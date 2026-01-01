@@ -32,7 +32,18 @@ def connect(serial: str):
     Returns:
         dict[str,Any]: Device information
     """
-    d = u2.connect(serial)
     global _devices
-    _devices[serial] = d
-    return d.info
+    device: u2.Device | None = None
+
+    if device := _devices.get(serial):
+        # Found, then check if it's still connected
+        try:
+            device.info
+        except u2.ConnectError:
+            del _devices[serial]
+        else:
+            return device.device_info
+
+    device = u2.connect(serial)
+    _devices[serial] = device
+    return device.device_info
