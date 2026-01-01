@@ -8,7 +8,7 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "fastmcp[cli]>=2.14.2,<3.0",
+    "mcp[cli]>=1.25.0,<2.0",
     "uiautomator2>=3.5.0,<4.0",
 ]
 
@@ -18,3 +18,4 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-name = "u2mcp"
+
