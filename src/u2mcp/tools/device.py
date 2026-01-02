@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import asyncio
+import sys
 from base64 import b64encode
 from io import BytesIO
-from typing import Any
+from logging import getLogger
+from typing import Any, Literal
 
 import uiautomator2 as u2
 from adbutils import adb
@@ -10,8 +13,10 @@ from PIL.Image import Image
 
 from ..mcp import mcp
 
-__all__ = ("device_list", "connect", "window_size", "screenshot", "dump_hierarchy")
+__all__ = ("device_list", "init", "connect", "window_size", "screenshot", "dump_hierarchy")
 
+
+StdoutType = Literal["stdout", "stderr"]
 
 _devices: dict[str, u2.Device] = {}
 
@@ -25,12 +30,87 @@ def device_list() -> list[dict[str, Any]]:
     return [d.info for d in adb.device_list()]
 
 
+@mcp.tool("init")
+async def init(serial: str | None = None) -> Any:
+    """Install essential resources to device.
+
+    Important:
+        This tool must be run on the Android device before running operation actions.
+
+    Args:
+        serial (str): Android device serialno to initialize. If None, all devices will be initialized.
+
+    Returns:
+        None upon successful completion (exit code 0).
+        Raises an exception if the subprocess returns a non-zero exit code.
+    """
+    logger = getLogger(f"{__name__}:init")
+    args = ["-m", "uiautomator2", "init"]
+    if serial:
+        args.extend(["--serial", serial])
+
+    process = await asyncio.create_subprocess_exec(
+        sys.executable, *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+    if process.stdout is None:
+        raise RuntimeError("stdout is None")
+    if process.stderr is None:
+        raise RuntimeError("stderr is None")
+
+    output_queue: asyncio.Queue[tuple[StdoutType, str]] = asyncio.Queue()
+
+    async def stream_subprocess(stream: asyncio.streams.StreamReader, tag: StdoutType):
+        while True:
+            line_bytes = await stream.readline()
+            await output_queue.put((tag, line_bytes.decode()))
+            if not line_bytes:  # Reached EOF, the empty string is in the queue
+                break
+
+    # Start the stream reading tasks
+    tasks = [
+        asyncio.create_task(coro)
+        for coro in (
+            stream_subprocess(process.stdout, "stdout"),
+            stream_subprocess(process.stderr, "stderr"),
+        )
+    ]
+
+    completed_streams = 0
+
+    while True:
+        tag, line = await output_queue.get()
+
+        if not line:  # This was the EOF sentinel (empty string)
+            completed_streams += 1
+            if completed_streams == len(tasks):
+                output_queue.task_done()
+                break  # Both streams are done, exit the main consumer loop
+
+        # Process the actual line data
+        if line := line.strip():
+            if tag == "stdout":
+                logger.info(line)
+                yield line  # Yielding raw stripped line
+            else:
+                logger.error(line)
+                yield line  # Yielding raw stripped line
+
+        output_queue.task_done()
+
+    # Wait for the tasks to formally complete and the process to exit
+    await asyncio.gather(*tasks)
+    exit_code = await process.wait()
+    if exit_code != 0:
+        raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
+    yield exit_code
+
+
 @mcp.tool("connect")
-def connect(serial: str):
+def connect(serial: str | None = None):
     """Connect to an Android device
 
     Args:
-        serial (str): Android device serialno
+        serial (str|None): Android device serialno. If None, connect the unique device if only one device is connected.
 
     Returns:
         dict[str,Any]: Device information
@@ -38,17 +118,25 @@ def connect(serial: str):
     global _devices
     device: u2.Device | None = None
 
-    if device := _devices.get(serial):
-        # Found, then check if it's still connected
-        try:
-            device.info
-        except u2.ConnectError:
-            del _devices[serial]
+    if serial:
+        if device := _devices.get(serial):
+            # Found, then check if it's still connected
+            try:
+                return device.device_info | device.info
+            except u2.ConnectError:
+                del _devices[serial]
         else:
-            return device.device_info
+            device = u2.connect(serial)
+            result = device.device_info | device.info
+            _devices[serial] = device
+            return result
 
-    device = u2.connect(serial)
-    _devices[serial] = device
+    else:
+        device = u2.connect()
+        result = device.device_info | device.info
+        _devices[device.serial] = device
+        return result
+
     return device.device_info
 
 
