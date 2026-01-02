@@ -4,11 +4,13 @@ import asyncio
 import sys
 from base64 import b64encode
 from io import BytesIO
-from logging import getLogger
 from typing import Any, Literal
 
 import uiautomator2 as u2
 from adbutils import adb
+from fastmcp.dependencies import CurrentContext
+from fastmcp.server.context import Context
+from fastmcp.utilities.logging import get_logger
 from PIL.Image import Image
 
 from ..mcp import mcp
@@ -31,7 +33,7 @@ def device_list() -> list[dict[str, Any]]:
 
 
 @mcp.tool("init")
-async def init(serial: str | None = None) -> Any:
+async def init(serial: str | None = None, ctx: Context = CurrentContext()):
     """Install essential resources to device.
 
     Important:
@@ -44,11 +46,12 @@ async def init(serial: str | None = None) -> Any:
         None upon successful completion (exit code 0).
         Raises an exception if the subprocess returns a non-zero exit code.
     """
-    logger = getLogger(f"{__name__}:init")
+    logger = get_logger(f"{__name__}.init")
     args = ["-m", "uiautomator2", "init"]
     if serial:
         args.extend(["--serial", serial])
 
+    logger.info("Running uiautomator2 init command: %s %s", sys.executable, args)
     process = await asyncio.create_subprocess_exec(
         sys.executable, *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
     )
@@ -77,6 +80,8 @@ async def init(serial: str | None = None) -> Any:
 
     completed_streams = 0
 
+    logger.info("read uiautomator2 init command stdio")
+
     while True:
         tag, line = await output_queue.get()
 
@@ -90,19 +95,20 @@ async def init(serial: str | None = None) -> Any:
         if line := line.strip():
             if tag == "stdout":
                 logger.info(line)
-                yield line  # Yielding raw stripped line
+                await ctx.info(line)
             else:
                 logger.error(line)
-                yield line  # Yielding raw stripped line
+                await ctx.error(line)
 
         output_queue.task_done()
 
     # Wait for the tasks to formally complete and the process to exit
+    logger.info("waiting for uiautomator2 init command to complete")
     await asyncio.gather(*tasks)
     exit_code = await process.wait()
+    logger.info("uiautomator2 init command exited with code: %s", exit_code)
     if exit_code != 0:
         raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
-    yield exit_code
 
 
 @mcp.tool("connect")
