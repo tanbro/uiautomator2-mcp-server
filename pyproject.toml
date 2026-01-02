@@ -5,7 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "tanbro", email = "tanbro@163.com" }]
 requires-python = ">=3.11"
-dependencies = ["mcp[cli]>=1.25.0,<2.0", "uiautomator2>=3.5.0,<4.0"]
+dependencies = [
+ "fastmcp>=2.14.2,<3.0",
+ "uiautomator2>=3.5.0,<4.0",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.18,<0.10.0"]
@@ -17,5 +20,8 @@ module-name = "u2mcp"
 [project.scripts]
 u2mcp = "u2mcp.__main__:main"
 
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple"
+
 [dependency-groups]
-dev = ["mypy>=1.19.1"]
+dev = ["mypy"]
