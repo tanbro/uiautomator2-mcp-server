@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from ..mcp import mcp
@@ -81,6 +82,23 @@ def app_start(
     """
     device = get_device(serial)
     device.app_start("com.tencent.mm")
+
+
+@mcp.tool("app_wait")
+async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=False) -> int:
+    """Wait until app launched
+
+    Args:
+        serial (str): Android device serialno
+        package_name (str): package name
+        timeout (float): maximum wait time seconds
+        front (bool): wait until app is current app
+
+    Returns:
+        pid (int) 0 if launch failed
+    """
+    device = get_device(serial)
+    return await asyncio.to_thread(device.app_wait, package_name, timeout, front)
 
 
 @mcp.tool("app_stop")
