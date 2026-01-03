@@ -196,7 +196,7 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
 
     Args:
         serial (str): Android device serialno
-        display_id (int): use specific display if device has multiple screen
+        display_id (int): use specific display if device has multiple screen. Defaults to -1.
 
     Returns:
         dict[str,Any]: Screenshot image JPEG data with the following keys:
@@ -215,7 +215,7 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
 
     with BytesIO() as fp:
         im.save(fp, "jpeg")
-        im_data = fp.getbuffer()
+        im_data = fp.getvalue()
 
     return {
         "width": im.width,
