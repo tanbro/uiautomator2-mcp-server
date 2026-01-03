@@ -1,5 +1,5 @@
 """
-This service provides tools for controlling and interacting with Android devices using uiautomator2.
+This MCP server provides tools for controlling and interacting with Android devices using uiautomator2.
 
 It allows you to perform various operations on Android devices such as connecting to devices, taking screenshots,
 getting device information, accessing UI hierarchy, tap on screens, and more...

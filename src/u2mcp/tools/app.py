@@ -182,13 +182,13 @@ async def app_list(serial: str, filter: str = "") -> list[str]:
 
     Args:
         serial (str): Android device serialno
-        filter (str|None): [-f] [-d] [-e] [-s] [-3] [-i] [-u] [--user USER_ID] [FILTER]
+        filter (str): [-f] [-d] [-e] [-s] [-3] [-i] [-u] [--user USER_ID] [FILTER]
 
     Returns:
         list[str]: list of apps by filter
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_list, filter)
+        return await asyncio.to_thread(device.app_list, filter.strip())
 
 
 @mcp.tool("app_list_running")
