@@ -23,18 +23,18 @@ __all__ = (
 
 
 @mcp.tool("app_install")
-def app_install(serial: str, data: str):
+async def app_install(serial: str, data: str):
     """Install app
 
     Args:
         data (str): can be file path or url or file object
     """
-    device = get_device(serial)
-    device.app_install(data)
+    async with get_device(serial) as device:
+        await asyncio.to_thread(device.app_install, data)
 
 
 @mcp.tool("app_uninstall")
-def app_uninstall(serial: str, package_name: str) -> bool:
+async def app_uninstall(serial: str, package_name: str) -> bool:
     """Uninstall an app
 
     Args:
@@ -44,12 +44,12 @@ def app_uninstall(serial: str, package_name: str) -> bool:
     Returns:
         bool: success
     """
-    device = get_device(serial)
-    return device.app_uninstall(package_name)
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_uninstall, package_name)
 
 
 @mcp.tool("app_uninstall_all")
-def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> list[str]:
+async def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> list[str]:
     """Uninstall all apps
 
     Args:
@@ -59,12 +59,12 @@ def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> list[st
     Returns:
         list[str]: list of uninstalled apps
     """
-    device = get_device(serial)
-    return device.app_uninstall_all(excludes or [])
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_uninstall_all, excludes or [])
 
 
 @mcp.tool("app_start")
-def app_start(
+async def app_start(
     serial: str,
     package_name: str,
     activity: str | None = None,
@@ -80,12 +80,12 @@ def app_start(
         stop (bool): Stop app before starting the activity. (require activity)
         wait (bool): wait until app started. default False
     """
-    device = get_device(serial)
-    device.app_start("com.tencent.mm")
+    async with get_device(serial) as device:
+        await asyncio.to_thread(device.app_start, package_name, activity, wait, stop)
 
 
 @mcp.tool("app_wait")
-async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=False) -> int:
+async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=False):
     """Wait until app launched
 
     Args:
@@ -93,28 +93,26 @@ async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=
         package_name (str): package name
         timeout (float): maximum wait time seconds
         front (bool): wait until app is current app
-
-    Returns:
-        pid (int) 0 if launch failed
     """
-    device = get_device(serial)
-    return await asyncio.to_thread(device.app_wait, package_name, timeout, front)
+    async with get_device(serial) as device:
+        if not await asyncio.to_thread(device.app_wait, package_name, timeout, front):
+            raise RuntimeError(f"Failed to wait App {package_name} to launch")
 
 
 @mcp.tool("app_stop")
-def app_stop(serial: str, package_name: str):
+async def app_stop(serial: str, package_name: str):
     """Stop one application
 
     Args:
         serial (str): Android device serialno
         package_name (str): package name
     """
-    device = get_device(serial)
-    device.app_stop(package_name)
+    async with get_device(serial) as device:
+        await asyncio.to_thread(device.app_stop, package_name)
 
 
 @mcp.tool("app_stop_all")
-def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[str]:
+async def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[str]:
     """Stop all third party applications
 
     Args:
@@ -123,12 +121,12 @@ def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[str]:
     Returns:
         list[str]: a list of killed apps
     """
-    device = get_device(serial)
-    return device.app_stop_all(excludes or [])
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_stop_all, excludes or [])
 
 
 @mcp.tool("app_clear")
-def app_clear(serial: str, package_name: str):
+async def app_clear(serial: str, package_name: str):
     """Stop and clear app data: pm clear
 
     Args:
@@ -138,12 +136,12 @@ def app_clear(serial: str, package_name: str):
     Returns:
         bool: success
     """
-    device = get_device(serial)
-    device.app_clear(package_name)
+    async with get_device(serial) as device:
+        await asyncio.to_thread(device.app_clear, package_name)
 
 
 @mcp.tool("app_info")
-def app_info(serial: str, package_name: str) -> dict[str, Any]:
+async def app_info(serial: str, package_name: str) -> dict[str, Any]:
     """
     Get app info
 
@@ -157,12 +155,12 @@ def app_info(serial: str, package_name: str) -> dict[str, Any]:
         Example:
             {"versionName": "1.1.7", "versionCode": 1001007}
     """
-    device = get_device(serial)
-    return device.app_info(package_name)
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_info, package_name)
 
 
 @mcp.tool("app_current")
-def app_current(serial: str) -> dict[str, Any]:
+async def app_current(serial: str) -> dict[str, Any]:
     """
     Get current app info
 
@@ -172,12 +170,12 @@ def app_current(serial: str) -> dict[str, Any]:
     Returns:
         dict[str,Any]: running app info
     """
-    device = get_device(serial)
-    return device.app_current()
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_current)
 
 
 @mcp.tool("app_list")
-def app_list(serial: str, filter: str | None = None) -> list[str]:
+async def app_list(serial: str, filter: str | None = None) -> list[str]:
     """
     List installed app package names
 
@@ -188,12 +186,12 @@ def app_list(serial: str, filter: str | None = None) -> list[str]:
     Returns:
         list[str]: list of apps by filter
     """
-    device = get_device(serial)
-    return device.app_list(filter)  # type: ignore
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_list, filter)  # type: ignore[arg-type]
 
 
 @mcp.tool("app_list_running")
-def app_list_running(serial: str) -> list[str]:
+async def app_list_running(serial: str) -> list[str]:
     """
     List running apps
 
@@ -203,12 +201,12 @@ def app_list_running(serial: str) -> list[str]:
     Returns:
         list[str]: list of running apps
     """
-    device = get_device(serial)
-    return device.app_list_running()
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.app_list_running)
 
 
 @mcp.tool("app_auto_grant_permissions")
-def app_auto_grant_permissions(serial: str, package_name: str):
+async def app_auto_grant_permissions(serial: str, package_name: str):
     """auto grant permissions
 
     Args:
@@ -228,5 +226,5 @@ def app_auto_grant_permissions(serial: str, package_name: str):
         On devices running Android 5.1 (API level 22) and lower,
             must be an optional permission defined by the app.
     """
-    device = get_device(serial)
-    device.app_auto_grant_permissions(package_name)
+    async with get_device(serial) as device:
+        await asyncio.to_thread(device.app_auto_grant_permissions, package_name)

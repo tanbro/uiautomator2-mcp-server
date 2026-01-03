@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from base64 import b64encode
+from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Any, Literal
 
@@ -20,16 +21,20 @@ __all__ = ("device_list", "init", "connect", "window_size", "screenshot", "dump_
 
 StdoutType = Literal["stdout", "stderr"]
 
-_devices: dict[str, u2.Device] = {}
+_devices: dict[str, tuple[asyncio.Semaphore, u2.Device]] = {}
 
 
-def get_device(serial: str) -> u2.Device:
-    return _devices[serial]
+@asynccontextmanager
+async def get_device(serial: str):
+    semaphore, device = _devices[serial]
+    async with semaphore:
+        yield device
 
 
 @mcp.tool("device_list")
-def device_list() -> list[dict[str, Any]]:
-    return [d.info for d in adb.device_list()]
+async def device_list() -> list[dict[str, Any]]:
+    device_list = await asyncio.to_thread(adb.device_list)
+    return [d.info for d in device_list]
 
 
 @mcp.tool("init")
@@ -93,12 +98,11 @@ async def init(serial: str | None = None, ctx: Context = CurrentContext()):
 
         # Process the actual line data
         if line := line.strip():
+            logger.info("%s: %s", tag, line)
             if tag == "stdout":
-                logger.info(line)
                 await ctx.info(line)
             else:
-                logger.error(line)
-                await ctx.error(line)
+                await ctx.warning(line)
 
         output_queue.task_done()
 
@@ -111,12 +115,16 @@ async def init(serial: str | None = None, ctx: Context = CurrentContext()):
         raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
 
 
+_device_connect_lock = asyncio.Lock()
+
+
 @mcp.tool("connect")
-def connect(serial: str | None = None):
+async def connect(serial: str | None = None):
     """Connect to an Android device
 
     Args:
-        serial (str|None): Android device serialno. If None, connect the unique device if only one device is connected.
+        serial (str | None): Android device serial number. If None, connects to the unique device if only one device is connected.
+
 
     Returns:
         dict[str,Any]: Device information
@@ -124,30 +132,51 @@ def connect(serial: str | None = None):
     global _devices
     device: u2.Device | None = None
 
-    if serial:
-        if device := _devices.get(serial):
-            # Found, then check if it's still connected
-            try:
-                return device.device_info | device.info
-            except u2.ConnectError:
-                del _devices[serial]
-        else:
-            device = u2.connect(serial)
-            result = device.device_info | device.info
-            _devices[serial] = device
-            return result
+    logger = get_logger(f"{__name__}.connect")
 
-    else:
-        device = u2.connect()
-        result = device.device_info | device.info
-        _devices[device.serial] = device
+    async def _reload_info(_d: u2.Device) -> dict[str, Any]:
+        return _d.device_info | _d.info
+
+    if serial:
+        try:
+            async with get_device(serial) as device:
+                # Found, then check if it's still connected
+                try:
+                    return await asyncio.to_thread(_reload_info, device)
+                except u2.ConnectError as e:
+                    # Found, but not connected, delete it
+                    logger.warning("Device %s is no longer connected, delete it!", serial)
+                    del _devices[serial]
+                    raise e from None
+        except KeyError:
+            # Not found, need a new connection!
+            logger.info("Cannot find device with serial %s, connecting...")
+
+    # make new connection here!
+    async with _device_connect_lock:
+        device = await asyncio.to_thread(u2.connect, serial)  # type: ignore[arg-type]
+        logger.info("Connected to device %s", device.serial)
+        result = await asyncio.to_thread(_reload_info, device)
+        _devices[device.serial] = asyncio.Semaphore(), device
         return result
 
-    return device.device_info
+
+@mcp.tool("disconnect")
+async def disconnect(serial: str):
+    """Disconnect from an Android device
+
+    Args:
+        serial (str): Android device serialno
+
+    Returns:
+        None
+    """
+    async with _device_connect_lock:
+        del _devices[serial]
 
 
 @mcp.tool("window_size")
-def window_size(serial: str) -> tuple[int, int]:
+async def window_size(serial: str) -> tuple[int, int]:
     """Get window size of an Android device
 
     Args:
@@ -156,11 +185,12 @@ def window_size(serial: str) -> tuple[int, int]:
     Returns:
         dict[int,int]: Window size (width, height)
     """
-    return get_device(serial).window_size()
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.window_size)
 
 
 @mcp.tool("screenshot")
-def screenshot(serial: str, display_id: int | None = None) -> dict[str, Any]:
+async def screenshot(serial: str, display_id: int | None = None) -> dict[str, Any]:
     """
     Take screenshot of device
 
@@ -171,10 +201,13 @@ def screenshot(serial: str, display_id: int | None = None) -> dict[str, Any]:
     Returns:
         dict[str,Any]: Screenshot image JPEG data with the following keys:
             - "image" (str): Base64 encoded image data in data URL format (data:image/jpeg;base64,...)
-            - "size" (tuple[int, int]): Image dimensions as (width, height)
+            - "size" (tuple[int,int]): Image dimensions as (width, height)
     """
-    device = get_device(serial)
-    im: Image = device.screenshot(display_id=display_id)  # type: ignore
+    async with get_device(serial) as device:
+        im: Image = await asyncio.to_thread(
+            device.screenshot,
+            display_id=display_id,
+        )
 
     with BytesIO() as fp:
         im.save(fp, "jpeg")
@@ -187,7 +220,7 @@ def screenshot(serial: str, display_id: int | None = None) -> dict[str, Any]:
 
 
 @mcp.tool("dump_hierarchy")
-def dump_hierarchy(serial: str, compressed=False, pretty=False, max_depth: int | None = None) -> str:
+async def dump_hierarchy(serial: str, compressed=False, pretty=False, max_depth: int | None = None) -> str:
     """
     Dump window hierarchy
 
@@ -200,5 +233,5 @@ def dump_hierarchy(serial: str, compressed=False, pretty=False, max_depth: int |
     Returns:
         str: xml content
     """
-    device = get_device(serial)
-    return device.dump_hierarchy(compressed=compressed, pretty=pretty, max_depth=max_depth)
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(device.dump_hierarchy, compressed=compressed, pretty=pretty, max_depth=max_depth)
