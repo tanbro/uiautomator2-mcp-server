@@ -178,8 +178,17 @@ async def disconnect(serial: str):
     Returns:
         None
     """
+    if not (serial := serial.strip()):
+        raise ValueError("serial cannot be empty")
     async with _device_connect_lock:
         del _devices[serial]
+
+
+@mcp.tool("disconnect_all")
+async def disconnect_all():
+    """Disconnect from all Android devices"""
+    async with _device_connect_lock:
+        _devices.clear()
 
 
 @mcp.tool("window_size")
