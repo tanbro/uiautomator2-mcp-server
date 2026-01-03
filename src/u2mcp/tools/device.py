@@ -16,7 +16,17 @@ from PIL.Image import Image
 
 from ..mcp import mcp
 
-__all__ = ("device_list", "init", "connect", "window_size", "screenshot", "dump_hierarchy")
+__all__ = (
+    "device_list",
+    "init",
+    "connect",
+    "disconnect",
+    "disconnect_all",
+    "window_size",
+    "screenshot",
+    "dump_hierarchy",
+    "info",
+)
 
 
 StdoutType = Literal["stdout", "stderr"]
@@ -277,3 +287,4 @@ async def info(serial: str) -> dict[str, Any]:
 
     async with get_device(serial) as device:
         return await asyncio.to_thread(lambda: device.info)
+

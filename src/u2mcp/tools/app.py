@@ -27,7 +27,8 @@ async def app_install(serial: str, data: str):
     """Install app
 
     Args:
-        data (str): can be file path or url or file object
+        serial (str): Android device serialno
+        data (str): APK file path or url
     """
     async with get_device(serial) as device:
         await asyncio.to_thread(device.app_install, data)
