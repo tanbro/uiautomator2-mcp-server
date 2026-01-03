@@ -134,15 +134,12 @@ async def connect(serial: str | None = None):
 
     logger = get_logger(f"{__name__}.connect")
 
-    def _reload_info(_d: u2.Device) -> dict[str, Any]:
-        return _d.device_info | _d.info
-
     if serial:
         try:
             async with get_device(serial) as device:
                 # Found, then check if it's still connected
                 try:
-                    return await asyncio.to_thread(_reload_info, device)
+                    return await asyncio.to_thread(lambda: device.device_info | device.info)
                 except u2.ConnectError as e:
                     # Found, but not connected, delete it
                     logger.warning("Device %s is no longer connected, delete it!", serial)
@@ -156,7 +153,7 @@ async def connect(serial: str | None = None):
     async with _device_connect_lock:
         device = await asyncio.to_thread(u2.connect, serial)  # type: ignore[arg-type]
         logger.info("Connected to device %s", device.serial)
-        result = await asyncio.to_thread(_reload_info, device)
+        result = await asyncio.to_thread(lambda: device.device_info | device.info)
         _devices[device.serial] = asyncio.Semaphore(), device
         return result
 
@@ -235,3 +232,19 @@ async def dump_hierarchy(serial: str, compressed=False, pretty=False, max_depth:
     """
     async with get_device(serial) as device:
         return await asyncio.to_thread(device.dump_hierarchy, compressed=compressed, pretty=pretty, max_depth=max_depth)
+
+
+@mcp.tool("info")
+async def info(serial: str) -> dict[str, Any]:
+    """
+    Get device info
+
+    Args:
+        serial (str): Android device serialno
+
+    Returns:
+        dict[str,Any]: Device info
+    """
+
+    async with get_device(serial) as device:
+        return await asyncio.to_thread(lambda: device.info)
