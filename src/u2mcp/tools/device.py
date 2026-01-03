@@ -134,7 +134,7 @@ async def connect(serial: str | None = None):
 
     logger = get_logger(f"{__name__}.connect")
 
-    async def _reload_info(_d: u2.Device) -> dict[str, Any]:
+    def _reload_info(_d: u2.Device) -> dict[str, Any]:
         return _d.device_info | _d.info
 
     if serial:
@@ -206,7 +206,7 @@ async def screenshot(serial: str, display_id: int | None = None) -> dict[str, An
     async with get_device(serial) as device:
         im: Image = await asyncio.to_thread(
             device.screenshot,
-            display_id=display_id,
+            display_id=display_id,  # type: ignore[arg-type]
         )
 
     with BytesIO() as fp:
