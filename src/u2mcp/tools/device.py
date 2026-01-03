@@ -38,14 +38,14 @@ async def device_list() -> list[dict[str, Any]]:
 
 
 @mcp.tool("init")
-async def init(serial: str | None = None, ctx: Context = CurrentContext()):
+async def init(serial: str = "", ctx: Context = CurrentContext()):
     """Install essential resources to device.
 
     Important:
         This tool must be run on the Android device before running operation actions.
 
     Args:
-        serial (str): Android device serialno to initialize. If None, all devices will be initialized.
+        serial (str): Android device serialno to initialize. If empty string, all devices will be initialized.
 
     Returns:
         None upon successful completion (exit code 0).
@@ -53,7 +53,7 @@ async def init(serial: str | None = None, ctx: Context = CurrentContext()):
     """
     logger = get_logger(f"{__name__}.init")
     args = ["-m", "uiautomator2", "init"]
-    if serial:
+    if serial := serial.strip():
         args.extend(["--serial", serial])
 
     logger.info("Running uiautomator2 init command: %s %s", sys.executable, args)
@@ -119,11 +119,11 @@ _device_connect_lock = asyncio.Lock()
 
 
 @mcp.tool("connect")
-async def connect(serial: str | None = None):
+async def connect(serial: str = ""):
     """Connect to an Android device
 
     Args:
-        serial (str | None): Android device serial number. If None, connects to the unique device if only one device is connected.
+        serial (str): Android device serial number. If empty string, connects to the unique device if only one device is connected.
 
 
     Returns:
@@ -134,7 +134,7 @@ async def connect(serial: str | None = None):
 
     logger = get_logger(f"{__name__}.connect")
 
-    if serial:
+    if serial := serial.strip():
         try:
             async with get_device(serial) as device:
                 # Found, then check if it's still connected
@@ -151,7 +151,7 @@ async def connect(serial: str | None = None):
 
     # make new connection here!
     async with _device_connect_lock:
-        device = await asyncio.to_thread(u2.connect, serial)  # type: ignore[arg-type]
+        device = await asyncio.to_thread(u2.connect, serial)
         logger.info("Connected to device %s", device.serial)
         result = await asyncio.to_thread(lambda: device.device_info | device.info)
         _devices[device.serial] = asyncio.Semaphore(), device
@@ -173,21 +173,24 @@ async def disconnect(serial: str):
 
 
 @mcp.tool("window_size")
-async def window_size(serial: str) -> tuple[int, int]:
+async def window_size(serial: str) -> dict[str, int]:
     """Get window size of an Android device
 
     Args:
         serial (str): Android device serialno
 
     Returns:
-        dict[int,int]: Window size (width, height)
+        dict[str,int]: Window size object:
+            - "width" (int): Window width
+            - "height" (int): Window height
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.window_size)
+        width, height = await asyncio.to_thread(device.window_size)
+        return {"width": width, "height": height}
 
 
 @mcp.tool("screenshot")
-async def screenshot(serial: str, display_id: int | None = None) -> dict[str, Any]:
+async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
 
@@ -200,19 +203,24 @@ async def screenshot(serial: str, display_id: int | None = None) -> dict[str, An
             - "image" (str): Base64 encoded image data in data URL format (data:image/jpeg;base64,...)
             - "size" (tuple[int,int]): Image dimensions as (width, height)
     """
+    display_id = int(display_id)
     async with get_device(serial) as device:
-        im: Image = await asyncio.to_thread(
+        im = await asyncio.to_thread(
             device.screenshot,
-            display_id=display_id,  # type: ignore[arg-type]
-        )
+            display_id=display_id if display_id >= 0 else None,
+        )  # type: ignore[arg-type]
+
+    if not isinstance(im, Image):
+        raise RuntimeError("Invalid image")
 
     with BytesIO() as fp:
         im.save(fp, "jpeg")
         im_data = fp.getbuffer()
 
     return {
+        "width": im.width,
+        "height": im.height,
         "image": "data:image/jpeg;base64," + b64encode(im_data).decode(),
-        "size": (im.width, im.height),
     }
 
 

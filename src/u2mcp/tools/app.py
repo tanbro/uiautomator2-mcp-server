@@ -175,7 +175,7 @@ async def app_current(serial: str) -> dict[str, Any]:
 
 
 @mcp.tool("app_list")
-async def app_list(serial: str, filter: str | None = None) -> list[str]:
+async def app_list(serial: str, filter: str = "") -> list[str]:
     """
     List installed app package names
 
@@ -187,7 +187,7 @@ async def app_list(serial: str, filter: str | None = None) -> list[str]:
         list[str]: list of apps by filter
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_list, filter)  # type: ignore[arg-type]
+        return await asyncio.to_thread(device.app_list, filter)
 
 
 @mcp.tool("app_list_running")
