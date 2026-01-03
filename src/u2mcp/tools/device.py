@@ -22,11 +22,24 @@ __all__ = ("device_list", "init", "connect", "window_size", "screenshot", "dump_
 StdoutType = Literal["stdout", "stderr"]
 
 _devices: dict[str, tuple[asyncio.Semaphore, u2.Device]] = {}
+_device_connect_lock = asyncio.Lock()
 
 
 @asynccontextmanager
 async def get_device(serial: str):
-    semaphore, device = _devices[serial]
+    async with _device_connect_lock:
+        try:
+            semaphore, device = _devices[serial]
+        except KeyError:
+
+            def _connect():
+                _d = u2.connect(serial)
+                _d.info
+                return _d
+
+            device = await asyncio.to_thread(_connect)
+            semaphore = asyncio.Semaphore()
+            _devices[serial] = semaphore, device
     async with semaphore:
         yield device
 
@@ -113,9 +126,6 @@ async def init(serial: str = "", ctx: Context = CurrentContext()):
     logger.info("uiautomator2 init command exited with code: %s", exit_code)
     if exit_code != 0:
         raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
-
-
-_device_connect_lock = asyncio.Lock()
 
 
 @mcp.tool("connect")
@@ -225,7 +235,7 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
 
 
 @mcp.tool("dump_hierarchy")
-async def dump_hierarchy(serial: str, compressed=False, pretty=False, max_depth: int | None = None) -> str:
+async def dump_hierarchy(serial: str, compressed: bool = False, pretty: bool = False, max_depth: int = -1) -> str:
     """
     Dump window hierarchy
 
@@ -236,10 +246,12 @@ async def dump_hierarchy(serial: str, compressed=False, pretty=False, max_depth:
         max_depth (int): max depth of hierarchy
 
     Returns:
-        str: xml content
+        str: xml string of the hierarchy tree
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.dump_hierarchy, compressed=compressed, pretty=pretty, max_depth=max_depth)
+        return await asyncio.to_thread(
+            device.dump_hierarchy, compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None
+        )
 
 
 @mcp.tool("info")
