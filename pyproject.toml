@@ -1,14 +1,15 @@
 [project]
 name = "uiautomator2-mcp-server"
 version = "0.1.0"
-description = "Add your description here"
+description = "uiautomator2 mcp server"
 readme = "README.md"
-authors = [{ name = "tanbro", email = "tanbro@163.com" }]
+authors = [{ name = "tanbro"}]
 requires-python = ">=3.11"
-dependencies = ["fastmcp>=2.14.2,<3.0", "uiautomator2>=3.5.0,<4.0"]
+dependencies = ["fastmcp>=2.10,<3.0", "uiautomator2>=3.5,<4.0"]
+license = {text = "GPL-3.0-or-later"}
 
 [build-system]
-requires = ["uv_build>=0.9.18,<0.10.0"]
+requires = ["uv_build"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]

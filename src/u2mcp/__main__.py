@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import logging
-from enum import StrEnum
-from typing import Annotated
+from typing import Annotated, Any, Awaitable
 
 import typer
 
@@ -19,40 +19,38 @@ logging.getLogger("docket").setLevel(logging.WARNING)
 logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
 
-class Transport(StrEnum):
-    streamable_http = "streamable-http"
-    stdio = "stdio"
-    # http = "http"
-    # sse = "sse"
-
-
 def run(
-    transport: Annotated[
-        Transport, typer.Option("--transport", "-f", help="The transport mechanisms for client-server communication")
-    ] = Transport.streamable_http,
+    http: Annotated[bool, typer.Option("--http", "-h", help="Run mcp server in streamable http mode")] = False,
+    stdio: Annotated[bool, typer.Option("--stdio", "-s", help="Run mcp server in stdio mode")] = False,
     host: Annotated[str | None, typer.Option("--host", "-H", show_default=False, help="Host address for http mode")] = None,
     port: Annotated[int | None, typer.Option("--port", "-p", show_default=False, help="Port number for http mode")] = None,
+    log_level: Annotated[str | None, typer.Option("--log-level", "-l", help="Log level")] = None,
 ):
-    """Run mcp server
-    Args:
-        transport (Literal["http", "stdio"]): transport type
-        host (str | None): host
-        port (int | None): port
+    """Run uiautomator2 mcp server
     """
+    if not http and not stdio:
+        typer.Abort("Please specify one of ‘--http’ or ‘--stdio’")
+
     from . import tools as _
     from .mcp import mcp
 
-    if transport == Transport.stdio:
-        mcp.run(transport.value)
-    elif transport == Transport.streamable_http:
-        transport_kwargs = {}
+    awaitables: list[Awaitable] = []
+
+    if http:
+        transport_kwargs: dict[str, Any] = {}
         if host:
             transport_kwargs["host"] = host
         if port:
             transport_kwargs["port"] = port
-        mcp.run(transport.value, **transport_kwargs)
-    else:
-        typer.Abort(f"Unknown transport: {transport}")
+        awaitables.append(mcp.run_http_async(transport="streamable-http", **transport_kwargs, log_level=log_level))
+
+    if stdio:
+        awaitables.append(mcp.run_stdio_async(log_level=log_level))
+
+    async def _run():
+        await asyncio.gather(*awaitables)
+
+    asyncio.run(_run())
 
 
 def main():

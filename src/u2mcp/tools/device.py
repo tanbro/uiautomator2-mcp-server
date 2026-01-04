@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import sys
 from base64 import b64encode
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Any, Literal
@@ -36,7 +37,7 @@ _device_connect_lock = asyncio.Lock()
 
 
 @asynccontextmanager
-async def get_device(serial: str):
+async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
     async with _device_connect_lock:
         try:
             semaphore, device = _devices[serial]
@@ -287,4 +288,3 @@ async def info(serial: str) -> dict[str, Any]:
 
     async with get_device(serial) as device:
         return await asyncio.to_thread(lambda: device.info)
-
