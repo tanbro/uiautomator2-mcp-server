@@ -12,11 +12,19 @@ license = { text = "GPL-3.0-or-later" }
 requires = ["setuptools>=80", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools_scm]
+version_file = "src/u2mcp/_version.py"
+
 [project.scripts]
 uiautomator2-mcp-server = "u2mcp.__main__:main"
 u2mcp = "u2mcp.__main__:main"
-[tool.setuptools_scm]
-version_file = "src/u2mcp/_version.py"
+
+[project.urls]
+homepage = "https://github.com/tanbro/uiautomator2-mcp-server"
+documentation = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/README.md"
+repository = "https://github.com/tanbro/uiautomator2-mcp-server.git"
+issues = "https://github.com/tanbro/uiautomator2-mcp-server/issues"
+changelog = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = ["mypy"]

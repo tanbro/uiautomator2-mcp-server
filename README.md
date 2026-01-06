@@ -1,5 +1,8 @@
 # uiautomator2-mcp-server
 
+![GitHub Tag](https://img.shields.io/github/v/tag/tanbro/uiautomator2-mcp-server)
+![PyPI - Version](https://img.shields.io/pypi/v/uiautomator2-mcp-server)
+
 A MCP (Model Context Protocol) server that provides tools for controlling and interacting with Android devices using uiautomator2. This server allows you to perform various operations on Android devices such as connecting to devices, taking screenshots, getting device information, accessing UI hierarchy, tap on screens, and more.
 
 ## Features
