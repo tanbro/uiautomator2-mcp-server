@@ -3,10 +3,25 @@ name = "uiautomator2-mcp-server"
 dynamic = ["version"]
 description = "uiautomator2 mcp server"
 readme = "README.md"
-authors = [{ name = "tanbro" }]
+authors = [{ name = "tanbro", email = "tanbro@163.com" }]
 requires-python = ">=3.11"
 dependencies = ["fastmcp>=2.10,<3.0", "uiautomator2>=3.5,<4.0"]
-license = { text = "GPL-3.0-or-later" }
+license = "GPL-3.0-or-later"
+keywords = ["uiautomator2", "mcp", "fastmcp", "adb", "android", "adbutils"]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 4 - Beta",
+
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
 
 [build-system]
 requires = ["setuptools>=80", "setuptools-scm>=8"]
