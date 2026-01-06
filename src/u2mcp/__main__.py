@@ -26,8 +26,7 @@ def run(
     port: Annotated[int | None, typer.Option("--port", "-p", show_default=False, help="Port number for http mode")] = None,
     log_level: Annotated[str | None, typer.Option("--log-level", "-l", help="Log level")] = None,
 ):
-    """Run uiautomator2 mcp server
-    """
+    """Run uiautomator2 mcp server"""
     if not http and not stdio:
         typer.Abort("Please specify one of ‘--http’ or ‘--stdio’")
 

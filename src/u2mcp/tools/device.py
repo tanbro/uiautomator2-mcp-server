@@ -157,15 +157,18 @@ async def connect(serial: str = ""):
 
     if serial := serial.strip():
         try:
-            async with get_device(serial) as device:
+            async with get_device(serial) as device_1:
                 # Found, then check if it's still connected
                 try:
-                    return await asyncio.to_thread(lambda: device.device_info | device.info)
+                    result = await asyncio.to_thread(lambda: device_1.device_info | device_1.info)
                 except u2.ConnectError as e:
                     # Found, but not connected, delete it
                     logger.warning("Device %s is no longer connected, delete it!", serial)
                     del _devices[serial]
                     raise e from None
+                else:
+                    device = device_1
+                    return result
         except KeyError:
             # Not found, need a new connection!
             logger.info("Cannot find device with serial %s, connecting...")
@@ -173,6 +176,8 @@ async def connect(serial: str = ""):
     # make new connection here!
     async with _device_connect_lock:
         device = await asyncio.to_thread(u2.connect, serial)
+        if device is None:
+            raise RuntimeError("Cannot connect to device")
         logger.info("Connected to device %s", device.serial)
         result = await asyncio.to_thread(lambda: device.device_info | device.info)
         _devices[device.serial] = asyncio.Semaphore(), device
