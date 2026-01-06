@@ -1,23 +1,22 @@
 [project]
 name = "uiautomator2-mcp-server"
-version = "0.1.0"
+dynamic = ["version"]
 description = "uiautomator2 mcp server"
 readme = "README.md"
-authors = [{ name = "tanbro"}]
+authors = [{ name = "tanbro" }]
 requires-python = ">=3.11"
 dependencies = ["fastmcp>=2.10,<3.0", "uiautomator2>=3.5,<4.0"]
-license = {text = "GPL-3.0-or-later"}
+license = { text = "GPL-3.0-or-later" }
 
 [build-system]
-requires = ["uv_build"]
-build-backend = "uv_build"
-
-[tool.uv.build-backend]
-module-name = "u2mcp"
+requires = ["setuptools>=80", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
 
 [project.scripts]
 uiautomator2-mcp-server = "u2mcp.__main__:main"
 u2mcp = "u2mcp.__main__:main"
+[tool.setuptools_scm]
+version_file = "src/u2mcp/_version.py"
 
 [dependency-groups]
 dev = ["mypy"]
