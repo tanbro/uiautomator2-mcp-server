@@ -160,15 +160,12 @@ async def connect(serial: str = ""):
             async with get_device(serial) as device_1:
                 # Found, then check if it's still connected
                 try:
-                    result = await asyncio.to_thread(lambda: device_1.device_info | device_1.info)
+                    return await asyncio.to_thread(lambda: device_1.device_info | device_1.info)
                 except u2.ConnectError as e:
                     # Found, but not connected, delete it
                     logger.warning("Device %s is no longer connected, delete it!", serial)
                     del _devices[serial]
                     raise e from None
-                else:
-                    device = device_1
-                    return result
         except KeyError:
             # Not found, need a new connection!
             logger.info("Cannot find device with serial %s, connecting...")
