@@ -16,6 +16,7 @@ build-backend = "uv_build"
 module-name = "u2mcp"
 
 [project.scripts]
+uiautomator2-mcp-server = "u2mcp.__main__:main"
 u2mcp = "u2mcp.__main__:main"
 
 [dependency-groups]

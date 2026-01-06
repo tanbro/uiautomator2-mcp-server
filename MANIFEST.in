@@ -1,0 +1,6 @@
+exclude .*
+exclude coverage.*
+
+prune .*
+prune docs
+prune tests
