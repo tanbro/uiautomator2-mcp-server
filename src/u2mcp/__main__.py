@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import asyncio
 import logging
-from typing import Annotated, Any, Awaitable, Literal
+from typing import Annotated, Any, Literal
 
 import typer
 
@@ -10,7 +9,7 @@ import typer
 def run(
     transport: Annotated[
         Literal["http", "stdio"], typer.Argument(help="Run mcp server on streamable-http http or stdio transport")
-    ],
+    ] = "stdio",
     host: Annotated[
         str | None, typer.Option("--host", "-H", show_default=False, help="Host address of streamable-http mode")
     ] = None,
@@ -38,20 +37,15 @@ def run(
     from . import tools as _
     from .mcp import mcp
 
-    awaitable: Awaitable
-
     if transport == "http":
         transport_kwargs: dict[str, Any] = {"json_response": json_response}
         if host:
             transport_kwargs["host"] = host
         if port:
             transport_kwargs["port"] = port
-        awaitable = mcp.run_http_async(transport="streamable-http", **transport_kwargs, log_level=log_level)
-
-    elif transport == "stdio":
-        awaitable = mcp.run_stdio_async(log_level=log_level)
-
-    asyncio.run(asyncio.wait_for(awaitable, None))
+        mcp.run(transport="streamable-http", **transport_kwargs, log_level=log_level)
+    else:
+        mcp.run(log_level=log_level)
 
 
 def main():
