@@ -5,7 +5,7 @@ description = "uiautomator2 mcp server"
 readme = "README.md"
 authors = [{ name = "tanbro", email = "tanbro@163.com" }]
 requires-python = ">=3.11"
-dependencies = ["fastmcp>=2.10,<3.0", "uiautomator2>=3.5,<4.0"]
+dependencies = ["fastmcp>=2.11.0,<3.0", "uiautomator2>=3.5,<4.0"]
 license = "GPL-3.0-or-later"
 keywords = ["uiautomator2", "mcp", "fastmcp", "adb", "android", "adbutils"]
 classifiers = [

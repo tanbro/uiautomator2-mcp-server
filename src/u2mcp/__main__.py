@@ -8,17 +8,21 @@ import typer
 
 
 def run(
-    transport: Annotated[Literal["http", "stdio"], typer.Argument(help="Run mcp server on streamable http or stdio transport")],
-    host: Annotated[str | None, typer.Option("--host", "-H", show_default=False, help="Host address for http mode")] = None,
-    port: Annotated[int | None, typer.Option("--port", "-p", show_default=False, help="Port number for http mode")] = None,
+    transport: Annotated[
+        Literal["http", "stdio"], typer.Argument(help="Run mcp server on streamable-http http or stdio transport")
+    ],
+    host: Annotated[
+        str | None, typer.Option("--host", "-H", show_default=False, help="Host address of streamable-http mode")
+    ] = None,
+    port: Annotated[
+        int | None, typer.Option("--port", "-p", show_default=False, help="Port number of streamable-http mode")
+    ] = None,
+    json_response: Annotated[bool, typer.Option("--json-response", "-j", help="Whether to use JSON response format")] = True,
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], typer.Option("--log-level", "-l", help="Log level")
     ] = "info",
 ):
     """Run uiautomator2 mcp server"""
-    from . import tools as _
-    from .mcp import mcp
-
     logging.basicConfig(
         level=log_level.upper(),
         format="[%(asctime)s] %(levelname)s %(name)s - %(message)s",
@@ -31,10 +35,13 @@ def run(
     logging.getLogger("docket").setLevel(logging.WARNING)
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
+    from . import tools as _
+    from .mcp import mcp
+
     awaitable: Awaitable
 
     if transport == "http":
-        transport_kwargs: dict[str, Any] = {}
+        transport_kwargs: dict[str, Any] = {"json_response": json_response}
         if host:
             transport_kwargs["host"] = host
         if port:
