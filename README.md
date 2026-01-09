@@ -18,8 +18,8 @@ A MCP (Model Context Protocol) server that provides tools for controlling and in
 ## Requirements
 
 - Python >= 3.11
-- Android device with ADB access
-- Android device with uiautomator2 resources installed
+- adb executable in your PATH
+- Android device connected in debug mode
 
 ## Installation
 
@@ -36,10 +36,10 @@ The server can be run in different transport modes:
 
 ```bash
 # Run in streamable HTTP mode
-u2mcp --http --host 0.0.0.0 --port 8000
+u2mcp --host 0.0.0.0 --port 8000 --no-token http
 
 # Run in stdio mode
-u2mcp --stdio
+u2mcp stdio
 ```
 
 ### Using the Tools

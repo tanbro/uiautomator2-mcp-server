@@ -22,10 +22,10 @@ def run(
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], typer.Option("--log-level", "-l", help="Log level")
     ] = "info",
-    no_auth: Annotated[
+    no_token: Annotated[
         bool,
         typer.Option(
-            "--no-auth",
+            "--no-token",
             help="Disable authentication bearer token verification of streamable-http transport. If not set, a token will be generated randomly.",
         ),
     ] = False,
@@ -59,7 +59,7 @@ def run(
             token = token.strip()
             if not re.match(r"^[a-zA-Z0-9\-_.~!$&'()*+,;=:@]{8,64}$", token):
                 raise typer.BadParameter("Token must be 8-64 characters long and can only contain URL-safe characters")
-        elif not no_auth:
+        elif not no_token:
             token = secrets.token_urlsafe()
         if token:
             update_params(token=token, host=host, port=port)
