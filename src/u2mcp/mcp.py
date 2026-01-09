@@ -16,6 +16,7 @@ from textwrap import dedent
 from typing import Any
 
 from fastmcp import FastMCP
+from fastmcp.server.auth import AccessToken, AuthProvider
 from rich.console import Console
 from rich.markdown import Markdown
 
@@ -32,19 +33,12 @@ def update_params(**kwargs):
 @asynccontextmanager
 async def _lifespan(instance: FastMCP):
     if _params.get("transport") == "http" and (token := _params.get("token")):
-        host = _params.get("host", "HOST")
-        port = _params.get("port", "PORT")
-
         content = dedent(f"""
         ------
 
-        ### Server configured with authentication token. Please connect using one of the following methods:
+        **Server configured with authentication token. Connect using this token in the Authorization header:**
 
-        - Direct connection: <http://{host}:{port}/mcp?token={token}>
-
-        - Header authentication: <http://{host}:{port}/mcp>
-
-          with header: `Authorization: Bearer {token}`
+        `Authorization: Bearer {token}`
 
         ------
         """).strip()
@@ -53,4 +47,15 @@ async def _lifespan(instance: FastMCP):
     yield
 
 
-mcp = FastMCP(name="uiautomator2", instructions=__doc__, lifespan=_lifespan)
+class _SimpleTokenAuthProvider(AuthProvider):
+    _scopes = ["mcp:tools"]
+
+    async def verify_token(self, token: str) -> AccessToken | None:
+        if server_token := _params.get("token"):
+            if token == server_token:
+                return AccessToken(token=token, client_id="user", scopes=self._scopes)
+            return None
+        return AccessToken(token=token, client_id="user", scopes=self._scopes)
+
+
+mcp = FastMCP(name="uiautomator2", instructions=__doc__, lifespan=_lifespan, auth=_SimpleTokenAuthProvider())

@@ -6,7 +6,7 @@
     - http/stdio transport is now a required command line argument, user should choose either `http` or `stdio`, `stdio` is the default.
 
 - New:
-    - Added token support
+    - Added Authorization bearer token support
     - Added `--log-level` command line argument
 
 - Removed:

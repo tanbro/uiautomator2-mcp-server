@@ -22,16 +22,16 @@ def run(
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], typer.Option("--log-level", "-l", help="Log level")
     ] = "info",
-    no_token: Annotated[
+    no_auth: Annotated[
         bool,
         typer.Option(
-            "--no-token",
-            help="Disable token authentication for streamable-http transport. If not set, a token will be generated randomly.",
+            "--no-auth",
+            help="Disable authentication bearer token verification of streamable-http transport. If not set, a token will be generated randomly.",
         ),
     ] = False,
     token: Annotated[
         str | None,
-        typer.Option("--token", "-t", help="Explicit set token for streamable-http authentication"),
+        typer.Option("--token", "-t", help="Explicit set token of streamable-http authentication"),
     ] = None,
 ):
     """Run uiautomator2 mcp server"""
@@ -59,7 +59,7 @@ def run(
             token = token.strip()
             if not re.match(r"^[a-zA-Z0-9\-_.~!$&'()*+,;=:@]{8,64}$", token):
                 raise typer.BadParameter("Token must be 8-64 characters long and can only contain URL-safe characters")
-        elif not no_token:
+        elif not no_auth:
             token = secrets.token_urlsafe()
         if token:
             update_params(token=token, host=host, port=port)
