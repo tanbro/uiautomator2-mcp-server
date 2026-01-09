@@ -11,8 +11,46 @@ Before performing operations on a device, you need to initialize it using the in
 All operations require a device serial number to identify the target device.
 """
 
+from contextlib import asynccontextmanager
+from textwrap import dedent
+from typing import Any
+
 from fastmcp import FastMCP
+from rich.console import Console
+from rich.markdown import Markdown
 
 __all__ = ["mcp"]
 
-mcp = FastMCP(name="uiautomator2", instructions=__doc__)
+_params: dict[str, Any] = {}
+
+
+def update_params(**kwargs):
+    global _params
+    _params.update(kwargs)
+
+
+@asynccontextmanager
+async def _lifespan(instance: FastMCP):
+    if _params.get("transport") == "http" and (token := _params.get("token")):
+        host = _params.get("host", "HOST")
+        port = _params.get("port", "PORT")
+
+        content = dedent(f"""
+        ------
+
+        ### Server configured with authentication token. Please connect using one of the following methods:
+
+        - Direct connection: <http://{host}:{port}/mcp?token={token}>
+
+        - Header authentication: <http://{host}:{port}/mcp>
+
+          with header: `Authorization: Bearer {token}`
+
+        ------
+        """).strip()
+        Console().print(Markdown(content))
+
+    yield
+
+
+mcp = FastMCP(name="uiautomator2", instructions=__doc__, lifespan=_lifespan)

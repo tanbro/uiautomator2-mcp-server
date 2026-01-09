@@ -48,7 +48,11 @@ def run(
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
     from . import tools as _
-    from .mcp import mcp
+    from .mcp import mcp, update_params
+
+    transport_kwargs: dict[str, Any] = {"json_response": json_response}
+
+    update_params(transport=transport)
 
     if transport == "http":
         if token:
@@ -57,11 +61,9 @@ def run(
                 raise typer.BadParameter("Token must be 8-64 characters long and can only contain URL-safe characters")
         elif not no_token:
             token = secrets.token_urlsafe()
-            typer.echo(
-                f"You shall connect the MCP server by the url http://{host}:{port}/mcp?token={token} after the server started"
-            )
+        if token:
+            update_params(token=token, host=host, port=port)
 
-        transport_kwargs: dict[str, Any] = {"json_response": json_response}
         if host:
             transport_kwargs["host"] = host
         if port:
