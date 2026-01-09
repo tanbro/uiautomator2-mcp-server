@@ -10,8 +10,7 @@ from typing import Any, Literal
 
 import uiautomator2 as u2
 from adbutils import adb
-from fastmcp.dependencies import CurrentContext
-from fastmcp.server.context import Context
+from fastmcp.server.dependencies import get_context
 from fastmcp.utilities.logging import get_logger
 from PIL.Image import Image
 
@@ -62,7 +61,7 @@ async def device_list() -> list[dict[str, Any]]:
 
 
 @mcp.tool("init")
-async def init(serial: str = "", ctx: Context = CurrentContext()):
+async def init(serial: str = ""):
     """Install essential resources to device.
 
     Important:
@@ -110,6 +109,8 @@ async def init(serial: str = "", ctx: Context = CurrentContext()):
     completed_streams = 0
 
     logger.info("read uiautomator2 init command stdio")
+
+    ctx = get_context()
 
     while True:
         tag, line = await output_queue.get()
