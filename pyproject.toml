@@ -43,3 +43,4 @@ changelog = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/CHANGEL
 
 [dependency-groups]
 dev = ["mypy"]
+test = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-mock"]
