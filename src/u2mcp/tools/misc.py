@@ -6,10 +6,10 @@ from ..mcp import mcp
 
 
 @mcp.tool("delay")
-async def delay(duration: float):
+async def delay(seconds: float):
     """Delay for a specific amount of time
 
     Args:
-        duration (float): Duration in seconds
+        seconds(float): Delay duration in seconds
     """
-    await asyncio.sleep(duration)
+    await asyncio.sleep(seconds)

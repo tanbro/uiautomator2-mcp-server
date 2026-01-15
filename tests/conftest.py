@@ -5,7 +5,6 @@ Pytest configuration and shared fixtures for uiautomator2-mcp-server tests.
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -81,18 +80,18 @@ def event_loop():
 
 
 @pytest.fixture(autouse=True)
-def mock_device_dependencies(  # type: ignore
+def mock_device_dependencies(
     mock_u2_device: MagicMock,
     mock_u2_module: MagicMock,
     mock_adb: MagicMock,
-) -> AsyncGenerator[None, None]:  # type: ignore
+):
     """
     Automatically mock uiautomator2 and adbutils dependencies for all tests.
 
     This ensures tests don't require actual Android devices or ADB connections.
     """
     with patch("u2mcp.tools.device.u2", mock_u2_module), patch("u2mcp.tools.device.adb", mock_adb):
-        yield  # type: ignore
+        yield
 
 
 @pytest.fixture
