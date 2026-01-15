@@ -4,6 +4,8 @@ import asyncio
 
 from ..mcp import mcp
 
+__all__ = ("delay",)
+
 
 @mcp.tool("delay")
 async def delay(seconds: float):
