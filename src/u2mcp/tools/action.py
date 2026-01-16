@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import asyncio
+from anyio import to_thread
 
 from ..mcp import mcp
 from .device import get_device
@@ -30,7 +30,7 @@ async def click(serial: str, x: int, y: int):
         y (int): Y coordinate
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.click, x, y)
+        await to_thread.run_sync(device.click, x, y)
 
 
 @mcp.tool("long_click")
@@ -44,7 +44,7 @@ async def long_click(serial: str, x: int, y: int, duration: float = 0.5):
         duration (float): Duration of the long click in seconds, default is 0.5
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.long_click, x, y, duration)
+        await to_thread.run_sync(device.long_click, x, y, duration)
 
 
 @mcp.tool("double_click")
@@ -58,7 +58,7 @@ async def double_click(serial: str, x: int, y: int, duration: float = 0.1):
         duration (float): Duration between clicks in seconds, default is 0.1
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.double_click, x, y, duration)
+        await to_thread.run_sync(device.double_click, x, y, duration)
 
 
 @mcp.tool("swipe")
@@ -75,7 +75,7 @@ async def swipe(serial: str, fx: int, fy: int, tx: int, ty: int, duration: float
         steps: 1 steps is about 5ms, if set, duration will be ignore
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.swipe, fx, fy, tx, ty, duration if duration > 0 else None, step if step > 0 else None)
+        await to_thread.run_sync(device.swipe, fx, fy, tx, ty, duration if duration > 0 else None, step if step > 0 else None)
 
 
 @mcp.tool("swipe_points")
@@ -88,7 +88,7 @@ async def swipe_points(serial: str, points: list[tuple[int, int]], duration: flo
         duration (float): Duration of swipe in seconds, default is 0.5
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.swipe_points, points, duration)
+        await to_thread.run_sync(device.swipe_points, points, duration)
 
 
 @mcp.tool("drag")
@@ -104,7 +104,7 @@ async def drag(serial: str, sx: int, sy: int, ex: int, ey: int, duration: float 
         duration (float): Duration of drag in seconds, default is 0.5
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.drag, sx, sy, ex, ey, duration)
+        await to_thread.run_sync(device.drag, sx, sy, ex, ey, duration)
 
 
 @mcp.tool("press_key")
@@ -120,7 +120,7 @@ async def press_key(serial: str, key: str):
             volume_mute, camera, power
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.press, key)
+        await to_thread.run_sync(device.press, key)
 
 
 @mcp.tool("send_text")
@@ -133,7 +133,7 @@ async def send_text(serial: str, text: str, clear: bool = False):
             clear: clear text before input
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.send_keys, text, clear)
+        await to_thread.run_sync(device.send_keys, text, clear)
 
 
 @mcp.tool("clear_text")
@@ -144,7 +144,7 @@ async def clear_text(serial: str):
         serial (str): Android device serialno
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.clear_text)
+        await to_thread.run_sync(device.clear_text)
 
 
 @mcp.tool("screen_on")
@@ -155,7 +155,7 @@ async def screen_on(serial: str):
         serial (str): Android device serialno
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.screen_on)
+        await to_thread.run_sync(device.screen_on)
 
 
 @mcp.tool("screen_off")
@@ -166,4 +166,4 @@ async def screen_off(serial: str):
         serial (str): Android device serialno
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.screen_off)
+        await to_thread.run_sync(device.screen_off)

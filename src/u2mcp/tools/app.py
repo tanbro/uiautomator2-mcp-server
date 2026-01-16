@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import asyncio
 from typing import Any
+
+from anyio import to_thread
 
 from ..mcp import mcp
 from .device import get_device
@@ -31,7 +32,7 @@ async def app_install(serial: str, data: str):
         data (str): APK file path or url
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.app_install, data)
+        await to_thread.run_sync(device.app_install, data)
 
 
 @mcp.tool("app_uninstall")
@@ -46,7 +47,7 @@ async def app_uninstall(serial: str, package_name: str) -> bool:
         bool: success
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_uninstall, package_name)
+        return await to_thread.run_sync(device.app_uninstall, package_name)
 
 
 @mcp.tool("app_uninstall_all")
@@ -61,7 +62,7 @@ async def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> l
         list[str]: list of uninstalled apps
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_uninstall_all, excludes or [])
+        return await to_thread.run_sync(device.app_uninstall_all, excludes or [])
 
 
 @mcp.tool("app_start")
@@ -82,7 +83,7 @@ async def app_start(
         wait (bool): wait until app started. default False
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.app_start, package_name, activity, wait, stop)
+        await to_thread.run_sync(device.app_start, package_name, activity, wait, stop)
 
 
 @mcp.tool("app_wait")
@@ -96,7 +97,7 @@ async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=
         front (bool): wait until app is current app
     """
     async with get_device(serial) as device:
-        if not await asyncio.to_thread(device.app_wait, package_name, timeout, front):
+        if not await to_thread.run_sync(device.app_wait, package_name, timeout, front):
             raise RuntimeError(f"Failed to wait App {package_name} to launch")
 
 
@@ -109,7 +110,7 @@ async def app_stop(serial: str, package_name: str):
         package_name (str): package name
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.app_stop, package_name)
+        await to_thread.run_sync(device.app_stop, package_name)
 
 
 @mcp.tool("app_stop_all")
@@ -123,7 +124,7 @@ async def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[s
         list[str]: a list of killed apps
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_stop_all, excludes or [])
+        return await to_thread.run_sync(device.app_stop_all, excludes or [])
 
 
 @mcp.tool("app_clear")
@@ -138,7 +139,7 @@ async def app_clear(serial: str, package_name: str):
         bool: success
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.app_clear, package_name)
+        await to_thread.run_sync(device.app_clear, package_name)
 
 
 @mcp.tool("app_info")
@@ -157,7 +158,7 @@ async def app_info(serial: str, package_name: str) -> dict[str, Any]:
             {"versionName": "1.1.7", "versionCode": 1001007}
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_info, package_name)
+        return await to_thread.run_sync(device.app_info, package_name)
 
 
 @mcp.tool("app_current")
@@ -172,7 +173,7 @@ async def app_current(serial: str) -> dict[str, Any]:
         dict[str,Any]: running app info
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_current)
+        return await to_thread.run_sync(device.app_current)
 
 
 @mcp.tool("app_list")
@@ -188,7 +189,7 @@ async def app_list(serial: str, filter: str = "") -> list[str]:
         list[str]: list of apps by filter
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_list, filter.strip())
+        return await to_thread.run_sync(device.app_list, filter.strip())
 
 
 @mcp.tool("app_list_running")
@@ -203,7 +204,7 @@ async def app_list_running(serial: str) -> list[str]:
         list[str]: list of running apps
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(device.app_list_running)
+        return await to_thread.run_sync(device.app_list_running)
 
 
 @mcp.tool("app_auto_grant_permissions")
@@ -228,4 +229,4 @@ async def app_auto_grant_permissions(serial: str, package_name: str):
             must be an optional permission defined by the app.
     """
     async with get_device(serial) as device:
-        await asyncio.to_thread(device.app_auto_grant_permissions, package_name)
+        await to_thread.run_sync(device.app_auto_grant_permissions, package_name)

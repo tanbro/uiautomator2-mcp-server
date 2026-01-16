@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import asyncio
+import anyio
 
 from ..mcp import mcp
 
@@ -14,4 +14,4 @@ async def delay(seconds: float):
     Args:
         seconds(float): Delay duration in seconds
     """
-    await asyncio.sleep(seconds)
+    await anyio.sleep(seconds)

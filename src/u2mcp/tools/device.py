@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import sys
 from base64 import b64encode
 from collections.abc import AsyncGenerator
@@ -8,8 +7,12 @@ from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Any, Literal
 
+import anyio
 import uiautomator2 as u2
 from adbutils import adb
+from anyio import Semaphore, create_task_group, open_process, to_thread
+from anyio.abc import AnyByteReceiveStream
+from anyio.streams.text import TextReceiveStream
 from fastmcp.server.dependencies import get_context
 from fastmcp.utilities.logging import get_logger
 from PIL.Image import Image
@@ -31,8 +34,8 @@ __all__ = (
 
 StdoutType = Literal["stdout", "stderr"]
 
-_devices: dict[str, tuple[asyncio.Semaphore, u2.Device]] = {}
-_device_connect_lock = asyncio.Lock()
+_devices: dict[str, tuple[Semaphore, u2.Device]] = {}
+_device_connect_lock = anyio.Lock()
 
 
 @asynccontextmanager
@@ -47,16 +50,17 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
                 _d.info
                 return _d
 
-            device = await asyncio.to_thread(_connect)
-            semaphore = asyncio.Semaphore()
+            device = await to_thread.run_sync(_connect)
+            semaphore = Semaphore(0)
             _devices[serial] = semaphore, device
+
     async with semaphore:
         yield device
 
 
 @mcp.tool("device_list")
 async def device_list() -> list[dict[str, Any]]:
-    device_list = await asyncio.to_thread(adb.device_list)
+    device_list = await to_thread.run_sync(adb.device_list)
     return [d.info for d in device_list]
 
 
@@ -75,69 +79,34 @@ async def init(serial: str = ""):
         Raises an exception if the subprocess returns a non-zero exit code.
     """
     logger = get_logger(f"{__name__}.init")
-    args = ["-m", "uiautomator2", "init"]
+    command = [sys.executable, "-m", "uiautomator2", "init"]
     if serial := serial.strip():
-        args.extend(["--serial", serial])
+        command.extend(["--serial", serial])
 
-    logger.info("Running uiautomator2 init command: %s %s", sys.executable, args)
-    process = await asyncio.create_subprocess_exec(
-        sys.executable, *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-    )
-    if process.stdout is None:
-        raise RuntimeError("stdout is None")
-    if process.stderr is None:
-        raise RuntimeError("stderr is None")
-
-    output_queue: asyncio.Queue[tuple[StdoutType, str]] = asyncio.Queue()
-
-    async def stream_subprocess(stream: asyncio.streams.StreamReader, tag: StdoutType):
-        while True:
-            line_bytes = await stream.readline()
-            await output_queue.put((tag, line_bytes.decode()))
-            if not line_bytes:  # Reached EOF, the empty string is in the queue
-                break
-
-    # Start the stream reading tasks
-    tasks = [
-        asyncio.create_task(coro)
-        for coro in (
-            stream_subprocess(process.stdout, "stdout"),
-            stream_subprocess(process.stderr, "stderr"),
-        )
-    ]
-
-    completed_streams = 0
-
-    logger.info("read uiautomator2 init command stdio")
-
+    logger.info("Running uiautomator2 init command: %s %s", sys.executable, command)
+    # Capture stdio prevent polluting the output
     ctx = get_context()
 
-    while True:
-        tag, line = await output_queue.get()
+    async def receive(stream: AnyByteReceiveStream):
+        async for line in TextReceiveStream(stream):
+            await ctx.info(line)
 
-        if not line:  # This was the EOF sentinel (empty string)
-            completed_streams += 1
-            if completed_streams == len(tasks):
-                output_queue.task_done()
-                break  # Both streams are done, exit the main consumer loop
+    async with await open_process(command) as process:
+        if process.stdout is None:
+            raise RuntimeError("stdout is None")
+        if process.stderr is None:
+            raise RuntimeError("stderr is None")
+        async with create_task_group() as tg:
+            for handle in (process.stdout, process.stderr):
+                tg.start_soon(receive, handle)
 
-        # Process the actual line data
-        if line := line.strip():
-            logger.info("%s: %s", tag, line)
-            if tag == "stdout":
-                await ctx.info(line)
-            else:
-                await ctx.warning(line)
+        async for text in TextReceiveStream(process.stdout):
+            await ctx.info(text)
 
-        output_queue.task_done()
-
-    # Wait for the tasks to formally complete and the process to exit
-    logger.info("waiting for uiautomator2 init command to complete")
-    await asyncio.gather(*tasks)
-    exit_code = await process.wait()
-    logger.info("uiautomator2 init command exited with code: %s", exit_code)
-    if exit_code != 0:
+    if exit_code := process.returncode:
         raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
+    else:
+        logger.info("uiautomator2 init command exited with code: %s", exit_code)
 
 
 @mcp.tool("connect")
@@ -161,7 +130,7 @@ async def connect(serial: str = ""):
             async with get_device(serial) as device_1:
                 # Found, then check if it's still connected
                 try:
-                    return await asyncio.to_thread(lambda: device_1.device_info | device_1.info)
+                    return await to_thread.run_sync(lambda: device_1.device_info | device_1.info)
                 except u2.ConnectError as e:
                     # Found, but not connected, delete it
                     logger.warning("Device %s is no longer connected, delete it!", serial)
@@ -173,12 +142,12 @@ async def connect(serial: str = ""):
 
     # make new connection here!
     async with _device_connect_lock:
-        device = await asyncio.to_thread(u2.connect, serial)
+        device = await to_thread.run_sync(u2.connect, serial)
         if device is None:
             raise RuntimeError("Cannot connect to device")
         logger.info("Connected to device %s", device.serial)
-        result = await asyncio.to_thread(lambda: device.device_info | device.info)
-        _devices[device.serial] = asyncio.Semaphore(), device
+        result = await to_thread.run_sync(lambda: device.device_info | device.info)
+        _devices[device.serial] = Semaphore(0), device
         return result
 
 
@@ -218,7 +187,7 @@ async def window_size(serial: str) -> dict[str, int]:
             - "height" (int): Window height
     """
     async with get_device(serial) as device:
-        width, height = await asyncio.to_thread(device.window_size)
+        width, height = await to_thread.run_sync(device.window_size)
         return {"width": width, "height": height}
 
 
@@ -238,10 +207,7 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
     """
     display_id = int(display_id)
     async with get_device(serial) as device:
-        im = await asyncio.to_thread(
-            device.screenshot,
-            display_id=display_id if display_id >= 0 else None,
-        )  # type: ignore[arg-type]
+        im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
 
     if not isinstance(im, Image):
         raise RuntimeError("Invalid image")
@@ -272,8 +238,8 @@ async def dump_hierarchy(serial: str, compressed: bool = False, pretty: bool = F
         str: xml string of the hierarchy tree
     """
     async with get_device(serial) as device:
-        return await asyncio.to_thread(
-            device.dump_hierarchy, compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None
+        return await to_thread.run_sync(
+            lambda: device.dump_hierarchy(compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None)
         )
 
 
@@ -290,4 +256,4 @@ async def info(serial: str) -> dict[str, Any]:
     """
 
     async with get_device(serial) as device:
-        return await asyncio.to_thread(lambda: device.info)
+        return await to_thread.run_sync(lambda: device.info)
