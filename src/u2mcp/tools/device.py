@@ -7,10 +7,9 @@ from contextlib import asynccontextmanager
 from io import BytesIO
 from typing import Any, Literal
 
-import anyio
 import uiautomator2 as u2
 from adbutils import adb
-from anyio import Semaphore, create_task_group, open_process, to_thread
+from anyio import Lock, create_task_group, open_process, to_thread
 from anyio.abc import AnyByteReceiveStream
 from anyio.streams.text import TextReceiveStream
 from fastmcp.server.dependencies import get_context
@@ -34,15 +33,15 @@ __all__ = (
 
 StdoutType = Literal["stdout", "stderr"]
 
-_devices: dict[str, tuple[Semaphore, u2.Device]] = {}
-_device_connect_lock = anyio.Lock()
+_devices: dict[str, tuple[Lock, u2.Device]] = {}
+_global_device_connection_lock = Lock()
 
 
 @asynccontextmanager
 async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
-    async with _device_connect_lock:
+    async with _global_device_connection_lock:
         try:
-            semaphore, device = _devices[serial]
+            lock, device = _devices[serial]
         except KeyError:
 
             def _connect():
@@ -51,10 +50,10 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
                 return _d
 
             device = await to_thread.run_sync(_connect)
-            semaphore = Semaphore(0)
-            _devices[serial] = semaphore, device
+            lock = Lock()
+            _devices[serial] = lock, device
 
-    async with semaphore:
+    async with lock:
         yield device
 
 
@@ -87,9 +86,14 @@ async def init(serial: str = ""):
     # Capture stdio prevent polluting the output
     ctx = get_context()
 
-    async def receive(stream: AnyByteReceiveStream):
+    async def receive(name: StdoutType, stream: AnyByteReceiveStream):
         async for line in TextReceiveStream(stream):
-            await ctx.info(line)
+            if name == "stderr":
+                logger.warning(line)
+                await ctx.error(line)
+            else:
+                logger.debug(line)
+                await ctx.info(line)
 
     async with await open_process(command) as process:
         if process.stdout is None:
@@ -97,11 +101,8 @@ async def init(serial: str = ""):
         if process.stderr is None:
             raise RuntimeError("stderr is None")
         async with create_task_group() as tg:
-            for handle in (process.stdout, process.stderr):
-                tg.start_soon(receive, handle)
-
-        async for text in TextReceiveStream(process.stdout):
-            await ctx.info(text)
+            for name, handle in zip(("stdout", "stderr"), (process.stdout, process.stderr)):
+                tg.start_soon(receive, name, handle)
 
     if exit_code := process.returncode:
         raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
@@ -141,13 +142,13 @@ async def connect(serial: str = ""):
             logger.info("Cannot find device with serial %s, connecting...")
 
     # make new connection here!
-    async with _device_connect_lock:
+    async with _global_device_connection_lock:
         device = await to_thread.run_sync(u2.connect, serial)
         if device is None:
             raise RuntimeError("Cannot connect to device")
         logger.info("Connected to device %s", device.serial)
         result = await to_thread.run_sync(lambda: device.device_info | device.info)
-        _devices[device.serial] = Semaphore(0), device
+        _devices[device.serial] = Lock(), device
         return result
 
 
@@ -163,14 +164,14 @@ async def disconnect(serial: str):
     """
     if not (serial := serial.strip()):
         raise ValueError("serial cannot be empty")
-    async with _device_connect_lock:
+    async with _global_device_connection_lock:
         del _devices[serial]
 
 
 @mcp.tool("disconnect_all")
 async def disconnect_all():
     """Disconnect from all Android devices"""
-    async with _device_connect_lock:
+    async with _global_device_connection_lock:
         _devices.clear()
 
 
