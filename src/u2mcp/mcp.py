@@ -12,50 +12,62 @@ All operations require a device serial number to identify the target device.
 """
 
 from contextlib import asynccontextmanager
+from functools import partial
 from textwrap import dedent
-from typing import Any
+from typing import override
 
 from fastmcp import FastMCP
 from fastmcp.server.auth import AccessToken, AuthProvider
+from pydantic import AnyHttpUrl
 from rich.console import Console
 from rich.markdown import Markdown
 
-__all__ = ["mcp"]
-
-_params: dict[str, Any] = {}
+__all__ = ["mcp", "make_mcp"]
 
 
-def update_params(**kwargs):
-    global _params
-    _params.update(kwargs)
+mcp: FastMCP
 
 
 @asynccontextmanager
-async def _lifespan(instance: FastMCP):
-    if _params.get("transport") == "http" and (token := _params.get("token")):
-        content = dedent(f"""
+async def _lifespan(instance: FastMCP, token: str | None):
+    content = Markdown(
+        dedent(f"""
         ------
 
-        **Server configured with authentication token. Connect using this token in the Authorization header:**
+        Server configured with **authentication token**. Connect using this token in the Authorization header:
 
         `Authorization: Bearer {token}`
 
         ------
         """).strip()
-        Console().print(Markdown(content))
-
+    )
+    Console(stderr=True).print(content)
     yield
 
 
 class _SimpleTokenAuthProvider(AuthProvider):
-    _scopes = ["mcp:tools"]
+    @override
+    def __init__(
+        self,
+        base_url: AnyHttpUrl | str | None = None,
+        required_scopes: list[str] | None = ["mcp:tools"],
+        token: str | None = None,
+    ):
+        super().__init__(base_url, required_scopes)
+        self.token = token
 
+    @override
     async def verify_token(self, token: str) -> AccessToken | None:
-        if server_token := _params.get("token"):
-            if token == server_token:
-                return AccessToken(token=token, client_id="user", scopes=self._scopes)
-            return None
-        return AccessToken(token=token, client_id="user", scopes=self._scopes)
+        if self.token == token:
+            return AccessToken(token=token, client_id="user", scopes=self.required_scopes)
+        return None
 
 
-mcp = FastMCP(name="uiautomator2", instructions=__doc__, lifespan=_lifespan, auth=_SimpleTokenAuthProvider())
+def make_mcp(token: str | None = None) -> FastMCP:
+    global mcp
+    if token:
+        _lifespan_callable = partial(_lifespan, token=token)
+        mcp = FastMCP(name="uiautomator2", instructions=__doc__, lifespan=_lifespan_callable, auth=_SimpleTokenAuthProvider())
+    else:
+        mcp = FastMCP(name="uiautomator2", instructions=__doc__)
+    return mcp

@@ -47,30 +47,30 @@ def run(
     logging.getLogger("docket").setLevel(logging.WARNING)
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
-    from . import tools as _
-    from .mcp import mcp, update_params
+    from .mcp import make_mcp
 
     transport_kwargs: dict[str, Any] = {"json_response": json_response}
 
-    update_params(transport=transport)
-
     if transport == "http":
+        if host:
+            transport_kwargs["host"] = host
+        if port:
+            transport_kwargs["port"] = port
         if token:
             token = token.strip()
             if not re.match(r"^[a-zA-Z0-9\-_.~!$&'()*+,;=:@]{8,64}$", token):
                 raise typer.BadParameter("Token must be 8-64 characters long and can only contain URL-safe characters")
         elif not no_token:
             token = secrets.token_urlsafe()
-        if token:
-            update_params(token=token, host=host, port=port)
 
-        if host:
-            transport_kwargs["host"] = host
-        if port:
-            transport_kwargs["port"] = port
+        mcp = make_mcp(token)
+        from . import tools as _
 
         mcp.run(transport="streamable-http", **transport_kwargs, log_level=log_level)
     else:
+        mcp = make_mcp()
+        from . import tools as _
+
         mcp.run(log_level=log_level)
 
 
