@@ -14,7 +14,7 @@ All operations require a device serial number to identify the target device.
 from contextlib import asynccontextmanager
 from functools import partial
 from textwrap import dedent
-from typing import override
+from typing import Any, override
 
 from fastmcp import FastMCP
 from fastmcp.server.auth import AccessToken, AuthProvider
@@ -25,6 +25,7 @@ from rich.markdown import Markdown
 __all__ = ["mcp", "make_mcp"]
 
 
+# Warning: You can NOT import it unless call `make_mcp()`
 mcp: FastMCP
 
 
@@ -39,7 +40,7 @@ async def _lifespan(instance: FastMCP, token: str | None):
         `Authorization: Bearer {token}`
 
         ------
-        """).strip()
+        """)
     )
     Console(stderr=True).print(content)
     yield
@@ -65,9 +66,8 @@ class _SimpleTokenAuthProvider(AuthProvider):
 
 def make_mcp(token: str | None = None) -> FastMCP:
     global mcp
+    params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
     if token:
-        _lifespan_callable = partial(_lifespan, token=token)
-        mcp = FastMCP(name="uiautomator2", instructions=__doc__, lifespan=_lifespan_callable, auth=_SimpleTokenAuthProvider())
-    else:
-        mcp = FastMCP(name="uiautomator2", instructions=__doc__)
+        params.update(lifespan=partial(_lifespan, token=token), auth=_SimpleTokenAuthProvider(token=token))
+    mcp = FastMCP(**params)
     return mcp

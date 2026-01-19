@@ -7,6 +7,8 @@ from typing import Annotated, Any, Literal
 
 import typer
 
+from .mcp import make_mcp
+
 
 def run(
     transport: Annotated[
@@ -41,37 +43,35 @@ def run(
         handlers=[logging.StreamHandler()],
         force=True,
     )
-
     logging.getLogger("mcp.server").setLevel(logging.WARNING)
     logging.getLogger("sse_starlette").setLevel(logging.WARNING)
     logging.getLogger("docket").setLevel(logging.WARNING)
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
-    from .mcp import make_mcp
-
-    transport_kwargs: dict[str, Any] = {"json_response": json_response}
+    run_kwargs: dict[str, Any] = {"json_response": json_response, "log_level": log_level}
 
     if transport == "http":
+        run_kwargs["transport"] = "streamable-http"
         if host:
-            transport_kwargs["host"] = host
+            run_kwargs["host"] = host
         if port:
-            transport_kwargs["port"] = port
+            run_kwargs["port"] = port
         if token:
             token = token.strip()
             if not re.match(r"^[a-zA-Z0-9\-_.~!$&'()*+,;=:@]{8,64}$", token):
                 raise typer.BadParameter("Token must be 8-64 characters long and can only contain URL-safe characters")
         elif not no_token:
             token = secrets.token_urlsafe()
-
         mcp = make_mcp(token)
-        from . import tools as _
-
-        mcp.run(transport="streamable-http", **transport_kwargs, log_level=log_level)
     else:
+        run_kwargs["transport"] = "stdio"
         mcp = make_mcp()
-        from . import tools as _
 
-        mcp.run(log_level=log_level)
+    # can NOT import tools until mcp is crated
+    from . import tools as _
+
+    # run mcp
+    mcp.run(**run_kwargs)
 
 
 def main():
