@@ -46,20 +46,11 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     process = await open_process(command)
     pid = process.pid
 
-    # Startup phase: wait for process exit with timeout
-    with move_on_after(timeout) as timeout_scope:
-        await process.wait()
-
-    if timeout_scope.cancel_called:
-        # Timeout reached, process is still running - success!
-        logger.info("scrcpy started successfully in background (pid=%s)", pid)
-    else:
-        # Process exited before timeout - failure
-        raise RuntimeError(f"scrcpy exited during startup wait with code: {process.returncode}")
-
     # Stream monitoring function
     async def receive(name: str, stream: AnyByteReceiveStream):
+        logger.info("Starting to monitor %s for pid=%s", name, pid)
         async for line in TextReceiveStream(stream):
+            logger.debug("Received %s line: %s", name, line.strip())
             match name:
                 case "stdout":
                     await ctx.info(line)
@@ -67,6 +58,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
                     await ctx.error(line)
                 case _:
                     raise ValueError(f"Unknown stream name: {name}")
+        logger.info("Finished monitoring %s for pid=%s", name, pid)
 
     # Monitor streams and auto-cleanup on process exit
     async def monitor_streams():
@@ -86,7 +78,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
             else:
                 logger.info("scrcpy process was manually stopped, skipping cleanup (pid=%s)", pid)
 
-    # Get global monitor task group and start monitoring
+    # Start monitoring immediately (before startup wait) to capture startup logs
     tg = get_monitor_task_group()
     if tg is None:
         raise RuntimeError("Monitor task group not initialized - server not started?")
@@ -94,6 +86,19 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
 
     # Store process
     _background_processes[pid] = process
+
+    # Startup phase: wait for process exit with timeout
+    with move_on_after(timeout) as timeout_scope:
+        await process.wait()
+
+    if timeout_scope.cancel_called:
+        # Timeout reached, process is still running - success!
+        logger.info("scrcpy started successfully in background (pid=%s)", pid)
+    else:
+        # Process exited before timeout - failure
+        # Cancel the monitor task since process already died
+        _background_processes.pop(pid, None)
+        raise RuntimeError(f"scrcpy exited during startup wait with code: {process.returncode}")
 
     return pid
 
