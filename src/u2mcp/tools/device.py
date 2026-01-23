@@ -110,7 +110,7 @@ async def init(serial: str = ""):
 
 
 @mcp.tool("connect")
-async def connect(serial: str = ""):
+async def connect(serial: str = "") -> dict[str, Any]:
     """Connect to an Android device
 
     Args:
