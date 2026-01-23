@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.1.3
+
+> 📅 TBD
+
+- 🐛 Fixed: Python 3.11 compatibility (added `typing_extensions` dependency)
+
 ## 0.1.2
 
 > 📅 2026-01-09
