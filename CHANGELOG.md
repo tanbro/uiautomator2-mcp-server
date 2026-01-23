@@ -2,7 +2,7 @@
 
 ## 0.1.3
 
-> 📅 TBD
+> 📅 2026-01-23
 
 - 🐛 Fixed: Python 3.11 compatibility (added `typing_extensions` dependency)
 
