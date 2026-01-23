@@ -96,9 +96,11 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
         logger.info("scrcpy started successfully in background (pid=%s)", pid)
     else:
         # Process exited before timeout - failure
-        # Cancel the monitor task since process already died
         _background_processes.pop(pid, None)
-        raise RuntimeError(f"scrcpy exited during startup wait with code: {process.returncode}")
+        if process.returncode == 0:
+            raise RuntimeError(f"scrcpy closed during startup (pid={pid}, return code 0)")
+        else:
+            raise RuntimeError(f"scrcpy exited during startup wait with code: {process.returncode} (pid={pid})")
 
     return pid
 
