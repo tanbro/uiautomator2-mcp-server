@@ -17,14 +17,14 @@ _background_processes: dict[int, Process] = {}
 
 
 @mcp.tool("scrcpy")
-async def start_scrcpy(serial: str, timeout: float = 5.0) -> int:
+async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     """Startup scrcpy in background and returns process id.
 
     The scrcpy process will run in the background after successful startup.
     Use stop_scrcpy to terminate the process.
 
     Args:
-        serial (str): Android device serialno
+        serial (str): Android device serialno. If empty string, connects to the unique device if only one device is connected.
         timeout (float): Seconds to wait for process to confirm startup.
             If process is still running after this time, startup is considered successful.
 
