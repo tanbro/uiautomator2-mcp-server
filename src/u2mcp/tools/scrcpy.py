@@ -8,6 +8,7 @@ from anyio.streams.text import TextReceiveStream
 from fastmcp.server.dependencies import get_context
 from fastmcp.utilities.logging import get_logger
 
+from ..background import get_monitor_task_group
 from ..mcp import mcp
 
 __all__ = ("start_scrcpy", "stop_scrcpy")
@@ -33,6 +34,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     """
 
     logger = get_logger(f"{__name__}.start_scrcpy")
+    ctx = get_context()
 
     scrcpy_path = os.environ.get("SCRCPY", "scrcpy.exe" if os.name == "nt" else "scrcpy")
     command = [scrcpy_path]
@@ -40,29 +42,9 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
         command.extend(["--serial", serial])
 
     logger.info("start scrcpy: %s", command)
-    ctx = get_context()
 
     process = await open_process(command)
     pid = process.pid
-
-    async def receive(name: str, stream: AnyByteReceiveStream):
-        async for line in TextReceiveStream(stream):
-            match name:
-                case "stdout":
-                    await ctx.info(line)
-                case "stderr":
-                    await ctx.error(line)
-                case _:
-                    raise ValueError(f"Unknown stream name: {name}")
-
-    async def monitor_streams():
-        if process.stdout is None:
-            raise RuntimeError("stdout is None")
-        if process.stderr is None:
-            raise RuntimeError("stderr is None")
-        async with create_task_group() as tg:
-            for name, handle in zip(("stdout", "stderr"), (process.stdout, process.stderr)):
-                tg.start_soon(receive, name, handle)
 
     # Startup phase: wait for process exit with timeout
     with move_on_after(timeout) as timeout_scope:
@@ -75,16 +57,42 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
         # Process exited before timeout - failure
         raise RuntimeError(f"scrcpy exited during startup wait with code: {process.returncode}")
 
-    # Start background monitoring (fire and forget)
-    async def run_monitor():
-        try:
-            await monitor_streams()
-        except Exception as e:
-            logger.error("scrcpy stream monitor error: %s", e)
-        finally:
-            _background_processes.pop(pid, None)
+    # Stream monitoring function
+    async def receive(name: str, stream: AnyByteReceiveStream):
+        async for line in TextReceiveStream(stream):
+            match name:
+                case "stdout":
+                    await ctx.info(line)
+                case "stderr":
+                    await ctx.error(line)
+                case _:
+                    raise ValueError(f"Unknown stream name: {name}")
 
-    create_task_group().start_soon(run_monitor)
+    # Monitor streams and auto-cleanup on process exit
+    async def monitor_streams():
+        if process.stdout is None:
+            raise RuntimeError("stdout is None")
+        if process.stderr is None:
+            raise RuntimeError("stderr is None")
+        try:
+            async with create_task_group() as inner_tg:
+                for name, handle in zip(("stdout", "stderr"), (process.stdout, process.stderr)):
+                    inner_tg.start_soon(receive, name, handle)
+        finally:
+            # Cleanup only if we still own the process (i.e., not manually stopped)
+            if _background_processes.pop(pid, None) is process:
+                logger.info("scrcpy process exited naturally, cleaning up (pid=%s)", pid)
+                await process.aclose()
+            else:
+                logger.info("scrcpy process was manually stopped, skipping cleanup (pid=%s)", pid)
+
+    # Get global monitor task group and start monitoring
+    tg = get_monitor_task_group()
+    if tg is None:
+        raise RuntimeError("Monitor task group not initialized - server not started?")
+    tg.start_soon(monitor_streams)
+
+    # Store process
     _background_processes[pid] = process
 
     return pid
@@ -114,9 +122,11 @@ async def stop_scrcpy(pid: int, timeout: float = 5.0) -> None:
     with move_on_after(timeout) as timeout_scope:
         await process.wait()
 
+    # Always close the process when manually stopping
+    # The monitor task will detect we popped the process and skip cleanup
     await process.aclose()
 
     if timeout_scope.cancel_called:
-        raise TimeoutError(f"scrcpy process did not exit within {timeout}s")
-
-    logger.info("scrcpy process stopped (pid=%s)", pid)
+        logger.warning("scrcpy process did not exit within %ss (pid=%s)", timeout, pid)
+    else:
+        logger.info("scrcpy process stopped (pid=%s)", pid)

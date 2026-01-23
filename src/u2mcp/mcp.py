@@ -11,6 +11,8 @@ Before performing operations on a device, you need to initialize it using the in
 All operations require a device serial number to identify the target device.
 """
 
+from __future__ import annotations
+
 import sys
 from contextlib import asynccontextmanager
 from functools import partial
@@ -22,11 +24,14 @@ if sys.version_info >= (3, 12):  # qa: noqa
 else:  # qa: noqa
     from typing_extensions import override
 
+from anyio import create_task_group
 from fastmcp import FastMCP
 from fastmcp.server.auth import AccessToken, AuthProvider
 from pydantic import AnyHttpUrl
 from rich.console import Console
 from rich.markdown import Markdown
+
+from .background import set_monitor_task_group
 
 __all__ = ["mcp", "make_mcp"]
 
@@ -36,20 +41,25 @@ mcp: FastMCP
 
 
 @asynccontextmanager
-async def _lifespan(instance: FastMCP, token: str | None):
-    content = Markdown(
-        dedent(f"""
-        ------
+async def _lifespan(instance: FastMCP, token: str | None = None):
+    if token:
+        content = Markdown(
+            dedent(f"""
+            ------
 
-        Server configured with **authentication token**. Connect using this token in the Authorization header:
+            Server configured with **authentication token**. Connect using this token in the Authorization header:
 
-        `Authorization: Bearer {token}`
+            `Authorization: Bearer {token}`
 
-        ------
-        """)
-    )
-    Console(stderr=True).print(content)
-    yield
+            ------
+            """)
+        )
+        Console(stderr=True).print(content)
+
+    # Global task group for background tasks - keeps running until server shuts down
+    async with create_task_group() as tg:
+        set_monitor_task_group(tg)
+        yield
 
 
 class _SimpleTokenAuthProvider(AuthProvider):
@@ -75,5 +85,7 @@ def make_mcp(token: str | None = None) -> FastMCP:
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
     if token:
         params.update(lifespan=partial(_lifespan, token=token), auth=_SimpleTokenAuthProvider(token=token))
+    else:
+        params.update(lifespan=_lifespan)
     mcp = FastMCP(**params)
     return mcp
