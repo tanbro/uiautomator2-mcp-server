@@ -5,7 +5,7 @@ from base64 import b64encode
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from io import BytesIO
-from typing import Any, Literal
+from typing import Any
 
 import uiautomator2 as u2
 from adbutils import adb
@@ -30,8 +30,6 @@ __all__ = (
     "info",
 )
 
-
-StdoutType = Literal["stdout", "stderr"]
 
 _devices: dict[str, tuple[Lock, u2.Device]] = {}
 _global_device_connection_lock = Lock()
@@ -86,14 +84,15 @@ async def init(serial: str = ""):
     # Capture stdio prevent polluting the output
     ctx = get_context()
 
-    async def receive(name: StdoutType, stream: AnyByteReceiveStream):
+    async def receive(name: str, stream: AnyByteReceiveStream):
         async for line in TextReceiveStream(stream):
-            if name == "stderr":
-                logger.warning(line)
-                await ctx.error(line)
-            else:
-                logger.debug(line)
-                await ctx.info(line)
+            match name:
+                case "stdout":
+                    await ctx.info(line)
+                case "stderr":
+                    await ctx.error(line)
+                case _:
+                    raise ValueError(f"Unknown stream name: {name}")
 
     async with await open_process(command) as process:
         if process.stdout is None:
