@@ -9,6 +9,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+# Initialize mcp at module import time, before any test modules are imported
+# This ensures @mcp.tool() decorators in tool modules work during test collection
+from u2mcp.mcp import make_mcp
+
+make_mcp()
+
 
 @pytest.fixture
 def mock_u2_device() -> MagicMock:
