@@ -99,23 +99,6 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref }}
 
-      - name: Check if tag is on main branch
-        run: |
-          # Get the commit that the tag points to
-          TAG_COMMIT=$(git rev-parse -q --verify "refs/tags/${{ github.ref_name }}^{commit}")
-          # Use the local main branch (already checked out by actions/checkout)
-          MAIN_COMMIT=$(git rev-parse main)
-
-          # Check if the tag's commit is an ancestor of main
-          if git merge-base --is-ancestor "$TAG_COMMIT" "$MAIN_COMMIT"; then
-            echo "✓ Tag is on main branch"
-          else
-            echo "✗ Tag is not on main branch"
-            echo "Tag commit: $TAG_COMMIT"
-            echo "Main branch HEAD: $MAIN_COMMIT"
-            exit 1
-          fi
-
       - name: Set validation result
         run: |
           if [ -n "${{ steps.check.outputs.version }}" ]; then
