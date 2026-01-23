@@ -5,7 +5,11 @@ description = "uiautomator2 mcp server"
 readme = "README.md"
 authors = [{ name = "tanbro", email = "tanbro@163.com" }]
 requires-python = ">=3.11"
-dependencies = ["fastmcp>=2.11.0,<3.0", "uiautomator2>=3.5,<4.0"]
+dependencies = [
+  "fastmcp>=2.11.0,<3.0",
+  "typing_extensions>=4.12.0; python_version < '3.12'",
+  "uiautomator2>=3.5,<4.0",
+]
 license = "GPL-3.0-or-later"
 keywords = ["uiautomator2", "mcp", "fastmcp", "adb", "android", "adbutils"]
 classifiers = [
@@ -42,9 +46,6 @@ issues = "https://github.com/tanbro/uiautomator2-mcp-server/issues"
 changelog = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/CHANGELOG.md"
 
 [dependency-groups]
-dev = [
-  { include-group = "type" },
-  { include-group = "test" },
-]
+dev = [{ include-group = "type" }, { include-group = "test" }]
 type = ["mypy"]
 test = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-mock"]

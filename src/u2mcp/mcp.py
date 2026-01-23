@@ -11,10 +11,16 @@ Before performing operations on a device, you need to initialize it using the in
 All operations require a device serial number to identify the target device.
 """
 
+import sys
 from contextlib import asynccontextmanager
 from functools import partial
 from textwrap import dedent
-from typing import Any, override
+from typing import Any
+
+if sys.version_info >= (3, 12):  # qa: noqa
+    from typing import override
+else:  # qa: noqa
+    from typing_extensions import override
 
 from fastmcp import FastMCP
 from fastmcp.server.auth import AccessToken, AuthProvider
