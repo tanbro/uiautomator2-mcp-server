@@ -129,7 +129,7 @@ jobs:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.validate-tag.outputs.version }}
 
       - name: Store the distribution packages
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v6
         with:
           name: python-package-distributions
           path: dist/
