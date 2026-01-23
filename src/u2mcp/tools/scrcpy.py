@@ -16,7 +16,7 @@ __all__ = ("start_scrcpy", "stop_scrcpy")
 _background_processes: dict[int, Process] = {}
 
 
-@mcp.tool("scrcpy")
+@mcp.tool("start_scrcpy")
 async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     """Startup scrcpy in background and returns process id.
 
@@ -34,7 +34,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
 
     logger = get_logger(f"{__name__}.start_scrcpy")
 
-    scrcpy_path = os.environ.get("SCRCPY", "scrcpy")
+    scrcpy_path = os.environ.get("SCRCPY", "scrcpy.exe" if os.name == "nt" else "scrcpy")
     command = [scrcpy_path]
     if serial := serial.strip():
         command.extend(["--serial", serial])
