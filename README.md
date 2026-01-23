@@ -5,7 +5,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
 [![codecov](https://codecov.io/gh/tanbro/uiautomator2-mcp-server/graph/badge.svg?token=OpQb2Mk6PP)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
 
-A MCP (Model Context Protocol) server that provides tools for controlling and interacting with Android devices using uiautomator2. This server allows you to perform various operations on Android devices such as connecting to devices, taking screenshots, getting device information, accessing UI hierarchy, tap on screens, and more.
+A [MCP][] (Model Context Protocol) server that provides tools for controlling and interacting with Android devices using [uiautomator2](https://github.com/openatx/uiautomator2). This server allows you to perform various operations on Android devices such as connecting to devices, taking screenshots, getting device information, accessing UI hierarchy, tap on screens, and more.
 
 ## Features
 
@@ -44,9 +44,35 @@ u2mcp --host 0.0.0.0 --port 8000 --no-token http
 u2mcp stdio
 ```
 
+Or run the tool directly without an explicit installation by modern Python package manage tools:
+
+- [pipx][]
+
+    ```bash
+    pipx run uiautomator2-mcp-server --help
+    ```
+
+    and of cause you can also install it explicitly, which is the suggested way of [pipx][]:
+
+    ```bash
+    pipx install uiautomator2-mcp-server
+    ```
+
+- [uv][]
+
+    ```bash
+    uvx uiautomator2-mcp-server --help
+    ```
+
+    and of cause you can also install it as a user-global “tool” (See <https://docs.astral.sh/uv/guides/tools/>):
+
+    ```bash
+    uv tool install uiautomator2-mcp-server
+    ```
+
 ### Using the Tools
 
-Connect it to any tool that supports MCP protocol.
+Connect it with any software that supports [MCP][] protocol.
 
 ## Available Tools
 
@@ -88,3 +114,7 @@ Connect it to any tool that supports MCP protocol.
 ## License
 
 This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
+
+[mcp]: https://modelcontextprotocol.io/ "MCP (Model Context Protocol) is an open-source standard for connecting AI applications to external systems."
+[pipx]: https://pipx.pypa.io/ "pipx — Install and Run Python Applications in Isolated Environments"
+[uv]: https://docs.astral.sh/uv/ "An extremely fast Python package and project manager"
