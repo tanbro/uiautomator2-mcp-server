@@ -1,6 +1,9 @@
 exclude .*
 exclude coverage.*
+exclude pytest.ini
+exclude *.lock
 
 prune .*
 prune docs
+prune htmlcov
 prune tests

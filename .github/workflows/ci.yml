@@ -2,11 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     tags:
-      - '*'
+      - "*"
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
@@ -17,27 +17,26 @@ jobs:
     name: Ruff (Format + Lint)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
 
-      - name: Run ruff format check
-        run: uvx ruff format --check .
-
       - name: Run ruff check
-        run: uvx ruff check .
+        run: |
+          uvx ruff format --check .
+          uvx ruff check .
 
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           enable-cache: true
@@ -57,16 +56,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [ruff, type-check]
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           enable-cache: true
@@ -75,18 +74,17 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: uv sync --group test
-
-      - name: Run tests with coverage
-        run: uv run pytest --cov=src/u2mcp --cov-report=term-missing --cov-report=xml
+      - name: Run tests
+        run: |
+          uv sync --group test
+          uv run pytest --cov=src/u2mcp --cov-branch --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
-          file: ./coverage.xml
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+          slug: tanbro/uiautomator2-mcp-server
 
   # Deploy jobs - only run on valid version tags on main branch
   validate-tag:
@@ -97,25 +95,17 @@ jobs:
       is-valid: ${{ steps.check.outputs.is-valid }}
       version: ${{ steps.check.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Check tag format (PEP 440)
         id: check
         run: |
-          TAG="${{ github.ref_name }}"
-          # PEP 440 version pattern (simplified)
-          # Matches: 1.0.0, 2.1.3a1, 3.0.0rc2, 1.0.0.dev1, 1.0.0.post1, etc.
-          if echo "$TAG" | grep -qE '^[0-9]+(\.[0-9]+)*((a|alpha|b|beta|rc|c|dev|post)[0-9]+)?$'; then
-            echo "is-valid=true" >> $GITHUB_OUTPUT
-            echo "version=$TAG" >> $GITHUB_OUTPUT
-            echo "✓ Tag $TAG matches PEP 440 version format"
-          else
-            echo "is-valid=false" >> $GITHUB_OUTPUT
-            echo "✗ Tag $TAG does not match PEP 440 version format"
-            exit 1
-          fi
+          python3 -m pip install --disable-pip-version-check packaging
+          .github/scripts/validate_version.py
+        env:
+          GITHUB_REF: ${{ github.ref }}
 
       - name: Check if tag is on main branch
         run: |
@@ -134,6 +124,15 @@ jobs:
             exit 1
           fi
 
+      - name: Set validation result
+        run: |
+          if [ -n "${{ steps.check.outputs.version }}" ]; then
+            echo "is-valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "is-valid=false" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
   build:
     name: Build Distribution
     runs-on: ubuntu-latest
@@ -141,12 +140,10 @@ jobs:
     if: needs.validate-tag.outputs.is-valid == 'true'
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # Fetch all history for setuptools-scm
+      - uses: actions/checkout@v6
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
           enable-cache: true
@@ -157,6 +154,8 @@ jobs:
 
       - name: Build package
         run: uv build
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.validate-tag.outputs.version }}
 
       - name: Store the distribution packages
         uses: actions/upload-artifact@v4
