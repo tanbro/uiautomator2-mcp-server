@@ -15,7 +15,136 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 ## Installation
 
-### Claude Desktop (Recommended)
+### Standalone Installation
+
+Install the server globally on your system:
+
+```bash
+# Using uv (recommended)
+uv tool install uiautomator2-mcp-server
+
+# Or using pipx
+pipx install uiautomator2-mcp-server
+
+# Or using pip
+pip install uiautomator2-mcp-server
+```
+
+### Running Modes
+
+The MCP server can run in two modes:
+
+#### STDIO Mode (for local MCP clients)
+
+```bash
+u2mcp stdio
+```
+
+This mode communicates via standard input/output and is typically used by MCP clients that spawn the server process directly.
+
+#### HTTP Mode (for remote/network access)
+
+```bash
+# Basic HTTP server
+u2mcp --host 0.0.0.0 --port 8000 --no-token http
+
+# With authentication token
+u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
+```
+
+The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
+
+## Testing and Debugging
+
+### Using MCP Inspector
+
+[MCP Inspector](https://github.com/modelcontextprotocol/inspector) is a command-line tool for testing and debugging MCP servers without requiring an AI client.
+
+```bash
+# Install MCP Inspector
+npm install -g @modelcontextprotocol/inspector
+
+# Inspect the server in STDIO mode
+npx @modelcontextprotocol/inspector u2mcp stdio
+
+# Or inspect the server in HTTP mode
+# First start the server: u2mcp --host 0.0.0.0 --port 8000 http
+# Then run inspector with the URL
+npx @modelcontextprotocol/inspector http://localhost:8000/mcp
+```
+
+The inspector will display:
+- Available tools and their parameters
+- Server resources and prompts
+- Real-time tool execution results
+- Request/response logs
+
+### Using Postman or cURL
+
+You can test the HTTP endpoint using any HTTP client like Postman or cURL.
+
+#### Using cURL
+
+```bash
+# 1. Start the server first
+u2mcp --host 0.0.0.0 --port 8000 http
+
+# 2. In another terminal, send MCP requests
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  }'
+
+# Call a tool (e.g., list devices)
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 2,
+    "method": "tools/call",
+    "params": {
+      "name": "device_list",
+      "arguments": {}
+    }
+  }'
+```
+
+#### Using Postman
+
+1. Start the server: `u2mcp --host 0.0.0.0 --port 8000 http`
+2. Create a new POST request to `http://localhost:8000/mcp`
+3. Set headers:
+   - `Content-Type: application/json`
+4. Send JSON-RPC 2.0 requests in the body:
+
+Example request body for listing tools:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}
+```
+
+Example request body for calling a tool:
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "device_list",
+    "arguments": {}
+  }
+}
+```
+
+## MCP Client Configuration
+
+### Claude Desktop
 
 Add to your Claude Desktop config file:
 
@@ -33,20 +162,7 @@ Add to your Claude Desktop config file:
 }
 ```
 
-Alternatively, install globally first:
-
-```bash
-# Using uv (recommended)
-uv tool install uiautomator2-mcp-server
-
-# Or using pipx
-pipx install uiautomator2-mcp-server
-
-# Or using pip
-pip install uiautomator2-mcp-server
-```
-
-Then use `u2mcp` as the command:
+If you installed the package globally, you can also use:
 
 ```json
 {
@@ -59,19 +175,9 @@ Then use `u2mcp` as the command:
 }
 ```
 
-### HTTP Mode (for remote/network access)
+### Other MCP Clients
 
-```bash
-u2mcp --host 0.0.0.0 --port 8000 http
-```
-
-With authentication token:
-
-```bash
-u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
-```
-
-Then configure your MCP client to connect to `http://localhost:8000/mcp`.
+The server follows the [Model Context Protocol](https://modelcontextprotocol.io/) specification and can be used with any MCP-compatible client. Refer to your client's documentation for configuration details.
 
 ## Quick Start
 

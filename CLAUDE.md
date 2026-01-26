@@ -38,11 +38,18 @@ tests/
 ```bash
 # Install dependencies (uses uv lock file)
 uv sync --dev
+```
 
-# Activate virtual environment
+Activate virtual environment
+
+```bash
 source .venv/bin/activate  # Linux/macOS
-# or
-.venv\Scripts\activate     # Windows
+```
+
+or Windows:
+
+```powershell
+.venv\Scripts\activate
 ```
 
 ## Running Tests
