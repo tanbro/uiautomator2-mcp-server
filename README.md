@@ -2,6 +2,8 @@
 
 [![PyPI](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
+[![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
+[![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
 An [MCP](https://modelcontextprotocol.io/) server that provides tools for controlling Android devices using [uiautomator2](https://github.com/openatx/uiautomator2).
 
@@ -9,7 +11,7 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 ## Prerequisites
 
-- Python 3.11+
+- [Python][] 3.11+
 - `adb` in your PATH (install via [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools))
 - Android device with **USB debugging enabled**
 
@@ -17,7 +19,7 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 ### Standalone Installation
 
-Install the server globally on your system:
+Install the server globally on your system by [pip][], [uv][](recommended), or [pipx][]:
 
 ```bash
 # Using uv (recommended)
@@ -144,6 +146,8 @@ Example request body for calling a tool:
 
 ## MCP Client Configuration
 
+This MCP server can be used with any MCP-compatible client. Below are configuration instructions for popular clients.
+
 ### Claude Desktop
 
 Add to your Claude Desktop config file:
@@ -175,9 +179,147 @@ If you installed the package globally, you can also use:
 }
 ```
 
+### Cursor
+
+Cursor is an AI-powered code editor with native MCP support.
+
+1. Open Cursor Settings (Cmd/Ctrl + ,)
+2. Navigate to **MCP Servers**
+3. Add a new server:
+
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "u2mcp",
+      "args": ["stdio"]
+    }
+  }
+}
+```
+
+### Cherry Studio
+
+[Cherry Studio](https://cherry-ai.com/) is a cross-platform AI desktop client with full MCP support. Ideal for Android device automation tasks.
+
+1. Download and install [Cherry Studio](https://github.com/CherryHQ/cherry-studio)
+2. Open Settings and navigate to **MCP Servers**
+3. Click **Add Server** and configure:
+
+**Option A: Using uvx (recommended)**
+```
+Command: uvx
+Arguments: uiautomator2-mcp-server stdio
+```
+
+**Option B: Using installed u2mcp command**
+```
+Command: u2mcp
+Arguments: stdio
+```
+
+**Option C: HTTP Mode**
+First start the server:
+```bash
+u2mcp --host 0.0.0.0 --port 8000 --no-token http
+```
+
+Then in Cherry Studio, select HTTP mode and enter:
+```
+URL: http://localhost:8000/mcp
+```
+
+For detailed MCP configuration in Cherry Studio, see the [official documentation](https://docs.cherry-ai.com/docs/en-us/advanced-basic/mcp/config).
+
+### ChatMCP
+
+[ChatMCP](https://github.com/daodao97/chatmcp) is an open-source AI chat client implementing the MCP protocol. Supports multiple LLM providers (OpenAI, Claude, Ollama).
+
+1. Download and install [ChatMCP](https://github.com/daodao97/chatmcp)
+2. Open Settings and navigate to **MCP Servers**
+3. Add a new server:
+
+**Using uvx (recommended)**
+```
+Command: uvx
+Arguments: uiautomator2-mcp-server stdio
+```
+
+**Using installed u2mcp command**
+```
+Command: u2mcp
+Arguments: stdio
+```
+
+**HTTP Mode**
+First start the server:
+```bash
+u2mcp --host 0.0.0.0 --port 8000 --no-token http
+```
+
+Then in ChatMCP, select HTTP mode and enter:
+```
+URL: http://localhost:8000/mcp
+```
+
+### Cline
+
+Cline is an AI coding assistant extension that supports MCP.
+
+1. Open Cline settings in your IDE
+2. Navigate to **MCP Servers** section
+3. Add the server configuration:
+
+```json
+{
+  "android": {
+    "command": "u2mcp",
+      "args": ["stdio"]
+  }
+}
+```
+
+### Continue
+
+Continue is an AI pair programmer extension for VS Code and JetBrains.
+
+1. Install the [Continue extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
+2. Open Continue settings
+3. Add to your MCP servers configuration:
+
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "u2mcp",
+      "args": ["stdio"]
+    }
+  }
+}
+```
+
+### HTTP Mode Configuration
+
+For clients that support HTTP connections (or for remote access), start the server first:
+
+```bash
+u2mcp --host 0.0.0.0 --port 8000 --no-token http
+```
+
+Then configure your client to connect to `http://localhost:8000/mcp`.
+
+**Note:** Check your client's documentation for HTTP MCP server configuration, as the setup varies by client.
+
 ### Other MCP Clients
 
-The server follows the [Model Context Protocol](https://modelcontextprotocol.io/) specification and can be used with any MCP-compatible client. Refer to your client's documentation for configuration details.
+The server follows the [Model Context Protocol](https://modelcontextprotocol.io/) specification and can be used with any MCP-compatible client, including:
+
+- **Windsurf** - Development environment with MCP support
+- **Zed** - Code editor with MCP capabilities
+- **LibreChat** - Chat interface supporting MCP
+- **Chainlit** - Platform for building AI applications
+
+Refer to your client's documentation for specific configuration details.
 
 ## Quick Start
 
@@ -251,3 +393,10 @@ Claude: [Uses swipe to scroll down]
 ## License
 
 GPL-3.0
+
+------
+
+[python]: https://www.python.org/ "Python is a programming language that lets you work quickly and integrate systems more effectively."
+[pip]: https://pip.pypa.io/ "The most popular tool for installing Python packages, and the one included with modern versions of Python."
+[pipx]: https://pipx.pypa.io/ "pipx is a tool to install and run Python command-line applications without causing dependency conflicts with other packages installed on the system."
+[uv]: https://docs.astral.sh/uv/ "An extremely fast Python package and project manager"
