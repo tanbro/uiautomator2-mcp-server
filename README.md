@@ -1,120 +1,147 @@
 # uiautomator2-mcp-server
 
-[![GitHub Tag](https://img.shields.io/github/v/tag/tanbro/uiautomator2-mcp-server)](https://github.com/tanbro/uiautomator2-mcp-server)
+[![PyPI](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
-[![PyPI - Version](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
-[![codecov](https://codecov.io/gh/tanbro/uiautomator2-mcp-server/graph/badge.svg?token=OpQb2Mk6PP)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
 
-A [MCP][] (Model Context Protocol) server that provides tools for controlling and interacting with Android devices using [uiautomator2](https://github.com/openatx/uiautomator2). This server allows you to perform various operations on Android devices such as connecting to devices, taking screenshots, getting device information, accessing UI hierarchy, tap on screens, and more.
+An [MCP](https://modelcontextprotocol.io/) server that provides tools for controlling Android devices using [uiautomator2](https://github.com/openatx/uiautomator2).
 
-## Features
+> Use AI to automate your Android device: take screenshots, tap/swipe, manage apps, send text, and more.
 
-- **Device Management**: List connected devices, initialize devices, connect/disconnect from devices
-- **Screen Operations**: Take screenshots, get device window size, dump UI hierarchy
-- **Touch Actions**: Click, long click, double click at specific coordinates
-- **Gesture Controls**: Swipe, swipe through multiple points, drag operations
-- **System Controls**: Screen on/off, key presses
-- **App Management**: Install, uninstall, start, stop, clear, and manage Android applications
-- **Text Operations**: Send text input, clear text fields
+## Prerequisites
 
-## Requirements
-
-- Python >= 3.11
-- adb executable in your PATH
-- Android device connected in debug mode
+- Python 3.11+
+- `adb` in your PATH (install via [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools))
+- Android device with **USB debugging enabled**
 
 ## Installation
 
+### Claude Desktop (Recommended)
+
+Add to your Claude Desktop config file:
+
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "uvx",
+      "args": ["uiautomator2-mcp-server", "stdio"]
+    }
+  }
+}
+```
+
+Alternatively, install globally first:
+
 ```bash
-# Install the package
+# Using uv (recommended)
+uv tool install uiautomator2-mcp-server
+
+# Or using pipx
+pipx install uiautomator2-mcp-server
+
+# Or using pip
 pip install uiautomator2-mcp-server
 ```
 
-## Usage
+Then use `u2mcp` as the command:
 
-### Running the Server
-
-The server can be run in different transport modes:
-
-```bash
-# Run in streamable HTTP mode
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
-
-# Run in stdio mode
-u2mcp stdio
+```json
+{
+  "mcpServers": {
+    "android": {
+      "command": "u2mcp",
+      "args": ["stdio"]
+    }
+  }
+}
 ```
 
-Or run the tool directly without an explicit installation by modern Python package manage tools:
+### HTTP Mode (for remote/network access)
 
-- [pipx][]
+```bash
+u2mcp --host 0.0.0.0 --port 8000 http
+```
 
-    ```bash
-    pipx run uiautomator2-mcp-server --help
-    ```
+With authentication token:
 
-    and of cause you can also install it explicitly, which is the suggested way of [pipx][]:
+```bash
+u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
+```
 
-    ```bash
-    pipx install uiautomator2-mcp-server
-    ```
+Then configure your MCP client to connect to `http://localhost:8000/mcp`.
 
-- [uv][]
+## Quick Start
 
-    ```bash
-    uvx uiautomator2-mcp-server --help
-    ```
+1. **Connect your Android device** via USB with USB debugging enabled
+2. **Initialize the device** (required first time):
 
-    and of cause you can also install it as a user-global “tool” (See <https://docs.astral.sh/uv/guides/tools/>):
+   > "Initialize my Android device"
 
-    ```bash
-    uv tool install uiautomator2-mcp-server
-    ```
+3. **Start automating**:
 
-### Using the Tools
-
-Connect it with any software that supports [MCP][] protocol.
+   > "Take a screenshot"
+   > "Tap at coordinates 500, 1000"
+   > "Swipe up"
+   > "Open YouTube app"
 
 ## Available Tools
 
-### Device Management
-- `device_list`: Get list of connected devices
-- `init`: Install essential resources to device
-- `connect`, `disconnect`, `disconnect_all`: Manage device connections
-- `info`: Get device information
-- `window_size`: Get device window size
-- `screenshot`: Take device screenshot
-- `dump_hierarchy`: Get UI hierarchy of device
+### Device
+| Tool | Description |
+|------|-------------|
+| `device_list` | List connected devices |
+| `init` | Install required resources to device (**run first**) |
+| `info` | Get device information |
+| `screenshot` | Take screenshot |
+| `dump_hierarchy` | Get UI hierarchy XML |
 
-### Action Tools
-- `click`: Click at specific coordinates
-- `long_click`: Long click at specific coordinates
-- `double_click`: Double click at specific coordinates
-- `swipe`: Swipe from one point to another
-- `swipe_points`: Swipe through multiple points
-- `drag`: Drag from one point to another
-- `press_key`: Press device key
-- `send_text`: Send text to device
-- `clear_text`: Clear text input
-- `screen_on`/`screen_off`: Control screen state
+### Actions
+| Tool | Description |
+|------|-------------|
+| `click` | Tap at coordinates |
+| `long_click` | Long press at coordinates |
+| `double_click` | Double tap at coordinates |
+| `swipe` | Swipe from point A to B |
+| `swipe_points` | Swipe through multiple points |
+| `drag` | Drag from point A to B |
+| `press_key` | Press a key (home, back, etc.) |
+| `send_text` | Type text |
+| `clear_text` | Clear text field |
 
-### App Management
-- `app_install`: Install an app
-- `app_uninstall`: Uninstall an app
-- `app_uninstall_all`: Uninstall all apps
-- `app_start`: Start an app
-- `app_stop`: Stop an app
-- `app_stop_all`: Stop all apps
-- `app_clear`: Clear app data
-- `app_info`: Get app information
-- `app_current`: Get current app
-- `app_list`: List installed apps
-- `app_list_running`: List running apps
-- `app_auto_grant_permissions`: Auto grant permissions
+### Apps
+| Tool | Description |
+|------|-------------|
+| `app_start` | Launch an app |
+| `app_stop` | Stop an app |
+| `app_list` | List installed apps |
+| `app_current` | Get current foreground app |
+| `app_install` | Install APK |
+| `app_uninstall` | Uninstall app |
+| `app_info` | Get app info |
+| `app_clear` | Clear app data |
+
+## Example Usage
+
+```txt
+You: Take a screenshot
+Claude: [Uses screenshot tool, displays image]
+
+You: What apps are installed?
+Claude: [Lists installed apps using app_list]
+
+You: Open the YouTube app
+Claude: [Uses app_start with package name]
+
+You: Search for "cats"
+Claude: [Uses click to tap search bar, then send_text to type "cats"]
+
+You: Scroll down
+Claude: [Uses swipe to scroll down]
+```
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0 (GPL-3.0).
-
-[mcp]: https://modelcontextprotocol.io/ "MCP (Model Context Protocol) is an open-source standard for connecting AI applications to external systems."
-[pipx]: https://pipx.pypa.io/ "pipx — Install and Run Python Applications in Isolated Environments"
-[uv]: https://docs.astral.sh/uv/ "An extremely fast Python package and project manager"
+GPL-3.0
