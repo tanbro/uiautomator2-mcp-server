@@ -7,6 +7,7 @@ from typing import Annotated, Any, Literal
 
 import typer
 
+from .health import check_adb
 from .mcp import make_mcp
 
 
@@ -35,6 +36,7 @@ def run(
         str | None,
         typer.Option("--token", "-t", help="Explicit set token of streamable-http authentication"),
     ] = None,
+    skip_adb_check: Annotated[bool, typer.Option("--skip-adb-check", help="Skip ADB availability check at startup")] = False,
 ):
     """Run uiautomator2 mcp server"""
     logging.basicConfig(
@@ -48,10 +50,18 @@ def run(
     logging.getLogger("docket").setLevel(logging.WARNING)
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
-    run_kwargs: dict[str, Any] = {"json_response": json_response, "log_level": log_level}
+    # Check ADB availability
+    if not skip_adb_check:
+        from rich.console import Console
+
+        console = Console(stderr=True)
+        if not check_adb(console):
+            console.print("[yellow]Proceeding anyway. Use --skip-check to bypass this check.[/yellow]")
+
+    run_kwargs: dict[str, Any] = {"log_level": log_level}
 
     if transport == "http":
-        run_kwargs["transport"] = "streamable-http"
+        run_kwargs.update({"transport": "streamable-http", "json_response": json_response})
         if host:
             run_kwargs["host"] = host
         if port:
