@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## develop
+
+- 🆕 New:
+    - Added scrcpy start and stop tool functions
+
 ## 0.1.3
 
 > 📅 2026-01-23
