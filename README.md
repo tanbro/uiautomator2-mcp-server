@@ -15,11 +15,56 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 - `adb` in your PATH (install via [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools))
 - Android device with **USB debugging enabled**
 
+### Installing `uv` (recommended for MCP clients)
+
+Most MCP clients (like Claude Desktop) use `uvx` to run Python MCP servers. `uvx` is part of the [uv][] toolkit.
+
+> **Why `uvx`?** `uvx` can run Python packages directly from PyPI without manual installation - just use `uvx package-name` and it handles the rest. This makes it perfect for MCP client configurations.
+
+**macOS / Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+Or use `winget`:
+```powershell
+winget install --id=astral-sh.uv -e
+```
+
+Verify installation:
+```bash
+uv --version
+uvx --version
+```
+
+### Installing `pipx` (alternative)
+
+[pipx][] is another tool for installing and running Python CLI applications in isolated environments.
+
+> **`pipx` vs `uvx`:** Like `uvx`, `pipx` can also run packages directly with `pipx run package-name`. However, `uvx` is generally faster and is more commonly used in the MCP ecosystem.
+
+**macOS / Linux:**
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+
+**Windows:**
+```powershell
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
+
 ## Installation
 
 ### Standalone Installation
 
-Install the server globally on your system by [pip][], [uv][](recommended), or [pipx][]:
+Install the server globally on your system by [pip][], [uv][] (recommended), or [pipx][]:
 
 ```bash
 # Using uv (recommended)
@@ -81,11 +126,34 @@ The inspector will display:
 - Real-time tool execution results
 - Request/response logs
 
-### Using Postman or cURL
+### Using Postman
 
-You can test the HTTP endpoint using any HTTP client like Postman or cURL.
+[Postman](https://www.postman.com/) has native MCP support for testing and debugging MCP servers.
 
-#### Using cURL
+1. Open Postman and create a new **MCP Request**
+2. Enter the server connection details:
+
+**STDIO Mode:**
+```
+Command: u2mcp
+Arguments: stdio
+```
+
+**HTTP Mode:**
+```
+URL: http://localhost:8000/mcp
+```
+(First start the server: `u2mcp --host 0.0.0.0 --port 8000 http`)
+
+3. Click **Load Capabilities** to connect and discover available tools
+4. Use the **Tools**, **Resources**, and **Prompts** tabs to interact with the server
+5. Click **Run** to execute tool calls and view responses
+
+For more information, see the [Postman MCP documentation](https://learning.postman.com/docs/postman-ai/mcp-requests/overview/).
+
+### Using cURL
+
+You can also test the HTTP endpoint using cURL with JSON-RPC 2.0 requests:
 
 ```bash
 # 1. Start the server first
@@ -112,36 +180,6 @@ curl -X POST http://localhost:8000/mcp \
       "arguments": {}
     }
   }'
-```
-
-#### Using Postman
-
-1. Start the server: `u2mcp --host 0.0.0.0 --port 8000 http`
-2. Create a new POST request to `http://localhost:8000/mcp`
-3. Set headers:
-   - `Content-Type: application/json`
-4. Send JSON-RPC 2.0 requests in the body:
-
-Example request body for listing tools:
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/list"
-}
-```
-
-Example request body for calling a tool:
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "tools/call",
-  "params": {
-    "name": "device_list",
-    "arguments": {}
-  }
-}
 ```
 
 ## MCP Client Configuration

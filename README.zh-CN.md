@@ -15,6 +15,51 @@
 - `adb` 在你的 PATH 中（通过 [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) 安装）
 - Android 设备已开启 **USB 调试**
 
+### 安装 `uv`（推荐用于 MCP 客户端）
+
+大多数 MCP 客户端（如 Claude Desktop）使用 `uvx` 来运行 Python MCP 服务器。`uvx` 是 [uv][] 工具套件的一部分。
+
+> **为什么选择 `uvx`？** `uvx` 可以直接从 PyPI 运行 Python 包，无需手动安装——只需使用 `uvx package-name`，其余的它会自动处理。这使得它非常适合 MCP 客户端配置。
+
+**macOS / Linux:**
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+**Windows (PowerShell):**
+```powershell
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+或使用 `winget`:
+```powershell
+winget install --id=astral-sh.uv -e
+```
+
+验证安装：
+```bash
+uv --version
+uvx --version
+```
+
+### 安装 `pipx`（替代方案）
+
+[pipx][] 是另一个用于在隔离环境中安装和运行 Python CLI 应用程序的工具。
+
+> **`pipx` vs `uvx`：** 和 `uvx` 一样，`pipx` 也可以通过 `pipx run package-name` 直接运行包。不过 `uvx` 通常更快，在 MCP 生态系统中也更常用。
+
+**macOS / Linux:**
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+
+**Windows:**
+```powershell
+python -m pip install --user pipx
+python -m pipx ensurepath
+```
+
 ## 安装
 
 ### 独立安装
@@ -81,11 +126,34 @@ Inspector 将显示：
 - 实时工具执行结果
 - 请求/响应日志
 
-### 使用 Postman 或 cURL
+### 使用 Postman
 
-你可以使用任何 HTTP 客户端（如 Postman 或 cURL）测试 HTTP 端点。
+[Postman](https://www.postman.com/) 具有原生 MCP 支持，用于测试和调试 MCP 服务器。
 
-#### 使用 cURL
+1. 打开 Postman 并创建一个新的 **MCP Request**
+2. 输入服务器连接详情：
+
+**STDIO 模式：**
+```
+Command: u2mcp
+Arguments: stdio
+```
+
+**HTTP 模式：**
+```
+URL: http://localhost:8000/mcp
+```
+（首先启动服务器：`u2mcp --host 0.0.0.0 --port 8000 http`）
+
+3. 点击 **Load Capabilities** 连接并发现可用工具
+4. 使用 **Tools**、**Resources** 和 **Prompts** 标签与服务器交互
+5. 点击 **Run** 执行工具调用并查看响应
+
+有关更多信息，请参阅 [Postman MCP 文档](https://learning.postman.com/docs/postman-ai/mcp-requests/overview/)。
+
+### 使用 cURL
+
+你也可以使用 cURL 通过 JSON-RPC 2.0 请求测试 HTTP 端点：
 
 ```bash
 # 1. 首先启动服务器
@@ -112,36 +180,6 @@ curl -X POST http://localhost:8000/mcp \
       "arguments": {}
     }
   }'
-```
-
-#### 使用 Postman
-
-1. 启动服务器：`u2mcp --host 0.0.0.0 --port 8000 http`
-2. 创建一个新的 POST 请求到 `http://localhost:8000/mcp`
-3. 设置请求头：
-   - `Content-Type: application/json`
-4. 在请求体中发送 JSON-RPC 2.0 请求：
-
-列出工具的请求体示例：
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "tools/list"
-}
-```
-
-调用工具的请求体示例：
-```json
-{
-  "jsonrpc": "2.0",
-  "id": 2,
-  "method": "tools/call",
-  "params": {
-    "name": "device_list",
-    "arguments": {}
-  }
-}
 ```
 
 ## MCP 客户端配置
