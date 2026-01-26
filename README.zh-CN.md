@@ -12,8 +12,64 @@
 ## 前置条件
 
 - [Python][] 3.11+
-- `adb` 在你的 PATH 中（通过 [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) 安装）
+- `adb` 在你的 PATH 中（通过 [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools) 安装)
 - Android 设备已开启 **USB 调试**
+
+------
+
+> **💡 工具选择建议：**
+>
+> - **MCP 客户端使用**（Claude Desktop、Cursor 等）：推荐安装 **[uv][]**，使用 `uvx` 直接运行 Python 包
+> - **独立运行/调试**：可以使用 **[uv][]**、**[pip][]** 或 **[pipx][]**
+>
+> 大多数情况下，安装 **uv** 即可满足所有需求。
+
+------
+
+> **💡 中国大陆用户加速：**
+>
+> 如果使用 `pip` 安装软件包的速度较慢，建议配置国内镜像源。
+>
+> **方法一：使用 pip config 命令（推荐）**
+>
+> ```bash
+> # 设置（操作系统用户级别的）全局镜像源
+> pip config set --user global.index-url https://mirrors.aliyun.com/pypi/simple/
+>
+> # 验证配置
+> pip config list
+> ```
+>
+> **方法二：配置文件**
+>
+> 创建或编辑配置文件：
+> - **Unix/macOS**: `~/.config/pip/pip.conf` 或 `~/.pip/pip.conf`（旧路径，仍支持）
+> - **Windows**: `%APPDATA%\pip\pip.ini`
+>
+> ```ini
+> [global]
+> index-url = https://mirrors.aliyun.com/pypi/simple/
+> ```
+>
+> **方法三：环境变量**
+>
+> - **macOS/Linux** (添加到 `~/.bashrc`、`~/.zshrc` 等):
+> ```bash
+> export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+> ```
+>
+> - **Windows** (系统环境变量):
+> ```
+> PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+> ```
+>
+> 其他可用的镜像源：
+> - **腾讯云**：`https://mirrors.cloud.tencent.com/pypi/simple/`
+> - **华为云**：`https://mirrors.huaweicloud.com/repository/pypi/simple/`
+> - **清华大学**：`https://pypi.tuna.tsinghua.edu.cn/simple/`
+> - **中科大**：`https://pypi.mirrors.ustc.edu.cn/simple/`
+>
+> 此配置对 `pip` 和 `pipx` 都生效。
 
 ### 安装 `uv`（推荐用于 MCP 客户端）
 
@@ -42,6 +98,38 @@ uv --version
 uvx --version
 ```
 
+> **💡 中国大陆用户加速：**
+>
+> 安装完毕之后，如果 [uv][] 下载软件包的速度较慢，可以配置国内镜像源。
+>
+> **方法一：配置文件**
+>
+> 创建或编辑 `~/.config/uv/uv.toml`（macOS/Linux）或 `%APPDATA%\uv\uv.toml`（Windows）：
+>
+> ```toml
+> [[index]]
+> url = "https://mirrors.aliyun.com/pypi/simple/"
+> default = true
+> ```
+>
+> **方法二：环境变量**
+>
+> - **macOS/Linux** (添加到 `~/.bashrc`、`~/.zshrc` 等):
+> ```bash
+> export UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
+> ```
+>
+> - **Windows** (系统环境变量):
+> ```
+> UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
+> ```
+>
+> 其他可用的镜像源：
+> - **腾讯云**：`https://mirrors.cloud.tencent.com/pypi/simple/`
+> - **华为云**：`https://mirrors.huaweicloud.com/repository/pypi/simple/`
+> - **清华大学**：`https://pypi.tuna.tsinghua.edu.cn/simple/`
+> - **中科大**：`https://pypi.mirrors.ustc.edu.cn/simple/`
+
 ### 安装 `pipx`（替代方案）
 
 [pipx][] 是另一个用于在隔离环境中安装和运行 Python CLI 应用程序的工具。
@@ -59,6 +147,8 @@ python3 -m pipx ensurepath
 python -m pip install --user pipx
 python -m pipx ensurepath
 ```
+
+> **注意**：`pipx` 会使用上面配置的 pip 镜像源，无需额外配置。
 
 ## 安装
 
