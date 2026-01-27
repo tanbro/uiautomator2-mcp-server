@@ -5,15 +5,15 @@ from __future__ import annotations
 from anyio.abc import TaskGroup
 
 # Global task group for background tasks (set by lifespan)
-_monitor_task_group: TaskGroup
+_task_group: TaskGroup
 
 
-def get_monitor_task_group() -> TaskGroup:
-    """Get the global monitor task group."""
-    return _monitor_task_group
+def get_background_task_group() -> TaskGroup:
+    """Get the global background task group."""
+    return _task_group
 
 
-def set_monitor_task_group(tg: TaskGroup) -> None:
+def set_background_task_group(tg: TaskGroup) -> None:
     """Set the global monitor task group."""
-    global _monitor_task_group
-    _monitor_task_group = tg
+    global _task_group
+    _task_group = tg

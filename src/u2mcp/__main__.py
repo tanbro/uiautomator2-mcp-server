@@ -57,7 +57,7 @@ def run(
     """Run uiautomator2 mcp server"""
     logging.basicConfig(
         level=log_level.upper(),
-        format="[%(asctime)s] %(levelname)s %(name)s - %(message)s",
+        format="[%(asctime)s] %(levelname)8s %(name)s - %(message)s",
         handlers=[logging.StreamHandler()],
         force=True,
     )

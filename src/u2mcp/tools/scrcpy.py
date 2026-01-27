@@ -8,7 +8,7 @@ from anyio.streams.text import TextReceiveStream
 from fastmcp.server.dependencies import get_context
 from fastmcp.utilities.logging import get_logger
 
-from ..background import get_monitor_task_group
+from ..background import get_background_task_group
 from ..mcp import mcp
 
 __all__ = ("start_scrcpy", "stop_scrcpy")
@@ -79,7 +79,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
                 logger.info("scrcpy process was manually stopped, skipping cleanup (pid=%s)", pid)
 
     # Start monitoring immediately (before startup wait) to capture startup logs
-    tg = get_monitor_task_group()
+    tg = get_background_task_group()
     if tg is None:
         raise RuntimeError("Monitor task group not initialized - server not started?")
     tg.start_soon(monitor_streams)

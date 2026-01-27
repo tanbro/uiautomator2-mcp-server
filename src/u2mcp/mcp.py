@@ -31,7 +31,7 @@ from pydantic import AnyHttpUrl
 from rich.console import Console
 from rich.markdown import Markdown
 
-from .background import set_monitor_task_group
+from .background import set_background_task_group
 
 __all__ = ["mcp", "make_mcp"]
 
@@ -58,7 +58,7 @@ async def _lifespan(instance: FastMCP, token: str | None = None):
 
     # Global task group for background tasks - keeps running until server shuts down
     async with create_task_group() as tg:
-        set_monitor_task_group(tg)
+        set_background_task_group(tg)
         yield
 
 
