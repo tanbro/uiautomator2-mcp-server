@@ -69,7 +69,7 @@ async def init(serial: str = ""):
     """
     from uiautomator2.__main__ import cmd_init
 
-    args = argparse.Namespace(serial=serial)
+    args = argparse.Namespace(serial=serial, serial_optional=None)
     return await to_thread.run_sync(cmd_init, args)
 
 
