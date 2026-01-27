@@ -3,12 +3,24 @@ from __future__ import annotations
 import logging
 import re
 import secrets
+import sys
 from typing import Annotated, Any, Literal
 
 import typer
 
 from .health import check_adb
 from .mcp import make_mcp
+
+
+def print_version(value: bool):
+    """
+    Callback function to print the version and exit.
+    """
+    if value:
+        from ._version import __version__
+
+        typer.echo(f"uiautomator2-mcp-server {__version__} (Python {sys.version})")
+        raise typer.Exit()
 
 
 def run(
@@ -37,6 +49,10 @@ def run(
         typer.Option("--token", "-t", help="Explicit set token of streamable-http authentication"),
     ] = None,
     skip_adb_check: Annotated[bool, typer.Option("--skip-adb-check", help="Skip ADB availability check at startup")] = False,
+    version: Annotated[
+        bool,
+        typer.Option("--version", "-V", callback=print_version, is_eager=True, help="Print version information and exit"),
+    ] = False,
 ):
     """Run uiautomator2 mcp server"""
     logging.basicConfig(
