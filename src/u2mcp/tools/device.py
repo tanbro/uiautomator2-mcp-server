@@ -55,12 +55,6 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
         yield device
 
 
-@mcp.tool("device_list")
-async def device_list() -> list[dict[str, Any]]:
-    device_list = await to_thread.run_sync(adb.device_list)
-    return [d.info for d in device_list]
-
-
 @mcp.tool("init")
 async def init(serial: str = ""):
     """Install essential resources to device.
@@ -107,6 +101,23 @@ async def init(serial: str = ""):
         raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
     else:
         logger.info("uiautomator2 init command exited with code: %s", exit_code)
+
+
+@mcp.tool("shell_command")
+async def shell_command(serial: str, command: str, timeout: float = 60) -> str:
+    async with get_device(serial) as device:
+        return await to_thread.run_sync(lambda: device.adb_device.shell(command, timeout=timeout))
+
+
+@mcp.tool("device_list")
+async def device_list() -> list[dict[str, Any]]:
+    """List connected Android devices
+
+    Returns:
+        list[dict[str,Any]]: List of Adb device with state:device
+    """
+    device_list = await to_thread.run_sync(adb.device_list)
+    return [d.info for d in device_list]
 
 
 @mcp.tool("connect")
