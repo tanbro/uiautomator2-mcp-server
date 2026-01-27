@@ -35,6 +35,7 @@ build-backend = "setuptools.build_meta"
 version_file = "src/u2mcp/_version.py"
 
 [project.scripts]
+uiautomator2-mcp = "u2mcp.__main__:main"
 uiautomator2-mcp-server = "u2mcp.__main__:main"
 u2mcp = "u2mcp.__main__:main"
 
