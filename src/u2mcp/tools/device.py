@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import sys
+import argparse
 from base64 import b64encode
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -9,10 +9,7 @@ from typing import Any
 
 import uiautomator2 as u2
 from adbutils import adb
-from anyio import Lock, create_task_group, open_process, to_thread
-from anyio.abc import AnyByteReceiveStream
-from anyio.streams.text import TextReceiveStream
-from fastmcp.server.dependencies import get_context
+from anyio import Lock, to_thread
 from fastmcp.utilities.logging import get_logger
 from PIL.Image import Image
 
@@ -58,7 +55,7 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
 
 @mcp.tool("init")
 async def init(serial: str = ""):
-    """Install essential resources to device.
+    """Install essential resources (minicap, minitouch, uiautomator ...) to device.
 
     Important:
         This tool must be run on the Android device before running operation actions.
@@ -67,41 +64,33 @@ async def init(serial: str = ""):
         serial (str): Android device serialno to initialize. If empty string, all devices will be initialized.
 
     Returns:
-        None upon successful completion (exit code 0).
+        None upon successful completion
         Raises an exception if the subprocess returns a non-zero exit code.
     """
-    logger = get_logger(f"{__name__}.init")
-    command = [sys.executable, "-m", "uiautomator2", "init"]
-    if serial := serial.strip():
-        command.extend(["--serial", serial])
+    from uiautomator2.__main__ import cmd_init
 
-    logger.info("Running uiautomator2 init command: %s %s", sys.executable, command)
-    # Capture stdio prevent polluting the output
-    ctx = get_context()
+    args = argparse.Namespace(serial=serial)
+    return await to_thread.run_sync(cmd_init, args)
 
-    async def receive(name: str, stream: AnyByteReceiveStream):
-        async for line in TextReceiveStream(stream):
-            match name:
-                case "stdout":
-                    await ctx.info(line)
-                case "stderr":
-                    await ctx.error(line)
-                case _:
-                    raise ValueError(f"Unknown stream name: {name}")
 
-    async with await open_process(command) as process:
-        if process.stdout is None:
-            raise RuntimeError("stdout is None")
-        if process.stderr is None:
-            raise RuntimeError("stderr is None")
-        async with create_task_group() as tg:
-            for name, handle in zip(("stdout", "stderr"), (process.stdout, process.stderr)):
-                tg.start_soon(receive, name, handle)
+@mcp.tool("purge")
+async def purge(serial: str = ""):
+    """Purge all resources (minicap, minitouch, uiautomator ...) from device.
 
-    if exit_code := process.returncode:
-        raise RuntimeError(f"uiautomator2 init command exited with non-zero code: {exit_code}")
-    else:
-        logger.info("uiautomator2 init command exited with code: %s", exit_code)
+    Important:
+        This tool must be run on the Android device before running operation actions.
+
+    Args:
+        serial (str): Android device serialno to purge. If empty string, all devices will be purged.
+
+    Returns:
+        None upon successful completion
+        Raises an exception if the subprocess returns a non-zero exit code.
+    """
+    from uiautomator2.__main__ import cmd_purge
+
+    args = argparse.Namespace(serial=serial)
+    return await to_thread.run_sync(cmd_purge, args)
 
 
 @mcp.tool("shell_command")
@@ -123,10 +112,10 @@ async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple
 
 @mcp.tool("device_list")
 async def device_list() -> list[dict[str, Any]]:
-    """List connected Android devices
+    """List of Adb Device with state:device
 
     Returns:
-        list[dict[str,Any]]: List of Adb device with state:device
+        list[dict[str,Any]]: List Adb Device information
     """
     device_list = await to_thread.run_sync(adb.device_list)
     return [d.info for d in device_list]
