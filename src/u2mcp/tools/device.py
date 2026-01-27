@@ -20,6 +20,7 @@ from ..mcp import mcp
 
 __all__ = (
     "device_list",
+    "shell_command",
     "init",
     "connect",
     "disconnect",
@@ -104,9 +105,20 @@ async def init(serial: str = ""):
 
 
 @mcp.tool("shell_command")
-async def shell_command(serial: str, command: str, timeout: float = 60) -> str:
+async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple[int, str]:
+    """Run a shell command on an Android device
+
+    Args:
+        serial (str): Android device serialno
+        command (str): Shell command to run
+        timeout (float): Seconds to wait for command to complete.
+
+    Returns:
+        tuple[int,str]: Return code and output of the command
+    """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.adb_device.shell(command, timeout=timeout))
+        return_value = await to_thread.run_sync(device.adb_device.shell2, command, timeout)
+        return return_value.returncode, return_value.output
 
 
 @mcp.tool("device_list")
@@ -126,7 +138,6 @@ async def connect(serial: str = "") -> dict[str, Any]:
 
     Args:
         serial (str): Android device serial number. If empty string, connects to the unique device if only one device is connected.
-
 
     Returns:
         dict[str,Any]: Device information
