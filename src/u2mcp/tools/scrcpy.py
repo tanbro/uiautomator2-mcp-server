@@ -21,6 +21,8 @@ _background_processes: dict[int, Process] = {}
 async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     """Startup scrcpy in background and returns process id.
 
+    scrcpy is an application mirrors Android devices (video and audio) connected via USB or TCP/IP and allows control using the computer's keyboard and mouse.
+
     The scrcpy process will run in the background after successful startup.
     Use stop_scrcpy to terminate the process.
 
@@ -108,6 +110,8 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
 @mcp.tool("stop_scrcpy")
 async def stop_scrcpy(pid: int, timeout: float = 5.0) -> None:
     """Stop a running scrcpy process by pid.
+
+    scrcpy is an application mirrors Android devices (video and audio) connected via USB or TCP/IP and allows control using the computer's keyboard and mouse.
 
     Args:
         pid (int): Process id of the scrcpy process to stop
