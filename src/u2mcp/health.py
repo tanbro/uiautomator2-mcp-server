@@ -19,11 +19,12 @@ def check_adb(console: Console | None = None) -> bool:
         console = Console(stderr=True)
 
     try:
-        from adbutils import adb
+        import adbutils
 
         # Try to connect to ADB server
-        adb.device_list()
-        console.print("[green]✓ ADB is available[/green]")
+        adbutils.adb.server_version()
+        console.print(f"[green]✓ ADB server version: {adbutils.adb.server_version()}[/green]")
+        console.print(f"[green]✓ ADB device list:    {adbutils.adb.device_list()}[/green]")
         return True
 
     except Exception as e:
