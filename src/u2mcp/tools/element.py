@@ -5,7 +5,7 @@ from anyio import to_thread
 from ..mcp import mcp
 from .device import get_device
 
-__all__ = ["wait_activity"]
+__all__ = ("wait_activity",)
 
 
 @mcp.tool("wait_activity")

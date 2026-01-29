@@ -5,10 +5,7 @@ from anyio import to_thread
 from ..mcp import mcp
 from .device import get_device
 
-__all__ = (
-    "read_clipboard",
-    "write_clipboard",
-)
+__all__ = ("read_clipboard", "write_clipboard")
 
 
 @mcp.tool("read_clipboard")
