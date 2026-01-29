@@ -120,22 +120,21 @@ async def stop_scrcpy(pid: int, timeout: float = 5.0) -> None:
     Returns:
         None
     """
-
     logger = get_logger(f"{__name__}.stop_scrcpy")
 
     if pid not in _background_processes:
         raise ValueError(f"No scrcpy process found with pid: {pid}")
 
     process = _background_processes.pop(pid)
-    process.kill()
-
-    # Wait for process to exit with timeout
-    with move_on_after(timeout) as timeout_scope:
-        await process.wait()
-
-    # Always close the process when manually stopping
-    # The monitor task will detect we popped the process and skip cleanup
-    await process.aclose()
+    try:
+        process.kill()
+        # Wait for process to exit with timeout
+        with move_on_after(timeout) as timeout_scope:
+            await process.wait()
+    finally:
+        # Always close the process when manually stopping
+        # The monitor task will detect we popped the process and skip cleanup
+        await process.aclose()
 
     if timeout_scope.cancel_called:
         logger.warning("scrcpy process did not exit within %ss (pid=%s)", timeout, pid)

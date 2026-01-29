@@ -167,3 +167,14 @@ async def screen_off(serial: str):
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(device.screen_off)
+
+
+@mcp.tool("hide_keyboard")
+async def hide_keyboard(serial: str):
+    """Hide keyboard
+
+    Args:
+        serial (str): Android device serialno
+    """
+    async with get_device(serial) as device:
+        await to_thread.run_sync(device.hide_keyboard)
