@@ -17,6 +17,7 @@ __all__ = (
     "clear_text",
     "screen_on",
     "screen_off",
+    "hide_keyboard",
 )
 
 

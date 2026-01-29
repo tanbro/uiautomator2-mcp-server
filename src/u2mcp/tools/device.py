@@ -213,8 +213,8 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
 
     Returns:
         dict[str,Any]: Screenshot image JPEG data with the following keys:
-            - "image" (str): Base64 encoded image data in data URL format (data:image/jpeg;base64,...)
-            - "size" (tuple[int,int]): Image dimensions as (width, height)
+            - image (str): Base64 encoded image data in data URL format (data:image/jpeg;base64,...)
+            - size (tuple[int,int]): Image dimensions as (width, height)
     """
     display_id = int(display_id)
     async with get_device(serial) as device:
