@@ -19,11 +19,14 @@ src/u2mcp/
 ├── _version.py          # Auto-generated version info (SCM)
 ├── mcp.py               # MCP server factory and configuration
 ├── background.py        # Background task management
+├── health.py            # ADB availability check
 └── tools/
     ├── __init__.py      # Tools registry
     ├── device.py        # Device management tools
     ├── action.py        # Touch/gesture tools
     ├── app.py           # App management tools
+    ├── clipboard.py     # Clipboard read/write tools
+    ├── element.py       # Element/UI interaction tools
     ├── misc.py          # Miscellaneous tools
     └── scrcpy.py        # Screen mirroring (scrcpy integration)
 
@@ -106,6 +109,13 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `app_start`/`app_stop` - App lifecycle
 - `app_info`/`app_list` - App information
 
+### Clipboard Tools
+- `read_clipboard` - Read clipboard content from device
+- `write_clipboard` - Write text to device clipboard
+
+### Element Tools
+- `wait_activity` - Wait for a specific activity to appear (with timeout)
+
 ## Key Implementation Details
 
 ### Device Connection Pool
@@ -116,6 +126,12 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 ### Background Tasks
 - `background.py` manages background task group via `set_monitor_task_group()`
 - Used for scrcpy process monitoring
+
+### Health Check
+- `health.py` provides ADB availability check at server startup
+- Shows ADB server version and connected devices
+- Provides platform-specific installation instructions when ADB is not found
+- Can be bypassed with `--skip-adb-check` CLI flag
 
 ## Adding New Tools
 
@@ -146,6 +162,9 @@ u2mcp stdio
 # Run with auth token
 u2mcp --token MY_TOKEN http
 
+# Skip ADB availability check at startup
+u2mcp --skip-adb-check http
+
 # Lint
 ruff check src/
 
@@ -155,3 +174,40 @@ ruff format src/
 # Type check
 mypy src/
 ```
+
+## Troubleshooting
+
+### ADB Not Found
+If you get "ADB not found" errors at startup:
+
+1. **Install ADB (Android Platform Tools):**
+   - **macOS:** `brew install android-platform-tools`
+   - **Linux (Debian/Ubuntu):** `sudo apt install adb`
+   - **Linux (Fedora/RHEL):** `sudo yum install android-tools`
+   - **Windows:** Download from https://developer.android.com/tools/releases/platform-tools or use `winget install Google.PlatformTools`
+
+2. **Start ADB server:**
+   ```bash
+   adb start-server
+   ```
+
+3. **Set custom ADB path (if needed):**
+   - **Linux/macOS:** `export ADBUTILS_ADB_PATH=/path/to/adb`
+   - **Windows (CMD):** `set ADBUTILS_ADB_PATH=C:\path\to\adb.exe`
+   - **Windows (PowerShell):** `$env:ADBUTILS_ADB_PATH='C:\path\to\adb.exe'`
+
+4. **Bypass the check (not recommended):**
+   ```bash
+   u2mcp --skip-adb-check http
+   ```
+
+### Device Connection Issues
+- Ensure USB debugging is enabled on the device
+- Check device is authorized: `adb devices` (should show device, not "unauthorized")
+- Run the `init` tool before other operations
+- Try reconnecting: `adb kill-server && adb start-server`
+
+### Device Not Responding
+- Check if device screen is on
+- Verify uiautomator2 is installed: run `init` tool
+- Restart ADB: `adb kill-server && adb start-server`

@@ -1,6 +1,8 @@
 exclude .*
+exclude CLAUDE.md
 exclude coverage.*
 exclude pytest.ini
+exclude README.*.md
 exclude *.lock
 
 prune .*
