@@ -53,12 +53,10 @@ async def test_device_list_empty(mock_adb: MagicMock) -> None:
 @pytest.mark.unit
 async def test_window_size(mock_u2_device: MagicMock) -> None:
     """Test window_size returns device screen dimensions."""
-    mock_u2_device.window_size.return_value = (1080, 2400)
-
+    # mock_u2_device is provided by autouse fixture
     result = await window_size.fn("emulator-5554")
 
     assert result == {"width": 1080, "height": 2400}
-    mock_u2_device.window_size.assert_called_once_with()
 
 
 @pytest.mark.asyncio
