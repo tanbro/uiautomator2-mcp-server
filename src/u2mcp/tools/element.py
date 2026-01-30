@@ -21,6 +21,7 @@ __all__ = (
     "element_screenshot",
     "element_get_text",
     "element_set_text",
+    "element_bounds",
     "element_swipe",
     "element_scroll",
     "element_scroll_to",
@@ -79,7 +80,7 @@ async def element_wait_gone(serial: str, xpath: str, timeout: float | None = Non
 
 
 @mcp.tool("element_click")
-async def element_click(serial: str, xpath: str, timeout: float | None = None):
+async def element_click(serial: str, xpath: str, timeout: float | None = None) -> bool:
     """
     find element and perform click
 
@@ -87,9 +88,12 @@ async def element_click(serial: str, xpath: str, timeout: float | None = None):
         serial (str): Android device serialno
         xpath (str): element xpath
         timeout (Optional float): seconds wait element show up
+
+    Returns:
+        bool: True if click success else False
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).click(timeout))
+        return await to_thread.run_sync(lambda: device.xpath(xpath).click_exists(timeout))
 
 
 @mcp.tool("element_click_nowait")
@@ -195,6 +199,22 @@ async def element_set_text(serial: str, xpath: str, text: str) -> None:
     """
     async with get_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
+
+
+@mcp.tool("element_bounds")
+async def element_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]:
+    """
+    find an element and get bounds
+
+    Args:
+        serial (str): Android device serialno
+        xpath (str): element xpath
+
+    Returns:
+        tuple[int]: tuple of (left, top, right, bottom)
+    """
+    async with get_device(serial) as device:
+        return await to_thread.run_sync(lambda: device.xpath(xpath).bounds())
 
 
 @mcp.tool("element_swipe")
