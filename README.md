@@ -115,6 +115,87 @@ u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
 
 The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
 
+### Tool Filtering
+
+You can selectively expose tools using tag-based filtering. This reduces the number of tools available to the LLM, which can improve performance and reduce confusion.
+
+```bash
+# Only expose device management tools
+u2mcp --include-tags device:manage stdio
+
+# Only expose touch and gesture operations
+u2mcp --include-tags action:touch,action:gesture stdio
+
+# Exclude screen mirroring tools
+u2mcp --exclude-tags screen:mirror stdio
+
+# Only expose app lifecycle and element interaction tools
+u2mcp --include-tags app:lifecycle,element:interact stdio
+
+# Exclude shell command tools (for security)
+u2mcp --exclude-tags device:shell stdio
+
+# Only expose input-related tools
+u2mcp --include-tags input:text,input:keyboard stdio
+
+# Combine include and exclude
+u2mcp --include-tags device:info,action:touch --exclude-tags screen:capture stdio
+
+# Wildcard patterns - include all device tools
+u2mcp --include-tags "device:*" stdio
+
+# Wildcard patterns - include all touch and gesture tools
+u2mcp --include-tags "action:to*" stdio
+
+# Wildcard patterns - exclude all screen tools
+u2mcp --exclude-tags "screen:*" stdio
+
+# Wildcard patterns - exclude all mirror tools (screen:mirror, etc.)
+u2mcp --exclude-tags "*:mirror" stdio
+
+# List all available tags
+u2mcp --list-tags
+```
+
+**Wildcard Support:**
+
+The `--include-tags` and `--exclude-tags` options support wildcard patterns:
+- `*` matches any characters
+- `?` matches exactly one character
+- `device:*` matches all device:* tags
+- `*:mirror` matches all mirror tags (screen:mirror, etc.)
+- `action:to*` matches action:touch, action:tool (if exists)
+
+**Available Tags:**
+
+| Tag | Description |
+|-----|-------------|
+| `device:manage` | Device connection, initialization, and management |
+| `device:info` | Device information and status |
+| `device:capture` | Screenshots and UI hierarchy |
+| `device:shell` | Shell command execution |
+| `action:touch` | Click and tap actions |
+| `action:gesture` | Swipe and drag gestures |
+| `action:key` | Physical key presses |
+| `action:screen` | Screen control (on/off) |
+| `app:manage` | Install and uninstall apps |
+| `app:lifecycle` | Start and stop apps |
+| `app:info` | App information and listing |
+| `app:config` | App configuration (clear data, permissions) |
+| `element:wait` | Wait for elements/activities |
+| `element:interact` | Click and interact with elements |
+| `element:query` | Get element info (text, bounds) |
+| `element:modify` | Modify element (set text) |
+| `element:gesture` | Element-specific gestures (swipe, scroll) |
+| `element:capture` | Element screenshots |
+| `input:text` | Text input and clearing |
+| `input:keyboard` | Keyboard control |
+| `clipboard:read` | Read clipboard |
+| `clipboard:write` | Write clipboard |
+| `screen:mirror` | Screen mirroring (scrcpy) |
+| `screen:capture` | Screen screenshots |
+| `util:delay` | Delay/sleep utility |
+
 ## Testing and Debugging
 
 ### Using MCP Inspector
@@ -414,10 +495,14 @@ Refer to your client's documentation for specific configuration details.
 | `swipe_points` | Swipe through multiple points |
 | `drag` | Drag from point A to B |
 | `press_key` | Press a key (home, back, etc.) |
-| `send_text` | Type text (supports `clear` flag) |
-| `clear_text` | Clear text field |
 | `screen_on` | Turn screen on |
 | `screen_off` | Turn screen off |
+
+### Input
+| Tool | Description |
+|------|-------------|
+| `send_text` | Type text (supports `clear` flag) |
+| `clear_text` | Clear text field |
 | `hide_keyboard` | Hide virtual keyboard |
 
 ### Apps

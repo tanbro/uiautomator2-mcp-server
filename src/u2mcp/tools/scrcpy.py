@@ -17,7 +17,7 @@ __all__ = ("start_scrcpy", "stop_scrcpy")
 _background_processes: dict[int, Process] = {}
 
 
-@mcp.tool("start_scrcpy")
+@mcp.tool("start_scrcpy", tags={"screen:mirror"})
 async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     """Startup scrcpy in background and returns process id.
 
@@ -107,7 +107,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
     return pid
 
 
-@mcp.tool("stop_scrcpy")
+@mcp.tool("stop_scrcpy", tags={"screen:mirror"})
 async def stop_scrcpy(pid: int, timeout: float = 5.0) -> None:
     """Stop a running scrcpy process by pid.
 

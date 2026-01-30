@@ -80,12 +80,20 @@ class _SimpleTokenAuthProvider(AuthProvider):
         return None
 
 
-def make_mcp(token: str | None = None) -> FastMCP:
+def make_mcp(
+    token: str | None = None,
+    include_tags: set[str] | None = None,
+    exclude_tags: set[str] | None = None,
+) -> FastMCP:
     global mcp
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
     if token:
         params.update(lifespan=partial(_lifespan, token=token), auth=_SimpleTokenAuthProvider(token=token))
     else:
         params.update(lifespan=_lifespan)
+    if include_tags is not None:
+        params["include_tags"] = include_tags
+    if exclude_tags is not None:
+        params["exclude_tags"] = exclude_tags
     mcp = FastMCP(**params)
     return mcp

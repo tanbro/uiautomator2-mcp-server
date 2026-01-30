@@ -28,7 +28,7 @@ __all__ = (
 )
 
 
-@mcp.tool("activity_wait")
+@mcp.tool("activity_wait", tags={"element:wait"})
 async def activity_wait(serial: str, activity: str, timeout: float = 20.0) -> bool:
     """wait activity
 
@@ -45,7 +45,7 @@ async def activity_wait(serial: str, activity: str, timeout: float = 20.0) -> bo
         return await to_thread.run_sync(device.wait_activity, activity, timeout)  # type: ignore[arg-type]
 
 
-@mcp.tool("element_wait")
+@mcp.tool("element_wait", tags={"element:wait"})
 async def element_wait(serial: str, xpath: str, timeout: float | None = None) -> bool:
     """
     wait until element found
@@ -62,7 +62,7 @@ async def element_wait(serial: str, xpath: str, timeout: float | None = None) ->
         return await to_thread.run_sync(lambda: device.xpath(xpath).wait(timeout))
 
 
-@mcp.tool("element_wait_gone")
+@mcp.tool("element_wait_gone", tags={"element:wait"})
 async def element_wait_gone(serial: str, xpath: str, timeout: float | None = None) -> bool:
     """
     wait until element gone
@@ -79,7 +79,7 @@ async def element_wait_gone(serial: str, xpath: str, timeout: float | None = Non
         return await to_thread.run_sync(lambda: device.xpath(xpath).wait_gone(timeout))
 
 
-@mcp.tool("element_click")
+@mcp.tool("element_click", tags={"element:interact"})
 async def element_click(serial: str, xpath: str, timeout: float | None = None) -> bool:
     """
     find element and perform click
@@ -96,7 +96,7 @@ async def element_click(serial: str, xpath: str, timeout: float | None = None) -
         return await to_thread.run_sync(lambda: device.xpath(xpath).click_exists(timeout))
 
 
-@mcp.tool("element_click_nowait")
+@mcp.tool("element_click_nowait", tags={"element:interact"})
 async def element_click_nowait(serial: str, xpath: str):
     """
     find element and perform click
@@ -109,7 +109,7 @@ async def element_click_nowait(serial: str, xpath: str):
         return await to_thread.run_sync(lambda: device.xpath(xpath).click_nowait())
 
 
-@mcp.tool("element_click_until_gone")
+@mcp.tool("element_click_until_gone", tags={"element:interact"})
 async def element_click_until_gone(serial: str, xpath: str, maxretry=10, interval=1.0) -> bool:
     """
     find element and click until element is gone
@@ -127,7 +127,7 @@ async def element_click_until_gone(serial: str, xpath: str, maxretry=10, interva
         return await to_thread.run_sync(lambda: device.xpath(xpath).click_gone(maxretry, interval))
 
 
-@mcp.tool("element_long_click")
+@mcp.tool("element_long_click", tags={"element:interact"})
 async def element_long_click(serial: str, xpath: str):
     """
     find element and perform long click
@@ -140,7 +140,7 @@ async def element_long_click(serial: str, xpath: str):
         return await to_thread.run_sync(lambda: device.xpath(xpath).long_click())
 
 
-@mcp.tool("element_screenshot")
+@mcp.tool("element_screenshot", tags={"element:capture"})
 async def element_screenshot(serial: str, xpath: str) -> dict[str, Any]:
     """
     find element and take screenshot
@@ -170,7 +170,7 @@ async def element_screenshot(serial: str, xpath: str) -> dict[str, Any]:
         }
 
 
-@mcp.tool("element_get_text")
+@mcp.tool("element_get_text", tags={"element:query"})
 async def element_get_text(serial: str, xpath: str) -> str | None:
     """
     find and get element text
@@ -187,7 +187,7 @@ async def element_get_text(serial: str, xpath: str) -> str | None:
         return await to_thread.run_sync(lambda: device.xpath(xpath).get_text())
 
 
-@mcp.tool("element_set_text")
+@mcp.tool("element_set_text", tags={"element:modify"})
 async def element_set_text(serial: str, xpath: str, text: str) -> None:
     """
     find and set element text
@@ -201,7 +201,7 @@ async def element_set_text(serial: str, xpath: str, text: str) -> None:
         return await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
 
 
-@mcp.tool("element_bounds")
+@mcp.tool("element_bounds", tags={"element:query"})
 async def element_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]:
     """
     find an element and get bounds
@@ -217,7 +217,7 @@ async def element_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]:
         return await to_thread.run_sync(lambda: device.xpath(xpath).bounds())
 
 
-@mcp.tool("element_swipe")
+@mcp.tool("element_swipe", tags={"element:gesture"})
 async def element_swipe(serial: str, xpath: str, direction: str, scale: float = 0.6):
     """
     find an element and swipe
@@ -232,7 +232,7 @@ async def element_swipe(serial: str, xpath: str, direction: str, scale: float = 
         return await to_thread.run_sync(lambda: device.xpath(xpath).swipe(direction, scale))
 
 
-@mcp.tool("element_scroll")
+@mcp.tool("element_scroll", tags={"element:gesture"})
 async def element_scroll(serial: str, xpath: str, direction: str = "forward") -> bool:
     """
     find an element and scroll
@@ -249,7 +249,7 @@ async def element_scroll(serial: str, xpath: str, direction: str = "forward") ->
         return await to_thread.run_sync(lambda: device.xpath(xpath).swipe(direction))
 
 
-@mcp.tool("element_scroll_to")
+@mcp.tool("element_scroll_to", tags={"element:gesture"})
 async def element_scroll_to(serial: str, xpath: str, direction: str = "forward", max_swipes: int = 10):
     """
     find an element and scroll to

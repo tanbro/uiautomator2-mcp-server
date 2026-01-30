@@ -8,7 +8,7 @@ from .device import get_device
 __all__ = ("read_clipboard", "write_clipboard")
 
 
-@mcp.tool("read_clipboard")
+@mcp.tool("read_clipboard", tags={"clipboard:read"})
 async def read_clipboard(serial: str) -> str | None:
     """Read clipboard from device
 
@@ -23,7 +23,7 @@ async def read_clipboard(serial: str) -> str | None:
         return await to_thread.run_sync(lambda: device.clipboard)
 
 
-@mcp.tool("write_clipboard")
+@mcp.tool("write_clipboard", tags={"clipboard:write"})
 async def write_clipboard(serial: str, text: str):
     """Write clipboard to device
 

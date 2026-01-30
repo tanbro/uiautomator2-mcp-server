@@ -9,17 +9,19 @@ from unittest.mock import MagicMock
 import pytest
 
 from u2mcp.tools.action import (
-    clear_text,
     click,
     double_click,
     drag,
-    hide_keyboard,
     long_click,
     press_key,
     screen_off,
     screen_on,
-    send_text,
     swipe,
+)
+from u2mcp.tools.input import (
+    clear_text,
+    hide_keyboard,
+    send_text,
 )
 
 

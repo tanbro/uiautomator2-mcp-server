@@ -203,6 +203,87 @@ u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
 
 服务器将监听 `http://localhost:8000/mcp`（或你指定的主机/端口）。
 
+### 工具过滤
+
+你可以使用基于标签的过滤来选择性暴露工具。这会减少 LLM 可用的工具数量，从而提高性能并减少困惑。
+
+```bash
+# 只暴露设备管理工具
+u2mcp --include-tags device:manage stdio
+
+# 只暴露触摸和手势操作
+u2mcp --include-tags action:touch,action:gesture stdio
+
+# 排除屏幕镜像工具
+u2mcp --exclude-tags screen:mirror stdio
+
+# 只暴露应用生命周期和元素交互工具
+u2mcp --include-tags app:lifecycle,element:interact stdio
+
+# 排除 shell 命令工具（出于安全考虑）
+u2mcp --exclude-tags device:shell stdio
+
+# 只暴露输入相关工具
+u2mcp --include-tags input:text,input:keyboard stdio
+
+# 组合使用 include 和 exclude
+u2mcp --include-tags device:info,action:touch --exclude-tags screen:capture stdio
+
+# 通配符模式 - 包含所有设备工具
+u2mcp --include-tags "device:*" stdio
+
+# 通配符模式 - 包含所有触摸和手势工具
+u2mcp --include-tags "action:to*" stdio
+
+# 通配符模式 - 排除所有屏幕工具
+u2mcp --exclude-tags "screen:*" stdio
+
+# 通配符模式 - 排除所有镜像工具（screen:mirror 等）
+u2mcp --exclude-tags "*:mirror" stdio
+
+# 列出所有可用标签
+u2mcp --list-tags
+```
+
+**通配符支持：**
+
+`--include-tags` 和 `--exclude-tags` 选项支持通配符模式：
+- `*` 匹配任意字符
+- `?` 匹配恰好一个字符
+- `device:*` 匹配所有 device:* 标签
+- `*:mirror` 匹配所有镜像标签（screen:mirror 等）
+- `action:to*` 匹配 action:touch、action:tool（如果存在）
+
+**可用标签：**
+
+| 标签 | 描述 |
+|-----|------|
+| `device:manage` | 设备连接、初始化和管理 |
+| `device:info` | 设备信息和状态 |
+| `device:capture` | 截图和 UI 层级 |
+| `device:shell` | Shell 命令执行 |
+| `action:touch` | 点击和触摸操作 |
+| `action:gesture` | 滑动和拖动手势 |
+| `action:key` | 物理按键操作 |
+| `action:screen` | 屏幕控制（开/关） |
+| `app:manage` | 安装和卸载应用 |
+| `app:lifecycle` | 启动和停止应用 |
+| `app:info` | 应用信息和列表 |
+| `app:config` | 应用配置（清除数据、权限） |
+| `element:wait` | 等待元素/活动 |
+| `element:interact` | 点击和交互元素 |
+| `element:query` | 获取元素信息（文本、边界） |
+| `element:modify` | 修改元素（设置文本） |
+| `element:gesture` | 元素特定手势（滑动、滚动） |
+| `element:capture` | 元素截图 |
+| `input:text` | 文本输入和清除 |
+| `input:keyboard` | 键盘控制 |
+| `clipboard:read` | 读取剪贴板 |
+| `clipboard:write` | 写入剪贴板 |
+| `screen:mirror` | 屏幕镜像（scrcpy） |
+| `screen:capture` | 屏幕截图 |
+| `util:delay` | 延迟/休眠实用工具 |
+
 ## 测试和调试
 
 ### 使用 MCP Inspector

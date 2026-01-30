@@ -53,7 +53,7 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
         yield device
 
 
-@mcp.tool("init")
+@mcp.tool("init", tags={"device:manage"})
 async def init(serial: str = ""):
     """Install essential resources (minicap, minitouch, uiautomator ...) to device.
 
@@ -73,7 +73,7 @@ async def init(serial: str = ""):
     return await to_thread.run_sync(cmd_init, args)
 
 
-@mcp.tool("purge")
+@mcp.tool("purge", tags={"device:manage"})
 async def purge(serial: str = ""):
     """Purge all resources (minicap, minitouch, uiautomator ...) from device.
 
@@ -93,7 +93,7 @@ async def purge(serial: str = ""):
     return await to_thread.run_sync(cmd_purge, args)
 
 
-@mcp.tool("shell_command")
+@mcp.tool("shell_command", tags={"device:shell"})
 async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple[int, str]:
     """Run a shell command on an Android device
 
@@ -110,7 +110,7 @@ async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple
         return return_value.returncode, return_value.output
 
 
-@mcp.tool("device_list")
+@mcp.tool("device_list", tags={"device:info"})
 async def device_list() -> list[dict[str, Any]]:
     """List of Adb Device with state:device
 
@@ -121,7 +121,7 @@ async def device_list() -> list[dict[str, Any]]:
     return [d.info for d in device_list]
 
 
-@mcp.tool("connect")
+@mcp.tool("connect", tags={"device:manage"})
 async def connect(serial: str = "") -> dict[str, Any]:
     """Connect to an Android device
 
@@ -162,7 +162,7 @@ async def connect(serial: str = "") -> dict[str, Any]:
         return result
 
 
-@mcp.tool("disconnect")
+@mcp.tool("disconnect", tags={"device:manage"})
 async def disconnect(serial: str):
     """Disconnect from an Android device
 
@@ -178,14 +178,14 @@ async def disconnect(serial: str):
         del _devices[serial]
 
 
-@mcp.tool("disconnect_all")
+@mcp.tool("disconnect_all", tags={"device:manage"})
 async def disconnect_all():
     """Disconnect from all Android devices"""
     async with _global_device_connection_lock:
         _devices.clear()
 
 
-@mcp.tool("window_size")
+@mcp.tool("window_size", tags={"device:info"})
 async def window_size(serial: str) -> dict[str, int]:
     """Get window size of an Android device
 
@@ -202,7 +202,7 @@ async def window_size(serial: str) -> dict[str, int]:
         return {"width": width, "height": height}
 
 
-@mcp.tool("screenshot")
+@mcp.tool("screenshot", tags={"device:capture", "screen:capture"})
 async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
@@ -234,7 +234,7 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
     }
 
 
-@mcp.tool("dump_hierarchy")
+@mcp.tool("dump_hierarchy", tags={"device:capture"})
 async def dump_hierarchy(serial: str, compressed: bool = False, pretty: bool = False, max_depth: int = -1) -> str:
     """
     Dump window hierarchy
@@ -254,7 +254,7 @@ async def dump_hierarchy(serial: str, compressed: bool = False, pretty: bool = F
         )
 
 
-@mcp.tool("info")
+@mcp.tool("info", tags={"device:info"})
 async def info(serial: str) -> dict[str, Any]:
     """
     Get device info

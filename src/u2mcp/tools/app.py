@@ -23,7 +23,7 @@ __all__ = (
 )
 
 
-@mcp.tool("app_install")
+@mcp.tool("app_install", tags={"app:manage"})
 async def app_install(serial: str, data: str):
     """Install app
 
@@ -35,7 +35,7 @@ async def app_install(serial: str, data: str):
         await to_thread.run_sync(device.app_install, data)
 
 
-@mcp.tool("app_uninstall")
+@mcp.tool("app_uninstall", tags={"app:manage"})
 async def app_uninstall(serial: str, package_name: str) -> bool:
     """Uninstall an app
 
@@ -50,7 +50,7 @@ async def app_uninstall(serial: str, package_name: str) -> bool:
         return await to_thread.run_sync(device.app_uninstall, package_name)
 
 
-@mcp.tool("app_uninstall_all")
+@mcp.tool("app_uninstall_all", tags={"app:manage"})
 async def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> list[str]:
     """Uninstall all apps
 
@@ -65,7 +65,7 @@ async def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> l
         return await to_thread.run_sync(device.app_uninstall_all, excludes or [])
 
 
-@mcp.tool("app_start")
+@mcp.tool("app_start", tags={"app:lifecycle"})
 async def app_start(
     serial: str,
     package_name: str,
@@ -86,7 +86,7 @@ async def app_start(
         await to_thread.run_sync(device.app_start, package_name, activity, wait, stop)
 
 
-@mcp.tool("app_wait")
+@mcp.tool("app_wait", tags={"app:lifecycle"})
 async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=False):
     """Wait until app launched
 
@@ -101,7 +101,7 @@ async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=
             raise RuntimeError(f"Failed to wait App {package_name} to launch")
 
 
-@mcp.tool("app_stop")
+@mcp.tool("app_stop", tags={"app:lifecycle"})
 async def app_stop(serial: str, package_name: str):
     """Stop one application
 
@@ -113,7 +113,7 @@ async def app_stop(serial: str, package_name: str):
         await to_thread.run_sync(device.app_stop, package_name)
 
 
-@mcp.tool("app_stop_all")
+@mcp.tool("app_stop_all", tags={"app:lifecycle"})
 async def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[str]:
     """Stop all third party applications
 
@@ -127,7 +127,7 @@ async def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[s
         return await to_thread.run_sync(device.app_stop_all, excludes or [])
 
 
-@mcp.tool("app_clear")
+@mcp.tool("app_clear", tags={"app:config"})
 async def app_clear(serial: str, package_name: str):
     """Stop and clear app data: pm clear
 
@@ -142,7 +142,7 @@ async def app_clear(serial: str, package_name: str):
         await to_thread.run_sync(device.app_clear, package_name)
 
 
-@mcp.tool("app_info")
+@mcp.tool("app_info", tags={"app:info"})
 async def app_info(serial: str, package_name: str) -> dict[str, Any]:
     """
     Get app info
@@ -161,7 +161,7 @@ async def app_info(serial: str, package_name: str) -> dict[str, Any]:
         return await to_thread.run_sync(device.app_info, package_name)
 
 
-@mcp.tool("app_current")
+@mcp.tool("app_current", tags={"app:info"})
 async def app_current(serial: str) -> dict[str, Any]:
     """
     Get current app info
@@ -176,7 +176,7 @@ async def app_current(serial: str) -> dict[str, Any]:
         return await to_thread.run_sync(device.app_current)
 
 
-@mcp.tool("app_list")
+@mcp.tool("app_list", tags={"app:info"})
 async def app_list(serial: str, filter: str = "") -> list[str]:
     """
     List installed app package names
@@ -192,7 +192,7 @@ async def app_list(serial: str, filter: str = "") -> list[str]:
         return await to_thread.run_sync(device.app_list, filter.strip())
 
 
-@mcp.tool("app_list_running")
+@mcp.tool("app_list_running", tags={"app:info"})
 async def app_list_running(serial: str) -> list[str]:
     """
     List running apps
@@ -207,7 +207,7 @@ async def app_list_running(serial: str) -> list[str]:
         return await to_thread.run_sync(device.app_list_running)
 
 
-@mcp.tool("app_auto_grant_permissions")
+@mcp.tool("app_auto_grant_permissions", tags={"app:config"})
 async def app_auto_grant_permissions(serial: str, package_name: str):
     """auto grant permissions
 
