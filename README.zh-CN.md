@@ -156,18 +156,26 @@ python -m pipx ensurepath
 
 ## 安装
 
-### 独立安装
-
-使用 [pip][]、[uv][]（推荐）或 [pipx][] 在系统上全局安装服务器：
+**首选：免安装直接运行**，使用 `uvx`（推荐）或 `pipx run` 从 PyPI 直接运行包：
 
 ```bash
-# 使用 uv（推荐）
+# 使用 uvx（推荐）直接运行
+uvx uiautomator2-mcp-server stdio
+
+# 或使用 pipx 直接运行
+pipx run uiautomator2-mcp-server stdio
+```
+
+**如果需要全局安装命令或长期使用**，你也可以选择安装：
+
+```bash
+# 使用 uv（tool 方式安装）
 uv tool install uiautomator2-mcp-server
 
-# 或使用 pipx
+# 或使用 pipx 安装
 pipx install uiautomator2-mcp-server
 
-# 或使用 pip
+# 或使用 pip 安装
 pip install uiautomator2-mcp-server
 ```
 
@@ -472,11 +480,17 @@ u2mcp --host 0.0.0.0 --port 8000 --no-token http
 ### 设备
 | 工具 | 描述 |
 |------|-------------|
-| `device_list` | 列出连接的设备 |
+| `device_list` | 列出连接的 Adb 设备 |
 | `init` | 安装所需资源到设备（**首先运行**） |
-| `info` | 获取设备信息 |
-| `screenshot` | 截图 |
+| `purge` | 从设备移除已安装的 uiautomator 资源 |
+| `connect` | 连接到设备并返回设备信息 |
+| `disconnect` | 断开单个设备的连接 |
+| `disconnect_all` | 断开所有设备连接 |
+| `shell_command` | 在设备上运行 shell 命令，返回 `(exit_code, output)` |
+| `window_size` | 获取窗口尺寸（`width`, `height`） |
+| `screenshot` | 截图，返回 `width`、`height` 和 `image`（JPEG data URL） |
 | `dump_hierarchy` | 获取 UI 层次结构 XML |
+| `info` | 获取设备信息 |
 
 ### 操作
 | 工具 | 描述 |
@@ -488,20 +502,63 @@ u2mcp --host 0.0.0.0 --port 8000 --no-token http
 | `swipe_points` | 滑动经过多个点 |
 | `drag` | 从点 A 拖动到点 B |
 | `press_key` | 按键（主屏幕、返回等） |
-| `send_text` | 输入文本 |
+| `send_text` | 输入文本（支持 `clear` 参数） |
 | `clear_text` | 清除文本字段 |
+| `screen_on` | 打开屏幕 |
+| `screen_off` | 关闭屏幕 |
+| `hide_keyboard` | 隐藏软键盘 |
 
 ### 应用
 | 工具 | 描述 |
 |------|-------------|
-| `app_start` | 启动应用 |
-| `app_stop` | 停止应用 |
-| `app_list` | 列出已安装的应用 |
-| `app_current` | 获取当前前台应用 |
-| `app_install` | 安装 APK |
+| `app_install` | 安装 APK（文件路径或 URL） |
 | `app_uninstall` | 卸载应用 |
-| `app_info` | 获取应用信息 |
+| `app_uninstall_all` | 卸载多个应用（支持排除列表） |
+| `app_start` | 启动应用 |
+| `app_wait` | 等待应用启动（`timeout`, `front`） |
+| `app_stop` | 停止应用 |
+| `app_stop_all` | 停止所有第三方应用（支持排除） |
 | `app_clear` | 清除应用数据 |
+| `app_info` | 获取应用信息（`versionName`, `versionCode`） |
+| `app_current` | 获取当前前台应用 |
+| `app_list` | 列出已安装应用（支持 `filter`） |
+| `app_list_running` | 列出正在运行的应用 |
+| `app_auto_grant_permissions` | 自动授予应用运行时权限 |
+
+### 剪切板
+| 工具 | 描述 |
+|------|-------------|
+| `read_clipboard` | 读取设备剪切板文本 |
+| `write_clipboard` | 写入设备剪切板文本 |
+
+### 元素操作
+| 工具 | 描述 |
+|------|-------------|
+| `activity_wait` | 等待某个 Activity 出现 |
+| `element_wait` | 等待元素出现 |
+| `element_wait_gone` | 等待元素消失 |
+| `element_click` | 按 xpath 查找并点击（带等待） |
+| `element_click_nowait` | 立即点击元素（不等待） |
+| `element_click_until_gone` | 点击直到元素消失 |
+| `element_long_click` | 长按元素 |
+| `element_screenshot` | 截取元素图片（返回与 `screenshot` 相同格式） |
+| `element_get_text` | 获取元素文本 |
+| `element_set_text` | 设置元素文本 |
+| `element_bounds` | 获取元素边界（left, top, right, bottom） |
+| `element_swipe` | 在元素内部滑动 |
+| `element_scroll` | 滚动元素（`forward`/`backward`） |
+| `element_scroll_to` | 滚动到元素，最多指定次数 |
+
+### scrcpy
+| 工具 | 描述 |
+|------|-------------|
+| `start_scrcpy` | 后台启动 `scrcpy` 并返回进程 id（pid） |
+| `stop_scrcpy` | 通过 pid 停止运行的 `scrcpy` 进程 |
+
+> **说明：**
+> - `screenshot` 与 `element_screenshot` 会返回 JPEG data URL（`data:image/jpeg;base64,...`）以及 `width`/`height`。
+> - `shell_command` 返回 `(exit_code, output)`。
+> - `start_scrcpy` 会返回后台进程 id（pid），可用于后续调用 `stop_scrcpy`。
 
 ## 使用示例
 

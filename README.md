@@ -68,18 +68,26 @@ python -m pipx ensurepath
 
 ## Installation
 
-### Standalone Installation
-
-Install the server globally on your system by [pip][], [uv][] (recommended), or [pipx][]:
+**Preferred (no-install):** Run directly from PyPI without installing using `uvx` (recommended) or `pipx`:
 
 ```bash
-# Using uv (recommended)
+# Run directly with uvx (recommended)
+uvx uiautomator2-mcp-server stdio
+
+# Or run directly with pipx
+pipx run uiautomator2-mcp-server stdio
+```
+
+**Or install globally** (if you want the command available system-wide):
+
+```bash
+# Install using uv (tool-managed install)
 uv tool install uiautomator2-mcp-server
 
-# Or using pipx
+# Or install with pipx
 pipx install uiautomator2-mcp-server
 
-# Or using pip
+# Or install with pip
 pip install uiautomator2-mcp-server
 ```
 
@@ -384,11 +392,17 @@ Refer to your client's documentation for specific configuration details.
 ### Device
 | Tool | Description |
 |------|-------------|
-| `device_list` | List connected devices |
+| `device_list` | List connected Adb devices |
 | `init` | Install required resources to device (**run first**) |
-| `info` | Get device information |
-| `screenshot` | Take screenshot |
+| `purge` | Purge installed uiautomator resources from device |
+| `connect` | Connect to a device (returns device info) |
+| `disconnect` | Disconnect a device |
+| `disconnect_all` | Disconnect all devices |
+| `shell_command` | Run shell command on device (returns `(exit_code, output)`) |
+| `window_size` | Get device window size (`width`, `height`) |
+| `screenshot` | Take screenshot (returns `width`, `height`, `image` where `image` is a data URL `data:image/jpeg;base64,...`) |
 | `dump_hierarchy` | Get UI hierarchy XML |
+| `info` | Get device information |
 
 ### Actions
 | Tool | Description |
@@ -400,20 +414,63 @@ Refer to your client's documentation for specific configuration details.
 | `swipe_points` | Swipe through multiple points |
 | `drag` | Drag from point A to B |
 | `press_key` | Press a key (home, back, etc.) |
-| `send_text` | Type text |
+| `send_text` | Type text (supports `clear` flag) |
 | `clear_text` | Clear text field |
+| `screen_on` | Turn screen on |
+| `screen_off` | Turn screen off |
+| `hide_keyboard` | Hide virtual keyboard |
 
 ### Apps
 | Tool | Description |
 |------|-------------|
+| `app_install` | Install APK (file path or url) |
+| `app_uninstall` | Uninstall an app |
+| `app_uninstall_all` | Uninstall many apps (with excludes) |
 | `app_start` | Launch an app |
+| `app_wait` | Wait until app launched (`timeout`, `front`) |
 | `app_stop` | Stop an app |
-| `app_list` | List installed apps |
-| `app_current` | Get current foreground app |
-| `app_install` | Install APK |
-| `app_uninstall` | Uninstall app |
-| `app_info` | Get app info |
+| `app_stop_all` | Stop all third-party apps (with excludes) |
 | `app_clear` | Clear app data |
+| `app_info` | Get app info (`versionName`, `versionCode`) |
+| `app_current` | Get current foreground app |
+| `app_list` | List installed apps (supports `filter`) |
+| `app_list_running` | List running apps |
+| `app_auto_grant_permissions` | Auto grant runtime permissions to app |
+
+### Clipboard
+| Tool | Description |
+|------|-------------|
+| `read_clipboard` | Read clipboard text from device |
+| `write_clipboard` | Write text to device clipboard |
+
+### Element
+| Tool | Description |
+|------|-------------|
+| `activity_wait` | Wait until an activity appears |
+| `element_wait` | Wait until element found |
+| `element_wait_gone` | Wait until element gone |
+| `element_click` | Find element by xpath and click (waits) |
+| `element_click_nowait` | Click element without waiting |
+| `element_click_until_gone` | Click until element disappears |
+| `element_long_click` | Long click element |
+| `element_screenshot` | Take element screenshot (returns same image format as `screenshot`) |
+| `element_get_text` | Get element text |
+| `element_set_text` | Set element text |
+| `element_bounds` | Get element bounds (left, top, right, bottom) |
+| `element_swipe` | Swipe inside an element |
+| `element_scroll` | Scroll an element (`forward`/`backward`) |
+| `element_scroll_to` | Scroll to element with max swipes |
+
+### Scrcpy
+| Tool | Description |
+|------|-------------|
+| `start_scrcpy` | Start `scrcpy` in background and return process id (pid) |
+| `stop_scrcpy` | Stop a running `scrcpy` process by pid |
+
+> **Notes:**
+> - `screenshot` and `element_screenshot` return image data in a JPEG data URL (`data:image/jpeg;base64,...`) along with `width`/`height`.
+> - `shell_command` returns a tuple `(exit_code, output)`.
+> - `start_scrcpy` returns a background process id (pid) which can be passed to `stop_scrcpy`.
 
 ## Example Usage
 
