@@ -19,11 +19,6 @@ from functools import partial
 from textwrap import dedent
 from typing import Any
 
-if sys.version_info >= (3, 12):  # qa: noqa
-    from typing import override
-else:  # qa: noqa
-    from typing_extensions import override
-
 from anyio import create_task_group
 from fastmcp import FastMCP
 from fastmcp.server.auth import AccessToken, AuthProvider
@@ -32,6 +27,12 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from .background import set_background_task_group
+from .helpers import print_tags
+
+if sys.version_info >= (3, 12):  # qa: noqa
+    from typing import override
+else:  # qa: noqa
+    from typing_extensions import override
 
 __all__ = ["mcp", "make_mcp"]
 
@@ -41,7 +42,15 @@ mcp: FastMCP
 
 
 @asynccontextmanager
-async def _lifespan(instance: FastMCP, token: str | None = None):
+async def _lifespan(instance: FastMCP, /, show_tags: bool = True, token: str | None = None):
+    console = Console(stderr=True)
+
+    # Show enabled tags and tools if requested
+    if show_tags:
+        console.print("\n[bold cyan]Enabled Tags and Tools:[/bold cyan]")
+        await print_tags(instance, console)
+        console.print("")
+
     if token:
         content = Markdown(
             dedent(f"""
@@ -54,7 +63,7 @@ async def _lifespan(instance: FastMCP, token: str | None = None):
             ------
             """)
         )
-        Console(stderr=True).print(content)
+        console.print(content)
 
     # Global task group for background tasks - keeps running until server shuts down
     async with create_task_group() as tg:
@@ -84,13 +93,16 @@ def make_mcp(
     token: str | None = None,
     include_tags: set[str] | None = None,
     exclude_tags: set[str] | None = None,
+    show_tags: bool = False,
 ) -> FastMCP:
     global mcp
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
+    lifespan_kwargs: dict[str, Any] = {"show_tags": show_tags}
     if token:
-        params.update(lifespan=partial(_lifespan, token=token), auth=_SimpleTokenAuthProvider(token=token))
+        lifespan_kwargs["token"] = token
+        params.update(lifespan=partial(_lifespan, **lifespan_kwargs), auth=_SimpleTokenAuthProvider(token=token))
     else:
-        params.update(lifespan=_lifespan)
+        params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
     if include_tags is not None:
         params["include_tags"] = include_tags
     if exclude_tags is not None:

@@ -10,10 +10,11 @@ from typing import Annotated, Any, Literal
 import anyio
 import typer
 from rich.console import Console
-from rich.table import Table
 
 from .health import check_adb
+from .helpers import print_tags as print_tags_from_mcp
 from .mcp import make_mcp
+from .version import __version__
 
 
 def _parse_tags(tags: str | None) -> set[str] | None:
@@ -60,8 +61,6 @@ def print_version(value: bool):
     Callback function to print the version and exit.
     """
     if value:
-        from ._version import __version__
-
         typer.echo(f"uiautomator2-mcp-server {__version__} (Python {sys.version})")
         raise typer.Exit()
 
@@ -79,50 +78,7 @@ def print_tags(value: bool):
         # Import tools to register them
         from . import tools as _
 
-        tags: dict[str, list[str]] = {}
-
-        for tool in anyio.run(mcp.get_tools).values():
-            for tag in tool.tags or []:
-                if tag not in tags:
-                    tags[tag] = []
-                tags[tag].append(tool.name)
-
-        # Sort tags by category
-        sorted_tags = sorted(tags.keys())
-
-        # Group by category
-        categories: dict[str, list[tuple[str, list[str]]]] = {}
-        for tag in sorted_tags:
-            if ":" in tag:
-                category, subcategory = tag.split(":", 1)
-                if category not in categories:
-                    categories[category] = []
-                categories[category].append((subcategory, tags[tag]))
-            else:
-                # Tags without category (if any)
-                if "" not in categories:
-                    categories[""] = []
-                categories[""].append((tag, tags[tag]))
-
-        # Print table for each category
-        for category in sorted(categories.keys()):
-            if category == "":
-                console.print("\n[bold]Other Tags:[/bold]")
-            else:
-                console.print(f"\n[bold]{category.title()} Tags:[/bold]")
-
-            table = Table(show_header=True, header_style="bold magenta")
-            table.add_column("Tag", style="cyan", width=20)
-            table.add_column("Tools", style="green")
-
-            for subcategory, tools in sorted(categories[category]):
-                tag_name = f"{category}:{subcategory}" if category else subcategory
-                tools_str = ", ".join(sorted(tools))
-                table.add_row(tag_name, tools_str)
-
-            console.print(table)
-
-        console.print(f"\n[bold]Total: {len(tags)} tags, {sum(len(v) for v in tags.values())} tool-tag assignments[/bold]")
+        anyio.run(print_tags_from_mcp, mcp, console)
         raise typer.Exit()
 
 
@@ -170,6 +126,10 @@ def run(
         bool,
         typer.Option("--list-tags", callback=print_tags, is_eager=True, help="List all available tool tags and exit"),
     ] = False,
+    print_tags: Annotated[
+        bool,
+        typer.Option("--print-tags/--no-print-tags", help="Show enabled tags and tools at startup"),
+    ] = True,
     version: Annotated[
         bool,
         typer.Option("--version", "-V", callback=print_version, is_eager=True, help="Print version information and exit"),
@@ -207,10 +167,10 @@ def run(
                 raise typer.BadParameter("Token must be 8-64 characters long and can only contain URL-safe characters")
         elif not no_token:
             token = secrets.token_urlsafe()
-        mcp = make_mcp(token)
+        mcp = make_mcp(token, show_tags=print_tags)
     else:
         run_kwargs["transport"] = "stdio"
-        mcp = make_mcp()
+        mcp = make_mcp(show_tags=print_tags)
 
     # Import tools to register them with the MCP
     from . import tools as _
