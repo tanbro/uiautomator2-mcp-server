@@ -87,6 +87,13 @@ pytest --cov=src/u2mcp --cov-report=html
 - Ruff for linting
 - mypy for type checking
 
+## CLI Entry Points
+
+The server can be invoked using any of these commands (they are aliases):
+- `u2mcp` - Short form (primary)
+- `uiautomator2-mcp` - Full form
+- `uiautomator2-mcp-server` - Descriptive form
+
 ## MCP Tools
 
 All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to identify the target device.
@@ -99,22 +106,49 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `window_size` - Get screen dimensions
 - `screenshot` - Capture screen
 - `dump_hierarchy` - Get UI hierarchy XML
+- `purge` - Purge all resources (minicap, minitouch, uiautomator) from device
+- `shell_command` - Run arbitrary shell commands on device with timeout
 
 ### Action Tools
 - `click`/`long_click`/`double_click` - Touch actions
 - `swipe`/`swipe_points`/`drag` - Gesture actions
+- `press_key` - Press a physical key (e.g., HOME, BACK, ENTER)
+- `send_text` - Type text into the focused input field
+- `clear_text` - Clear text in the focused input field
+- `screen_on` - Turn the device screen on
+- `screen_off` - Turn the device screen off
+- `hide_keyboard` - Hide the on-screen keyboard
 
 ### App Management
 - `app_install`/`app_uninstall` - Package management
+- `app_uninstall_all` - Uninstall all third-party applications
 - `app_start`/`app_stop` - App lifecycle
+- `app_stop_all` - Stop all running applications
+- `app_wait` - Wait for an app to start (with timeout)
+- `app_clear` - Clear app data and cache
 - `app_info`/`app_list` - App information
+- `app_current` - Get the current foreground app information
+- `app_list_running` - List all currently running applications
+- `app_auto_grant_permissions` - Auto-grant all permissions to an app
 
 ### Clipboard Tools
 - `read_clipboard` - Read clipboard content from device
 - `write_clipboard` - Write text to device clipboard
 
 ### Element Tools
-- `wait_activity` - Wait for a specific activity to appear (with timeout)
+- `activity_wait` - Wait for a specific activity to appear (with timeout)
+- `element_click` - Click on an element found by XPath or text
+- `element_screenshot` - Take a screenshot of a specific element
+- `element_bounds` - Get the bounding box coordinates of an element
+- `element_scroll` - Scroll within a scrollable container
+- `element_scroll_to` - Scroll to a specific element or position
+
+### Screen Mirroring
+- `start_scrcpy` - Start scrcpy screen mirroring (requires scrcpy installed)
+- `stop_scrcpy` - Stop scrcpy screen mirroring
+
+### Miscellaneous Tools
+- `delay` - Add a simple delay/sleep in seconds
 
 ## Key Implementation Details
 
@@ -153,7 +187,7 @@ async def my_tool(serial: str, param: str) -> dict[str, Any]:
 ## Common Commands
 
 ```bash
-# Run the server
+# Run the server (alternative entry points: uiautomator2-mcp, uiautomator2-mcp-server)
 u2mcp --host 0.0.0.0 --port 8000 http
 
 # Run in stdio mode
@@ -161,6 +195,12 @@ u2mcp stdio
 
 # Run with auth token
 u2mcp --token MY_TOKEN http
+
+# Run with disabled token verification (HTTP only)
+u2mcp --no-token http
+
+# Enable JSON response format (HTTP only)
+u2mcp --json-response http
 
 # Skip ADB availability check at startup
 u2mcp --skip-adb-check http
@@ -174,6 +214,11 @@ ruff format src/
 # Type check
 mypy src/
 ```
+
+## Environment Variables
+
+- `ADBUTILS_ADB_PATH` - Custom path to ADB executable
+- `SCRCPY` - Custom path to scrcpy executable for screen mirroring
 
 ## Troubleshooting
 
@@ -211,3 +256,16 @@ If you get "ADB not found" errors at startup:
 - Check if device screen is on
 - Verify uiautomator2 is installed: run `init` tool
 - Restart ADB: `adb kill-server && adb start-server`
+
+### Scrcpy Issues
+If `start_scrcpy` fails to start:
+
+1. **Install scrcpy:**
+   - **macOS:** `brew install scrcpy`
+   - **Linux (Debian/Ubuntu):** `sudo apt install scrcpy`
+   - **Windows:** Download from https://github.com/Genymobile/scrcpy/releases
+
+2. **Set custom scrcpy path (if needed):**
+   - **Linux/macOS:** `export SCRCPY=/path/to/scrcpy`
+   - **Windows (CMD):** `set SCRCPY=C:\path\to\scrcpy.exe`
+   - **Windows (PowerShell):** `$env:SCRCPY='C:\path\to\scrcpy.exe'`
