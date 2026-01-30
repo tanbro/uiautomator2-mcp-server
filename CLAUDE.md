@@ -27,6 +27,7 @@ src/u2mcp/
     ├── app.py           # App management tools
     ├── clipboard.py     # Clipboard read/write tools
     ├── element.py       # Element/UI interaction tools
+    ├── input.py         # Text input and keyboard tools
     ├── misc.py          # Miscellaneous tools
     └── scrcpy.py        # Screen mirroring (scrcpy integration)
 
@@ -113,10 +114,12 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `click`/`long_click`/`double_click` - Touch actions
 - `swipe`/`swipe_points`/`drag` - Gesture actions
 - `press_key` - Press a physical key (e.g., HOME, BACK, ENTER)
-- `send_text` - Type text into the focused input field
-- `clear_text` - Clear text in the focused input field
 - `screen_on` - Turn the device screen on
 - `screen_off` - Turn the device screen off
+
+### Input Tools
+- `send_text` - Type text into the focused input field
+- `clear_text` - Clear text in the focused input field
 - `hide_keyboard` - Hide the on-screen keyboard
 
 ### App Management
@@ -170,14 +173,29 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 ## Adding New Tools
 
 1. Create tool function in appropriate `tools/*.py` module
-2. Decorate with `@mcp.tool("tool_name")`
+2. Decorate with `@mcp.tool("tool_name", tags={"category:subcategory"})`
 3. Use `get_device(serial)` context manager for device access
 4. Run CPU-bound operations in `to_thread.run_sync()`
 5. Use FastMCP context for user feedback: `get_context().info()`
 
+### Tool Tags
+
+All tools should be tagged using the `category:subcategory` format for selective filtering:
+
+| Category | Subcategories |
+|----------|---------------|
+| `device` | `manage`, `info`, `capture`, `shell` |
+| `action` | `touch`, `gesture`, `key`, `screen` |
+| `app` | `manage`, `lifecycle`, `info`, `config` |
+| `element` | `wait`, `interact`, `query`, `modify`, `gesture`, `capture` |
+| `input` | `text`, `keyboard` |
+| `clipboard` | `read`, `write` |
+| `screen` | `mirror`, `capture` |
+| `util` | `delay` |
+
 Example:
 ```python
-@mcp.tool("my_tool")
+@mcp.tool("my_tool", tags={"device:info"})
 async def my_tool(serial: str, param: str) -> dict[str, Any]:
     async with get_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.some_method(param))
@@ -204,6 +222,13 @@ u2mcp --json-response http
 
 # Skip ADB availability check at startup
 u2mcp --skip-adb-check http
+
+# List all available tool tags
+u2mcp --list-tags
+
+# Tool filtering - only expose specific tools
+u2mcp --include-tags device:manage,action:touch stdio
+u2mcp --exclude-tags screen:mirror,device:shell stdio
 
 # Lint
 ruff check src/
