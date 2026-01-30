@@ -295,6 +295,12 @@ By contributing to this project, you agree that your contributions will be licen
 - Keep docstrings clear and concise
 - Update README.md when adding user-facing features
 
+### Localization & Multi-language Policy
+
+- Keep region-specific instructions (for example, Mainland China `pip`/`uv` mirror configuration) inside the corresponding language README (e.g., `README.zh-CN.md`).
+- Do **not** duplicate region-only instructions into the English README. Instead, add a short navigation note in the English README pointing to the language specific file when appropriate (e.g., "See `README.zh-CN.md` for Mainland China-specific mirror instructions").
+- Ensure translations are accurate and avoid adding region-specific content to all language files unless it is globally applicable.
+
 ### Async/Await
 
 - Use `async/await` for all I/O operations

@@ -2,8 +2,12 @@
 
 [![PyPI](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
+[![Codecov](https://img.shields.io/codecov/c/gh/tanbro/uiautomator2-mcp-server)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
+[![GitHub release](https://img.shields.io/github/v/release/tanbro/uiautomator2-mcp-server)](https://github.com/tanbro/uiautomator2-mcp-server/releases)
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
+
+> **注**：本文件包含有关中国大陆用户加速下载（`pip` / `uv` 镜像源）的**详细说明**；英文版仅包含指向本文件的提示。
 
 一个 [MCP](https://modelcontextprotocol.io/) 服务器，提供使用 [uiautomator2](https://github.com/openatx/uiautomator2) 控制 Android 设备的工具。
 
