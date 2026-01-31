@@ -115,6 +115,28 @@ u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
 
 The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
 
+### CLI Utility Commands
+
+The `u2mcp` CLI provides several utility commands for exploring available tools and tags:
+
+```bash
+# List all available tools
+u2mcp tools
+
+# Show detailed information about a specific tool
+u2mcp info screenshot
+
+# Show tools matching a pattern (supports wildcards)
+u2mcp info "device:*"     # All device tools
+u2mcp info "*screenshot*" # Tools with 'screenshot' in name
+
+# List all available tool tags
+u2mcp tags
+
+# Show version information
+u2mcp version
+```
+
 ### Tool Filtering
 
 You can selectively expose tools using tag-based filtering. This reduces the number of tools available to the LLM, which can improve performance and reduce confusion.
@@ -154,7 +176,7 @@ u2mcp --exclude-tags "screen:*" stdio
 u2mcp --exclude-tags "*:mirror" stdio
 
 # List all available tags
-u2mcp --list-tags
+u2mcp tags
 ```
 
 **Wildcard Support:**

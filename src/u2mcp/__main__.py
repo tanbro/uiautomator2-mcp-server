@@ -69,7 +69,7 @@ def stdio_cmd(
         bool, typer.Option("--print-tags/--no-print-tags", help="Show enabled tags and tools at startup")
     ] = True,
 ):
-    """Run the MCP server with stdio transport (default)."""
+    """Run the MCP server with stdio transport."""
     _setup_logging(log_level)
     _check_adb(Console(stderr=True), skip_adb_check)
     mcp = make_mcp(show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags)

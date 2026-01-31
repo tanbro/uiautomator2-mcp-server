@@ -203,6 +203,28 @@ u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
 
 服务器将监听 `http://localhost:8000/mcp`（或你指定的主机/端口）。
 
+### CLI 实用命令
+
+`u2mcp` CLI 提供了几个实用命令用于探索可用的工具和标签：
+
+```bash
+# 列出所有可用工具
+u2mcp tools
+
+# 显示特定工具的详细信息
+u2mcp info screenshot
+
+# 显示匹配模式的所有工具（支持通配符）
+u2mcp info "device:*"     # 所有设备工具
+u2mcp info "*screenshot*" # 名称中包含 'screenshot' 的工具
+
+# 列出所有可用的工具标签
+u2mcp tags
+
+# 显示版本信息
+u2mcp version
+```
+
 ### 工具过滤
 
 你可以使用基于标签的过滤来选择性暴露工具。这会减少 LLM 可用的工具数量，从而提高性能并减少困惑。
@@ -242,7 +264,7 @@ u2mcp --exclude-tags "screen:*" stdio
 u2mcp --exclude-tags "*:mirror" stdio
 
 # 列出所有可用标签
-u2mcp --list-tags
+u2mcp tags
 ```
 
 **通配符支持：**
