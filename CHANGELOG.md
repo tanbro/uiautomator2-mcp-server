@@ -16,7 +16,7 @@
     - Add new element interaction tools: `element_get_text`, `element_set_text`
     - Add `purge` device tool to remove all resources from device
     - Add `shell_command` tool to run arbitrary shell commands with timeout
-    - Add ADB availability check at startup with `--skip-adb-check` option
+    - Add ADB availability check at startup with `--check-adb/--no-check-adb` option
     - Add `version` CLI option to display version information
     - Add alternative CLI entry points: `uiautomator2-mcp`, `uiautomator2-mcp-server`
 

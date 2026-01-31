@@ -177,7 +177,7 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `health.py` provides ADB availability check at server startup
 - Shows ADB server version and connected devices
 - Provides platform-specific installation instructions when ADB is not found
-- Can be bypassed with `--skip-adb-check` CLI flag
+- Can be bypassed with `--no-check-adb` CLI flag
 
 ### CLI Helpers
 - `helpers.py` provides functions for displaying tools, tags, and help information
@@ -259,7 +259,7 @@ u2mcp http --no-token
 u2mcp http --json-response
 
 # Skip ADB availability check at startup
-u2mcp stdio --skip-adb-check
+u2mcp stdio --no-check-adb
 
 # CLI Utility Commands
 u2mcp tools              # List all available tools
@@ -310,7 +310,7 @@ If you get "ADB not found" errors at startup:
 
 4. **Bypass the check (not recommended):**
    ```bash
-   u2mcp stdio --skip-adb-check
+   u2mcp stdio --no-check-adb
    ```
 
 ### Device Connection Issues

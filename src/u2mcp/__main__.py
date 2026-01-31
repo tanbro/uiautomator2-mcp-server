@@ -36,10 +36,10 @@ def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "crit
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
 
-def _check_adb(console: Console, skip_check: bool) -> None:
-    """Check ADB availability if not skipped."""
-    if not skip_check and not check_adb(console):
-        console.print("[yellow]Proceeding anyway. Use --skip-adb-check to bypass this check.[/yellow]")
+def _check_adb(console: Console, check: bool) -> None:
+    """Check ADB availability if enabled."""
+    if check and not check_adb(console):
+        console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
 
 
 @cli.command("stdio")
@@ -48,7 +48,7 @@ def stdio_cmd(
         Literal["debug", "info", "warning", "error", "critical"],
         typer.Option("--log-level", "-l", help="Log level"),
     ] = "info",
-    skip_adb_check: Annotated[bool, typer.Option("--skip-adb-check", help="Skip ADB availability check at startup")] = False,
+    check_adb: Annotated[bool, typer.Option("--check-adb/--no-check-adb", help="Check ADB availability at startup")] = True,
     include_tags: Annotated[
         str | None,
         typer.Option(
@@ -69,7 +69,7 @@ def stdio_cmd(
 ):
     """Run the MCP server with stdio transport."""
     _setup_logging(log_level)
-    _check_adb(Console(stderr=True), skip_adb_check)
+    _check_adb(Console(stderr=True), check_adb)
     mcp = make_mcp(show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags)
     mcp.run(transport="stdio", log_level=log_level)
 
@@ -91,7 +91,7 @@ def http_cmd(
         ),
     ] = False,
     token: Annotated[str | None, typer.Option("--token", "-t", help="Explicit set authentication token")] = None,
-    skip_adb_check: Annotated[bool, typer.Option("--skip-adb-check", help="Skip ADB availability check at startup")] = False,
+    check_adb: Annotated[bool, typer.Option("--check-adb/--no-check-adb", help="Check ADB availability at startup")] = True,
     include_tags: Annotated[
         str | None,
         typer.Option(
@@ -112,7 +112,7 @@ def http_cmd(
 ):
     """Run the MCP server with HTTP (streamable-http) transport."""
     _setup_logging(log_level)
-    _check_adb(Console(stderr=True), skip_adb_check)
+    _check_adb(Console(stderr=True), check_adb)
 
     if token:
         token = token.strip()
