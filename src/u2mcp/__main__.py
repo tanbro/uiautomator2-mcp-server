@@ -35,7 +35,7 @@ def print_tags(value: bool):
         # Create a temporary MCP instance to collect tool tags
         mcp = make_mcp()
 
-        anyio.run(print_tags_from_mcp, mcp, console)
+        anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
         raise typer.Exit()
 
 

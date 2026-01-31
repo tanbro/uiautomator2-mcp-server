@@ -11,17 +11,41 @@ if TYPE_CHECKING:
     from .mcp import FastMCP
 
 
-async def print_tags(instance: FastMCP, console: Console):
+async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = True):
     """Print tags from an MCP instance.
 
     Args:
         instance: The MCP instance to get tools from
         console: The Rich console to print to
+        filtered: If True, only show tags that match include/exclude filters.
+                   If False, show all available tags. Defaults to True.
     """
     tags: dict[str, list[str]] = {}
+    include_tags = getattr(instance, "include_tags", None) if filtered else None
+    exclude_tags = getattr(instance, "exclude_tags", None) if filtered else None
 
     for tool in (await instance.get_tools()).values():
-        for tag in tool.tags or []:
+        tool_tags = tool.tags or []
+
+        # Skip tools with no tags
+        if not tool_tags:
+            continue
+
+        # Apply include filter
+        if include_tags is not None and not any(tag in include_tags for tag in tool_tags):
+            continue
+
+        # Apply exclude filter
+        if exclude_tags is not None and any(tag in exclude_tags for tag in tool_tags):
+            continue
+
+        for tag in tool_tags:
+            # Only include tags that pass the filters
+            if include_tags is not None and tag not in include_tags:
+                continue
+            if exclude_tags is not None and tag in exclude_tags:
+                continue
+
             if tag not in tags:
                 tags[tag] = []
             tags[tag].append(tool.name)

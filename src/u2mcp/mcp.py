@@ -149,7 +149,7 @@ def make_mcp(
     from . import tools as _  # noqa: F401
 
     # Collect all available tags from registered tools for wildcard expansion
-    all_tag_set = set()
+    all_tag_set: set[str] = set()
     for tool in mcp._tool_manager._tools.values():
         all_tag_set.update(tool.tags or [])
 
