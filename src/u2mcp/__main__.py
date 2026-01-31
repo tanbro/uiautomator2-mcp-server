@@ -17,10 +17,8 @@ from .mcp import make_mcp
 from .version import __version__
 
 cli = typer.Typer(
-    name="u2mcp",
+    name=__package__,
     help="uiautomator2-mcp-server - MCP server for Android device automation",
-    add_completion=False,
-    no_args_is_help=True,
 )
 
 

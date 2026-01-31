@@ -15,6 +15,20 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 > Use AI to automate your Android device: take screenshots, tap/swipe, manage apps, send text, and more.
 
+## Migration from v0.1.x
+
+**If you're upgrading from v0.1.3 or earlier:** The CLI now requires an explicit subcommand. Change your command from:
+
+```bash
+# Old (v0.1.3 and earlier)
+u2mcp
+
+# New (v0.2.0+)
+u2mcp stdio
+```
+
+All other commands remain the same (just add the transport subcommand).
+
 ## Prerequisites
 
 - [Python][] 3.11+

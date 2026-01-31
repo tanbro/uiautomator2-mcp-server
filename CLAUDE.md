@@ -170,7 +170,7 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - Global `_global_device_connection_lock` protects connection cache
 
 ### Background Tasks
-- `background.py` manages background task group via `set_monitor_task_group()`
+- `background.py` manages background task group via `set_background_task_group()`
 - Used for scrcpy process monitoring
 
 ### Health Check
