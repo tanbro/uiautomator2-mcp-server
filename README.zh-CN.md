@@ -195,10 +195,10 @@ u2mcp stdio
 
 ```bash
 # 基本 HTTP 服务器
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 
 # 带认证令牌
-u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
+u2mcp http --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN
 ```
 
 服务器将监听 `http://localhost:8000/mcp`（或你指定的主机/端口）。
@@ -231,37 +231,37 @@ u2mcp version
 
 ```bash
 # 只暴露设备管理工具
-u2mcp --include-tags device:manage stdio
+u2mcp stdio --include-tags device:manage
 
 # 只暴露触摸和手势操作
-u2mcp --include-tags action:touch,action:gesture stdio
+u2mcp stdio --include-tags action:touch,action:gesture
 
 # 排除屏幕镜像工具
-u2mcp --exclude-tags screen:mirror stdio
+u2mcp stdio --exclude-tags screen:mirror
 
 # 只暴露应用生命周期和元素交互工具
-u2mcp --include-tags app:lifecycle,element:interact stdio
+u2mcp stdio --include-tags app:lifecycle,element:interact
 
 # 排除 shell 命令工具（出于安全考虑）
-u2mcp --exclude-tags device:shell stdio
+u2mcp stdio --exclude-tags device:shell
 
 # 只暴露输入相关工具
-u2mcp --include-tags input:text,input:keyboard stdio
+u2mcp stdio --include-tags input:text,input:keyboard
 
 # 组合使用 include 和 exclude
-u2mcp --include-tags device:info,action:touch --exclude-tags screen:capture stdio
+u2mcp stdio --include-tags device:info,action:touch --exclude-tags screen:capture
 
 # 通配符模式 - 包含所有设备工具
-u2mcp --include-tags "device:*" stdio
+u2mcp stdio --include-tags "device:*"
 
 # 通配符模式 - 包含所有触摸和手势工具
-u2mcp --include-tags "action:to*" stdio
+u2mcp stdio --include-tags "action:to*"
 
 # 通配符模式 - 排除所有屏幕工具
-u2mcp --exclude-tags "screen:*" stdio
+u2mcp stdio --exclude-tags "screen:*"
 
 # 通配符模式 - 排除所有镜像工具（screen:mirror 等）
-u2mcp --exclude-tags "*:mirror" stdio
+u2mcp stdio --exclude-tags "*:mirror"
 
 # 列出所有可用标签
 u2mcp tags
@@ -320,7 +320,7 @@ npm install -g @modelcontextprotocol/inspector
 npx @modelcontextprotocol/inspector u2mcp stdio
 
 # 或在 HTTP 模式下检查服务器
-# 首先启动服务器：u2mcp --host 0.0.0.0 --port 8000 http
+# 首先启动服务器：u2mcp http --host 0.0.0.0 --port 8000
 # 然后使用 URL 运行 inspector
 npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 ```
@@ -348,7 +348,7 @@ Arguments: stdio
 ```
 URL: http://localhost:8000/mcp
 ```
-（首先启动服务器：`u2mcp --host 0.0.0.0 --port 8000 http`）
+（首先启动服务器：`u2mcp http --host 0.0.0.0 --port 8000`）
 
 3. 点击 **Load Capabilities** 连接并发现可用工具
 4. 使用 **Tools**、**Resources** 和 **Prompts** 标签与服务器交互
@@ -362,7 +362,7 @@ URL: http://localhost:8000/mcp
 
 ```bash
 # 1. 首先启动服务器
-u2mcp --host 0.0.0.0 --port 8000 http
+u2mcp http --host 0.0.0.0 --port 8000
 
 # 2. 在另一个终端中，发送 MCP 请求
 curl -X POST http://localhost:8000/mcp \
@@ -464,7 +464,7 @@ Arguments: stdio
 **选项 C: HTTP 模式**
 首先启动服务器：
 ```bash
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 ```
 
 然后在 Cherry Studio 中，选择 HTTP 模式并输入：
@@ -497,7 +497,7 @@ Arguments: stdio
 **HTTP 模式**
 首先启动服务器：
 ```bash
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 ```
 
 然后在 ChatMCP 中，选择 HTTP 模式并输入：

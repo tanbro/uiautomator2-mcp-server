@@ -244,22 +244,22 @@ async def my_tool(serial: str, param: str) -> dict[str, Any]:
 
 ```bash
 # Run the server (alternative entry points: uiautomator2-mcp, uiautomator2-mcp-server)
-u2mcp --host 0.0.0.0 --port 8000 http
+u2mcp http --host 0.0.0.0 --port 8000
 
 # Run in stdio mode
 u2mcp stdio
 
 # Run with auth token
-u2mcp --token MY_TOKEN http
+u2mcp http --token MY_TOKEN
 
 # Run with disabled token verification (HTTP only)
-u2mcp --no-token http
+u2mcp http --no-token
 
 # Enable JSON response format (HTTP only)
-u2mcp --json-response http
+u2mcp http --json-response
 
 # Skip ADB availability check at startup
-u2mcp --skip-adb-check http
+u2mcp stdio --skip-adb-check
 
 # CLI Utility Commands
 u2mcp tools              # List all available tools
@@ -269,8 +269,8 @@ u2mcp tags               # List all available tool tags
 u2mcp version            # Show version information
 
 # Tool filtering - only expose specific tools
-u2mcp --include-tags device:manage,action:touch stdio
-u2mcp --exclude-tags screen:mirror,device:shell stdio
+u2mcp stdio --include-tags device:manage,action:touch
+u2mcp stdio --exclude-tags screen:mirror,device:shell
 
 # Lint
 ruff check src/
@@ -310,7 +310,7 @@ If you get "ADB not found" errors at startup:
 
 4. **Bypass the check (not recommended):**
    ```bash
-   u2mcp --skip-adb-check http
+   u2mcp stdio --skip-adb-check
    ```
 
 ### Device Connection Issues

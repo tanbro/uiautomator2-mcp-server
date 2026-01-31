@@ -107,10 +107,10 @@ This mode communicates via standard input/output and is typically used by MCP cl
 
 ```bash
 # Basic HTTP server
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 
 # With authentication token
-u2mcp --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN http
+u2mcp http --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN
 ```
 
 The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
@@ -143,37 +143,37 @@ You can selectively expose tools using tag-based filtering. This reduces the num
 
 ```bash
 # Only expose device management tools
-u2mcp --include-tags device:manage stdio
+u2mcp stdio --include-tags device:manage
 
 # Only expose touch and gesture operations
-u2mcp --include-tags action:touch,action:gesture stdio
+u2mcp stdio --include-tags action:touch,action:gesture
 
 # Exclude screen mirroring tools
-u2mcp --exclude-tags screen:mirror stdio
+u2mcp stdio --exclude-tags screen:mirror
 
 # Only expose app lifecycle and element interaction tools
-u2mcp --include-tags app:lifecycle,element:interact stdio
+u2mcp stdio --include-tags app:lifecycle,element:interact
 
 # Exclude shell command tools (for security)
-u2mcp --exclude-tags device:shell stdio
+u2mcp stdio --exclude-tags device:shell
 
 # Only expose input-related tools
-u2mcp --include-tags input:text,input:keyboard stdio
+u2mcp stdio --include-tags input:text,input:keyboard
 
 # Combine include and exclude
-u2mcp --include-tags device:info,action:touch --exclude-tags screen:capture stdio
+u2mcp stdio --include-tags device:info,action:touch --exclude-tags screen:capture
 
 # Wildcard patterns - include all device tools
-u2mcp --include-tags "device:*" stdio
+u2mcp stdio --include-tags "device:*"
 
 # Wildcard patterns - include all touch and gesture tools
-u2mcp --include-tags "action:to*" stdio
+u2mcp stdio --include-tags "action:to*"
 
 # Wildcard patterns - exclude all screen tools
-u2mcp --exclude-tags "screen:*" stdio
+u2mcp stdio --exclude-tags "screen:*"
 
 # Wildcard patterns - exclude all mirror tools (screen:mirror, etc.)
-u2mcp --exclude-tags "*:mirror" stdio
+u2mcp stdio --exclude-tags "*:mirror"
 
 # List all available tags
 u2mcp tags
@@ -232,7 +232,7 @@ npm install -g @modelcontextprotocol/inspector
 npx @modelcontextprotocol/inspector u2mcp stdio
 
 # Or inspect the server in HTTP mode
-# First start the server: u2mcp --host 0.0.0.0 --port 8000 http
+# First start the server: u2mcp http --host 0.0.0.0 --port 8000
 # Then run inspector with the URL
 npx @modelcontextprotocol/inspector http://localhost:8000/mcp
 ```
@@ -260,7 +260,7 @@ Arguments: stdio
 ```
 URL: http://localhost:8000/mcp
 ```
-(First start the server: `u2mcp --host 0.0.0.0 --port 8000 http`)
+(First start the server: `u2mcp http --host 0.0.0.0 --port 8000`)
 
 3. Click **Load Capabilities** to connect and discover available tools
 4. Use the **Tools**, **Resources**, and **Prompts** tabs to interact with the server
@@ -274,7 +274,7 @@ You can also test the HTTP endpoint using cURL with JSON-RPC 2.0 requests:
 
 ```bash
 # 1. Start the server first
-u2mcp --host 0.0.0.0 --port 8000 http
+u2mcp http --host 0.0.0.0 --port 8000
 
 # 2. In another terminal, send MCP requests
 curl -X POST http://localhost:8000/mcp \
@@ -376,7 +376,7 @@ Arguments: stdio
 **Option C: HTTP Mode**
 First start the server:
 ```bash
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 ```
 
 Then in Cherry Studio, select HTTP mode and enter:
@@ -409,7 +409,7 @@ Arguments: stdio
 **HTTP Mode**
 First start the server:
 ```bash
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 ```
 
 Then in ChatMCP, select HTTP mode and enter:
@@ -458,7 +458,7 @@ Continue is an AI pair programmer extension for VS Code and JetBrains.
 For clients that support HTTP connections (or for remote access), start the server first:
 
 ```bash
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http --host 0.0.0.0 --port 8000 --no-token
 ```
 
 Then configure your client to connect to `http://localhost:8000/mcp`.
