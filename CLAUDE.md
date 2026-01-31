@@ -16,10 +16,11 @@ This project exposes Android device automation capabilities as MCP tools. It use
 src/u2mcp/
 ├── __init__.py          # Package init, exports version info
 ├── __main__.py          # Entry point for CLI commands
-├── _version.py          # Auto-generated version info (SCM)
+├── version.py           # Version info module
 ├── mcp.py               # MCP server factory and configuration
 ├── background.py        # Background task management
 ├── health.py            # ADB availability check
+├── helpers.py           # Helper functions for CLI output (tags, tools, info)
 └── tools/
     ├── __init__.py      # Tools registry
     ├── device.py        # Device management tools
@@ -140,9 +141,17 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 
 ### Element Tools
 - `activity_wait` - Wait for a specific activity to appear (with timeout)
-- `element_click` - Click on an element found by XPath or text
+- `element_wait` - Wait for an element to appear
+- `element_wait_gone` - Wait for an element to disappear
+- `element_click` - Click on an element found by XPath (with wait)
+- `element_click_nowait` - Click on an element without waiting
+- `element_click_until_gone` - Click until element disappears
+- `element_long_click` - Long click on an element
 - `element_screenshot` - Take a screenshot of a specific element
+- `element_get_text` - Get text from an element
+- `element_set_text` - Set text on an element
 - `element_bounds` - Get the bounding box coordinates of an element
+- `element_swipe` - Swipe within an element
 - `element_scroll` - Scroll within a scrollable container
 - `element_scroll_to` - Scroll to a specific element or position
 
@@ -170,6 +179,15 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - Provides platform-specific installation instructions when ADB is not found
 - Can be bypassed with `--skip-adb-check` CLI flag
 
+### CLI Helpers
+- `helpers.py` provides functions for displaying tools, tags, and help information
+- Uses `docstring_parser` to parse Google-style docstrings
+- Uses Rich for formatted terminal output (tables, panels, markdown)
+- Functions:
+  - `print_tags()` - Display tags with optional filtering
+  - `print_tool_help()` - Display tool list or detailed tool info
+  - Supports wildcard patterns for filtering (`*` and `?`)
+
 ## Adding New Tools
 
 1. Create tool function in appropriate `tools/*.py` module
@@ -177,6 +195,26 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 3. Use `get_device(serial)` context manager for device access
 4. Run CPU-bound operations in `to_thread.run_sync()`
 5. Use FastMCP context for user feedback: `get_context().info()`
+6. Write docstrings in **Google style format** for proper parsing by `info` command:
+
+```python
+@mcp.tool("my_tool", tags={"device:info"})
+async def my_tool(serial: str, param: str) -> dict[str, Any]:
+    """Brief one-line description.
+
+    Longer description if needed (optional).
+
+    Args:
+        serial: Android device serial number.
+        param: Description of the parameter.
+
+    Returns:
+        dict[str, Any]: Description of return value structure.
+    """
+    async with get_device(serial) as device:
+        result = await to_thread.run_sync(lambda: device.some_method(param))
+    return {"result": result}
+```
 
 ### Tool Tags
 
@@ -223,8 +261,12 @@ u2mcp --json-response http
 # Skip ADB availability check at startup
 u2mcp --skip-adb-check http
 
-# List all available tool tags
-u2mcp --list-tags
+# CLI Utility Commands
+u2mcp tools              # List all available tools
+u2mcp info screenshot    # Show detailed info for a tool
+u2mcp info "device:*"    # Show info for all device tools (supports wildcards)
+u2mcp tags               # List all available tool tags
+u2mcp version            # Show version information
 
 # Tool filtering - only expose specific tools
 u2mcp --include-tags device:manage,action:touch stdio
