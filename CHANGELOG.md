@@ -32,6 +32,7 @@
     - Add `serial_optional=None` parameter to argparse.Namespace in the init tool
     - Improve scrcpy error handling for process exit during startup
     - Correct scrcpy tool name and add Windows executable support
+    - Fix `element_bounds` tool - `bounds` is a property, not a method
 
 - 📚 Docs:
     - Add CLAUDE.md with comprehensive project documentation
@@ -41,9 +42,11 @@
     - Add Chinese translation to README
     - Add code of conduct and contribution guidelines
     - Add ADB troubleshooting guidance
+    - Add AI-driven UI testing documentation to README (English and Chinese)
 
 - 🧪 Tests:
     - Enhance u2 device mock with comprehensive functionality
+    - Add AI-driven UI testing skill with comprehensive test specification
 
 - 🐎 Chores:
     - Update check-jsonschema version

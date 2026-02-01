@@ -21,6 +21,7 @@ src/u2mcp/
 ├── background.py        # Background task management
 ├── health.py            # ADB availability check
 ├── helpers.py           # Helper functions for CLI output (tags, tools, info)
+├── middlewares.py       # MCP middlewares for request/response handling
 └── tools/
     ├── __init__.py      # Tools registry
     ├── device.py        # Device management tools
@@ -31,6 +32,11 @@ src/u2mcp/
     ├── input.py         # Text input and keyboard tools
     ├── misc.py          # Miscellaneous tools
     └── scrcpy.py        # Screen mirroring (scrcpy integration)
+
+.skills/                  # AI-driven testing skills
+├── u2mcp-uitest/
+│   ├── skill.md         # Skill description
+│   └── test.spec.md     # Test specification
 
 tests/
 ├── conftest.py          # Pytest configuration and fixtures
@@ -106,7 +112,8 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `connect`/`disconnect` - Manage device connections
 - `info` - Get device information
 - `window_size` - Get screen dimensions
-- `screenshot` - Capture screen
+- `screenshot` - Capture screen (returns base64-encoded JPEG)
+- `save_screenshot` - Save screenshot to file (format determined by extension)
 - `dump_hierarchy` - Get UI hierarchy XML
 - `purge` - Purge all resources (minicap, minitouch, uiautomator) from device
 - `shell_command` - Run arbitrary shell commands on device with timeout
@@ -286,6 +293,40 @@ mypy src/
 
 - `ADBUTILS_ADB_PATH` - Custom path to ADB executable
 - `SCRCPY` - Custom path to scrcpy executable for screen mirroring
+
+## AI-Driven UI Testing
+
+This project includes an AI-driven UI testing framework using the `.skills/` system. Skills allow AI to execute comprehensive automated tests using natural language specifications.
+
+### Skill Structure
+
+```
+.skills/
+├── u2mcp-uitest/
+│   ├── skill.md      # Skill description and usage
+│   └── test.spec.md  # Test specification with steps and expected results
+```
+
+### Running Tests
+
+Simply ask the AI to execute a test:
+
+```
+Execute u2mcp UI test
+```
+
+The AI will:
+- Auto-detect and connect to the first available device
+- Run comprehensive tests covering all device operations
+- Provide a detailed test report with pass/fail/skip status
+
+### Creating Custom Skills
+
+Each skill requires:
+- `skill.md` - Description and usage instructions
+- `test.spec.md` - Test cases with steps, expected results, and cleanup
+
+See `.skills/u2mcp-uitest/` for a complete example.
 
 ## Troubleshooting
 
