@@ -606,6 +606,7 @@ u2mcp --host 0.0.0.0 --port 8000 --no-token http
 | `shell_command` | 在设备上运行 shell 命令，返回 `(exit_code, output)` |
 | `window_size` | 获取窗口尺寸（`width`, `height`） |
 | `screenshot` | 截图，返回 `width`、`height` 和 `image`（JPEG data URL） |
+| `save_screenshot` | 保存截图到文件（返回文件路径，格式由文件扩展名决定） |
 | `dump_hierarchy` | 获取 UI 层次结构 XML |
 | `info` | 获取设备信息 |
 

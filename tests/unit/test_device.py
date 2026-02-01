@@ -4,6 +4,7 @@ Unit tests for device management tools.
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,6 +15,7 @@ from u2mcp.tools.device import (
     disconnect,
     disconnect_all,
     info,
+    save_screenshot,
     window_size,
 )
 
@@ -102,3 +104,85 @@ async def test_disconnect_all(mock_u2_device: MagicMock) -> None:
     result = await disconnect_all.fn()
     # Just ensure no exception raised
     assert result is None or isinstance(result, str)
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_save_screenshot_png(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+    """Test save_screenshot saves PNG file."""
+    from PIL.Image import Image
+
+    # Create a mock image
+    mock_image = MagicMock(spec=Image)
+    mock_image.save = MagicMock()
+
+    # Setup mock device to return our mock image
+    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+
+    # Create a temporary file path
+    output_path = tmp_path / "screenshot.png"
+
+    # Execute
+    result = await save_screenshot.fn("emulator-5554", str(output_path))
+
+    # Verify the image was saved and path is returned
+    mock_image.save.assert_called_once()
+    assert isinstance(result, str)
+    assert "screenshot.png" in result
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_save_screenshot_jpeg(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+    """Test save_screenshot saves JPEG file."""
+    from PIL.Image import Image
+
+    mock_image = MagicMock(spec=Image)
+    mock_image.save = MagicMock()
+    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+
+    output_path = tmp_path / "screenshot.jpg"
+    result = await save_screenshot.fn("emulator-5554", str(output_path))
+
+    mock_image.save.assert_called_once()
+    assert isinstance(result, str)
+    assert "screenshot.jpg" in result
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_save_screenshot_creates_directory(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+    """Test save_screenshot creates parent directory if it doesn't exist."""
+    from PIL.Image import Image
+
+    mock_image = MagicMock(spec=Image)
+    mock_image.save = MagicMock()
+    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+
+    # Create a path with non-existent subdirectories
+    output_path = tmp_path / "subdir1" / "subdir2" / "screenshot.png"
+
+    result = await save_screenshot.fn("emulator-5554", str(output_path))
+
+    # Verify the save was called (directory should have been created)
+    mock_image.save.assert_called_once()
+    assert isinstance(result, str)
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_save_screenshot_with_display_id(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+    """Test save_screenshot with specific display_id."""
+    from PIL.Image import Image
+
+    mock_image = MagicMock(spec=Image)
+    mock_image.save = MagicMock()
+    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+
+    output_path = tmp_path / "screenshot.png"
+    result = await save_screenshot.fn("emulator-5554", str(output_path), display_id=1)
+
+    # Verify screenshot was called with display_id=1
+    mock_u2_device.screenshot.assert_called_once_with(display_id=1)
+    assert isinstance(result, str)
+

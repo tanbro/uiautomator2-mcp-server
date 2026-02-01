@@ -145,8 +145,17 @@ def mock_device_dependencies(
     state pollution between tests. The mock_u2_device fixture is called for each test,
     ensuring clean state.
     """
+    # Import here to access the module-level _devices dict
+    from u2mcp.tools import device
+
+    # Clear device cache before each test
+    device._devices.clear()
+
     with patch("u2mcp.tools.device.u2", mock_u2_module), patch("u2mcp.tools.device.adb", mock_adb):
         yield
+
+    # Clear device cache after each test
+    device._devices.clear()
 
 
 @pytest.fixture

@@ -3,8 +3,9 @@ from __future__ import annotations
 import argparse
 from base64 import b64encode
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, closing
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 import uiautomator2 as u2
@@ -24,6 +25,7 @@ __all__ = (
     "disconnect_all",
     "window_size",
     "screenshot",
+    "save_screenshot",
     "dump_hierarchy",
     "info",
 )
@@ -175,7 +177,7 @@ async def disconnect(serial: str):
     if not (serial := serial.strip()):
         raise ValueError("serial cannot be empty")
     async with _global_device_connection_lock:
-        del _devices[serial]
+        _devices.pop(serial, None)
 
 
 @mcp.tool("disconnect_all", tags={"device:manage"})
@@ -203,18 +205,20 @@ async def window_size(serial: str) -> dict[str, int]:
 
 
 @mcp.tool("screenshot", tags={"device:capture", "screen:capture"})
-async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
+async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
 
     Args:
-        serial (str): Android device serialno
+        serial (str): Android device serialno.
+        format (str): Image format. Defaults to "jpeg".
         display_id (int): use specific display if device has multiple screen. Defaults to -1.
 
     Returns:
         dict[str,Any]: Screenshot image JPEG data with the following keys:
             - image (str): Base64 encoded image data in data URL format (data:image/jpeg;base64,...)
-            - size (tuple[int,int]): Image dimensions as (width, height)
+            - height (int): Image height
+            - width (int): Image width
     """
     display_id = int(display_id)
     async with get_device(serial) as device:
@@ -223,15 +227,48 @@ async def screenshot(serial: str, display_id: int = -1) -> dict[str, Any]:
     if not isinstance(im, Image):
         raise RuntimeError("Invalid image")
 
-    with BytesIO() as fp:
-        im.save(fp, "jpeg")
-        im_data = fp.getvalue()
+    with closing(im):
+        with BytesIO() as fp:
+            im.save(fp, format)
+            im_data = fp.getvalue()
 
-    return {
-        "width": im.width,
-        "height": im.height,
-        "image": "data:image/jpeg;base64," + b64encode(im_data).decode(),
-    }
+        return {
+            "image": "data:image/jpeg;base64," + b64encode(im_data).decode(),
+            "height": im.height,
+            "width": im.width,
+        }
+
+
+@mcp.tool("save_screenshot", tags={"device:capture", "screen:capture"})
+async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
+    """
+    Save screenshot of device to file
+
+    Args:
+        serial(str): Android device serial number.
+        file(str): File path to save the screenshot. Supports both absolute and relative paths.
+        display_id(int): Use specific display if device has multiple screens. Defaults to -1 (default display).
+
+    Returns:
+        str: Screenshot save file path
+    """
+    display_id = int(display_id)
+
+    async with get_device(serial) as device:
+        im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
+
+    if not isinstance(im, Image):
+        raise RuntimeError("Invalid image")
+
+    with closing(im):
+        # Convert path to Path object and resolve
+        file_path = Path(file)
+        # Create parent directory if it doesn't exist
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        # Save the image
+        im.save(file_path)
+
+    return file_path.resolve().as_posix()
 
 
 @mcp.tool("dump_hierarchy", tags={"device:capture"})

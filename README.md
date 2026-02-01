@@ -518,6 +518,7 @@ Refer to your client's documentation for specific configuration details.
 | `shell_command` | Run shell command on device (returns `(exit_code, output)`) |
 | `window_size` | Get device window size (`width`, `height`) |
 | `screenshot` | Take screenshot (returns `width`, `height`, `image` where `image` is a data URL `data:image/jpeg;base64,...`) |
+| `save_screenshot` | Save screenshot to file (returns file path, format determined by file extension) |
 | `dump_hierarchy` | Get UI hierarchy XML |
 | `info` | Get device information |
 
