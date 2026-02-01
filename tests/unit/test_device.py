@@ -185,4 +185,3 @@ async def test_save_screenshot_with_display_id(mock_u2_device: MagicMock, tmp_pa
     # Verify screenshot was called with display_id=1
     mock_u2_device.screenshot.assert_called_once_with(display_id=1)
     assert isinstance(result, str)
-
