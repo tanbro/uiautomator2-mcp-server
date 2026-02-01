@@ -66,11 +66,20 @@ def stdio_cmd(
     print_tags: Annotated[
         bool, typer.Option("--print-tags/--no-print-tags", help="Show enabled tags and tools at startup")
     ] = True,
+    fix_empty_responses: Annotated[
+        bool,
+        typer.Option(
+            "--fix-empty-responses/--no-fix-empty-responses",
+            help="Convert null tool responses to empty string compatibility",
+        ),
+    ] = False,
 ):
     """Run the MCP server with stdio transport."""
     _setup_logging(log_level)
     _check_adb(Console(stderr=True), check_adb)
-    mcp = make_mcp(show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags)
+    mcp = make_mcp(
+        show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags, fix_empty_responses=fix_empty_responses
+    )
     mcp.run(transport="stdio", log_level=log_level)
 
 
@@ -109,6 +118,13 @@ def http_cmd(
     print_tags: Annotated[
         bool, typer.Option("--print-tags/--no-print-tags", help="Show enabled tags and tools at startup")
     ] = True,
+    fix_empty_responses: Annotated[
+        bool,
+        typer.Option(
+            "--fix-empty-responses/--no-fix-empty-responses",
+            help="Convert null tool responses to empty string compatibility",
+        ),
+    ] = False,
 ):
     """Run the MCP server with HTTP (streamable-http) transport."""
     _setup_logging(log_level)
@@ -121,7 +137,13 @@ def http_cmd(
     elif not no_token:
         token = secrets.token_urlsafe()
 
-    mcp = make_mcp(token, show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags)
+    mcp = make_mcp(
+        token,
+        show_tags=print_tags,
+        include_tags=include_tags,
+        exclude_tags=exclude_tags,
+        fix_empty_responses=fix_empty_responses,
+    )
     mcp.run(
         transport="streamable-http",
         host=host,

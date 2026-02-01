@@ -214,7 +214,7 @@ async def element_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]:
         tuple[int]: tuple of (left, top, right, bottom)
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).bounds())
+        return await to_thread.run_sync(lambda: device.xpath(xpath).bounds)
 
 
 @mcp.tool("element_swipe", tags={"element:gesture"})

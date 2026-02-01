@@ -504,6 +504,69 @@ Refer to your client's documentation for specific configuration details.
    > "Swipe up"
    > "Open YouTube app"
 
+## AI-Driven UI Testing
+
+This project includes an AI-driven UI testing skill that allows you to run comprehensive automated tests on your Android device using natural language. The AI acts as an automated tester, executing test steps adaptively based on the device state.
+
+### Running UI Tests
+
+Simply ask the AI to execute the UI test:
+
+```
+Execute u2mcp UI test
+```
+
+The AI will:
+- Auto-detect and connect to the first available device
+- Run comprehensive tests covering all device operations
+- Provide a detailed test report with pass/fail status
+
+### Test Coverage
+
+| Category | Tests |
+|----------|-------|
+| Device | Connection, Info, Screenshot, Hierarchy |
+| Touch | Click, Long Click, Double Click |
+| Gesture | Swipe, Drag, Key Press |
+| App | List, Start, Wait, Info |
+| Element | Wait, Bounds, Get Text, Click |
+| Input | Text Input, Keyboard |
+| Clipboard | Read/Write (with known limitations) |
+
+### Test Specification
+
+The test suite is defined in `.skills/u2mcp-uitest/test.spec.md`. You can review or extend the test cases by editing this file.
+
+### Sample Test Report
+
+```
+u2mcp UI Test Summary
+=====================
+
+Device: UGAILFCIU88TT469 (PDKM00, Android 11, SDK 31)
+
+Test Cases:
+  [PASS] TC001: Device Connection & Initialization
+  [PASS] TC002: Device Info & Capture
+  [PASS] TC003: Touch Actions
+  [PASS] TC004: Gesture Actions
+  [PASS] TC005: Application Management
+  [PASS] TC006: Element Operations
+  [PASS] TC007: Input & Keyboard
+  [SKIP] TC008: Clipboard Operations (Android security restriction)
+
+Total: 7 passed, 1 skipped, 0 failed
+```
+
+### Creating Custom Tests
+
+You can create your own test specifications by adding new skill directories under `.skills/`. Each skill should contain:
+
+- `skill.md` - Skill description and usage
+- `test.spec.md` - Test cases with steps and expected results
+
+See `.skills/u2mcp-uitest/` for a complete example.
+
 ## Available Tools
 
 ### Device

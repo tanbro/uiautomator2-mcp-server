@@ -29,6 +29,7 @@ from rich.markdown import Markdown
 
 from .background import set_background_task_group
 from .helpers import print_tags
+from .middlewares import EmptyResponseMiddleware
 
 if sys.version_info >= (3, 12):  # qa: noqa
     from typing import override
@@ -134,6 +135,7 @@ def make_mcp(
     include_tags: str | None = None,
     exclude_tags: str | None = None,
     show_tags: bool = False,
+    fix_empty_responses: bool = False,
 ) -> FastMCP:
     global mcp
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
@@ -144,6 +146,10 @@ def make_mcp(
     else:
         params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
     mcp = FastMCP(**params)
+
+    # Add middleware to fix empty responses if enabled
+    if fix_empty_responses:
+        mcp.add_middleware(EmptyResponseMiddleware())
 
     # Import tools to register them with the MCP (needed for wildcard expansion)
     from . import tools as _  # noqa: F401
