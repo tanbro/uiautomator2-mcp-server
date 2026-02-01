@@ -401,3 +401,4 @@ http-client.private.env.json
 
 # claude code
 .claude/*.local.json
+.mcp.json
