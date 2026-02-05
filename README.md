@@ -121,10 +121,10 @@ This mode communicates via standard input/output and is typically used by MCP cl
 
 ```bash
 # Basic HTTP server
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http -H 0.0.0.0 -p 8000 -n
 
 # With authentication token
-u2mcp http --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN
+u2mcp http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
 ```
 
 The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
@@ -148,7 +148,7 @@ u2mcp info "*screenshot*" # Tools with 'screenshot' in name
 u2mcp tags
 
 # Show version information
-u2mcp version
+u2mcp --version
 ```
 
 ### Tool Filtering
@@ -157,41 +157,52 @@ You can selectively expose tools using tag-based filtering. This reduces the num
 
 ```bash
 # Only expose device management tools
-u2mcp stdio --include-tags device:manage
+u2mcp stdio -i device:manage
 
 # Only expose touch and gesture operations
-u2mcp stdio --include-tags action:touch,action:gesture
+u2mcp stdio -i action:touch,action:gesture
 
 # Exclude screen mirroring tools
-u2mcp stdio --exclude-tags screen:mirror
+u2mcp stdio -e screen:mirror
 
 # Only expose app lifecycle and element interaction tools
-u2mcp stdio --include-tags app:lifecycle,element:interact
+u2mcp stdio -i app:lifecycle,element:interact
 
 # Exclude shell command tools (for security)
-u2mcp stdio --exclude-tags device:shell
+u2mcp stdio -e device:shell
 
 # Only expose input-related tools
-u2mcp stdio --include-tags input:text,input:keyboard
+u2mcp stdio -i input:text,input:keyboard
 
 # Combine include and exclude
-u2mcp stdio --include-tags device:info,action:touch --exclude-tags screen:capture
+u2mcp stdio -i device:info,action:touch -e screen:capture
 
 # Wildcard patterns - include all device tools
-u2mcp stdio --include-tags "device:*"
+u2mcp stdio -i "device:*"
 
 # Wildcard patterns - include all touch and gesture tools
-u2mcp stdio --include-tags "action:to*"
+u2mcp stdio -i "action:to*"
 
 # Wildcard patterns - exclude all screen tools
-u2mcp stdio --exclude-tags "screen:*"
+u2mcp stdio -e "screen:*"
 
 # Wildcard patterns - exclude all mirror tools (screen:mirror, etc.)
-u2mcp stdio --exclude-tags "*:mirror"
+u2mcp stdio -e "*:mirror"
 
 # List all available tags
 u2mcp tags
 ```
+
+**Short Options:**
+
+All common options support short flags for convenience:
+- `-l` / `--log-level` - Set log level
+- `-i` / `--include-tags` - Include tools by tags
+- `-e` / `--exclude-tags` - Exclude tools by tags
+- `-H` / `--host` - Set host address (HTTP mode)
+- `-p` / `--port` - Set port number (HTTP mode)
+- `-t` / `--token` - Set authentication token (HTTP mode)
+- `-n` / `--no-token` - Disable token verification (HTTP mode)
 
 **Wildcard Support:**
 
@@ -204,33 +215,33 @@ The `--include-tags` and `--exclude-tags` options support wildcard patterns:
 
 **Available Tags:**
 
-| Tag | Description |
-|-----|-------------|
-| `device:manage` | Device connection, initialization, and management |
-| `device:info` | Device information and status |
-| `device:capture` | Screenshots and UI hierarchy |
-| `device:shell` | Shell command execution |
-| `action:touch` | Click and tap actions |
-| `action:gesture` | Swipe and drag gestures |
-| `action:key` | Physical key presses |
-| `action:screen` | Screen control (on/off) |
-| `app:manage` | Install and uninstall apps |
-| `app:lifecycle` | Start and stop apps |
-| `app:info` | App information and listing |
-| `app:config` | App configuration (clear data, permissions) |
-| `element:wait` | Wait for elements/activities |
-| `element:interact` | Click and interact with elements |
-| `element:query` | Get element info (text, bounds) |
-| `element:modify` | Modify element (set text) |
-| `element:gesture` | Element-specific gestures (swipe, scroll) |
-| `element:capture` | Element screenshots |
-| `input:text` | Text input and clearing |
-| `input:keyboard` | Keyboard control |
-| `clipboard:read` | Read clipboard |
-| `clipboard:write` | Write clipboard |
-| `screen:mirror` | Screen mirroring (scrcpy) |
-| `screen:capture` | Screen screenshots |
-| `util:delay` | Delay/sleep utility |
+| Tag                | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `device:manage`    | Device connection, initialization, and management |
+| `device:info`      | Device information and status                     |
+| `device:capture`   | Screenshots and UI hierarchy                      |
+| `device:shell`     | Shell command execution                           |
+| `action:touch`     | Click and tap actions                             |
+| `action:gesture`   | Swipe and drag gestures                           |
+| `action:key`       | Physical key presses                              |
+| `action:screen`    | Screen control (on/off)                           |
+| `app:manage`       | Install and uninstall apps                        |
+| `app:lifecycle`    | Start and stop apps                               |
+| `app:info`         | App information and listing                       |
+| `app:config`       | App configuration (clear data, permissions)       |
+| `element:wait`     | Wait for elements/activities                      |
+| `element:interact` | Click and interact with elements                  |
+| `element:query`    | Get element info (text, bounds)                   |
+| `element:modify`   | Modify element (set text)                         |
+| `element:gesture`  | Element-specific gestures (swipe, scroll)         |
+| `element:capture`  | Element screenshots                               |
+| `input:text`       | Text input and clearing                           |
+| `input:keyboard`   | Keyboard control                                  |
+| `clipboard:read`   | Read clipboard                                    |
+| `clipboard:write`  | Write clipboard                                   |
+| `screen:mirror`    | Screen mirroring (scrcpy)                         |
+| `screen:capture`   | Screen screenshots                                |
+| `util:delay`       | Delay/sleep utility                               |
 
 ## Testing and Debugging
 
@@ -523,15 +534,15 @@ The AI will:
 
 ### Test Coverage
 
-| Category | Tests |
-|----------|-------|
-| Device | Connection, Info, Screenshot, Hierarchy |
-| Touch | Click, Long Click, Double Click |
-| Gesture | Swipe, Drag, Key Press |
-| App | List, Start, Wait, Info |
-| Element | Wait, Bounds, Get Text, Click |
-| Input | Text Input, Keyboard |
-| Clipboard | Read/Write (with known limitations) |
+| Category  | Tests                                   |
+| --------- | --------------------------------------- |
+| Device    | Connection, Info, Screenshot, Hierarchy |
+| Touch     | Click, Long Click, Double Click         |
+| Gesture   | Swipe, Drag, Key Press                  |
+| App       | List, Start, Wait, Info                 |
+| Element   | Wait, Bounds, Get Text, Click           |
+| Input     | Text Input, Keyboard                    |
+| Clipboard | Read/Write (with known limitations)     |
 
 ### Test Specification
 
@@ -570,87 +581,87 @@ See `.skills/u2mcp-uitest/` for a complete example.
 ## Available Tools
 
 ### Device
-| Tool | Description |
-|------|-------------|
-| `device_list` | List connected Adb devices |
-| `init` | Install required resources to device (**run first**) |
-| `purge` | Purge installed uiautomator resources from device |
-| `connect` | Connect to a device (returns device info) |
-| `disconnect` | Disconnect a device |
-| `disconnect_all` | Disconnect all devices |
-| `shell_command` | Run shell command on device (returns `(exit_code, output)`) |
-| `window_size` | Get device window size (`width`, `height`) |
-| `screenshot` | Take screenshot (returns `width`, `height`, `image` where `image` is a data URL `data:image/jpeg;base64,...`) |
-| `save_screenshot` | Save screenshot to file (returns file path, format determined by file extension) |
-| `dump_hierarchy` | Get UI hierarchy XML |
-| `info` | Get device information |
+| Tool              | Description                                                                                                   |
+| ----------------- | ------------------------------------------------------------------------------------------------------------- |
+| `device_list`     | List connected Adb devices                                                                                    |
+| `init`            | Install required resources to device (**run first**)                                                          |
+| `purge`           | Purge installed uiautomator resources from device                                                             |
+| `connect`         | Connect to a device (returns device info)                                                                     |
+| `disconnect`      | Disconnect a device                                                                                           |
+| `disconnect_all`  | Disconnect all devices                                                                                        |
+| `shell_command`   | Run shell command on device (returns `(exit_code, output)`)                                                   |
+| `window_size`     | Get device window size (`width`, `height`)                                                                    |
+| `screenshot`      | Take screenshot (returns `width`, `height`, `image` where `image` is a data URL `data:image/jpeg;base64,...`) |
+| `save_screenshot` | Save screenshot to file (returns file path, format determined by file extension)                              |
+| `dump_hierarchy`  | Get UI hierarchy XML                                                                                          |
+| `info`            | Get device information                                                                                        |
 
 ### Actions
-| Tool | Description |
-|------|-------------|
-| `click` | Tap at coordinates |
-| `long_click` | Long press at coordinates |
-| `double_click` | Double tap at coordinates |
-| `swipe` | Swipe from point A to B |
-| `swipe_points` | Swipe through multiple points |
-| `drag` | Drag from point A to B |
-| `press_key` | Press a key (home, back, etc.) |
-| `screen_on` | Turn screen on |
-| `screen_off` | Turn screen off |
+| Tool           | Description                    |
+| -------------- | ------------------------------ |
+| `click`        | Tap at coordinates             |
+| `long_click`   | Long press at coordinates      |
+| `double_click` | Double tap at coordinates      |
+| `swipe`        | Swipe from point A to B        |
+| `swipe_points` | Swipe through multiple points  |
+| `drag`         | Drag from point A to B         |
+| `press_key`    | Press a key (home, back, etc.) |
+| `screen_on`    | Turn screen on                 |
+| `screen_off`   | Turn screen off                |
 
 ### Input
-| Tool | Description |
-|------|-------------|
-| `send_text` | Type text (supports `clear` flag) |
-| `clear_text` | Clear text field |
-| `hide_keyboard` | Hide virtual keyboard |
+| Tool            | Description                       |
+| --------------- | --------------------------------- |
+| `send_text`     | Type text (supports `clear` flag) |
+| `clear_text`    | Clear text field                  |
+| `hide_keyboard` | Hide virtual keyboard             |
 
 ### Apps
-| Tool | Description |
-|------|-------------|
-| `app_install` | Install APK (file path or url) |
-| `app_uninstall` | Uninstall an app |
-| `app_uninstall_all` | Uninstall many apps (with excludes) |
-| `app_start` | Launch an app |
-| `app_wait` | Wait until app launched (`timeout`, `front`) |
-| `app_stop` | Stop an app |
-| `app_stop_all` | Stop all third-party apps (with excludes) |
-| `app_clear` | Clear app data |
-| `app_info` | Get app info (`versionName`, `versionCode`) |
-| `app_current` | Get current foreground app |
-| `app_list` | List installed apps (supports `filter`) |
-| `app_list_running` | List running apps |
-| `app_auto_grant_permissions` | Auto grant runtime permissions to app |
+| Tool                         | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `app_install`                | Install APK (file path or url)               |
+| `app_uninstall`              | Uninstall an app                             |
+| `app_uninstall_all`          | Uninstall many apps (with excludes)          |
+| `app_start`                  | Launch an app                                |
+| `app_wait`                   | Wait until app launched (`timeout`, `front`) |
+| `app_stop`                   | Stop an app                                  |
+| `app_stop_all`               | Stop all third-party apps (with excludes)    |
+| `app_clear`                  | Clear app data                               |
+| `app_info`                   | Get app info (`versionName`, `versionCode`)  |
+| `app_current`                | Get current foreground app                   |
+| `app_list`                   | List installed apps (supports `filter`)      |
+| `app_list_running`           | List running apps                            |
+| `app_auto_grant_permissions` | Auto grant runtime permissions to app        |
 
 ### Clipboard
-| Tool | Description |
-|------|-------------|
-| `read_clipboard` | Read clipboard text from device |
-| `write_clipboard` | Write text to device clipboard |
+| Tool              | Description                     |
+| ----------------- | ------------------------------- |
+| `read_clipboard`  | Read clipboard text from device |
+| `write_clipboard` | Write text to device clipboard  |
 
 ### Element
-| Tool | Description |
-|------|-------------|
-| `activity_wait` | Wait until an activity appears |
-| `element_wait` | Wait until element found |
-| `element_wait_gone` | Wait until element gone |
-| `element_click` | Find element by xpath and click (waits) |
-| `element_click_nowait` | Click element without waiting |
-| `element_click_until_gone` | Click until element disappears |
-| `element_long_click` | Long click element |
-| `element_screenshot` | Take element screenshot (returns same image format as `screenshot`) |
-| `element_get_text` | Get element text |
-| `element_set_text` | Set element text |
-| `element_bounds` | Get element bounds (left, top, right, bottom) |
-| `element_swipe` | Swipe inside an element |
-| `element_scroll` | Scroll an element (`forward`/`backward`) |
-| `element_scroll_to` | Scroll to element with max swipes |
+| Tool                       | Description                                                         |
+| -------------------------- | ------------------------------------------------------------------- |
+| `activity_wait`            | Wait until an activity appears                                      |
+| `element_wait`             | Wait until element found                                            |
+| `element_wait_gone`        | Wait until element gone                                             |
+| `element_click`            | Find element by xpath and click (waits)                             |
+| `element_click_nowait`     | Click element without waiting                                       |
+| `element_click_until_gone` | Click until element disappears                                      |
+| `element_long_click`       | Long click element                                                  |
+| `element_screenshot`       | Take element screenshot (returns same image format as `screenshot`) |
+| `element_get_text`         | Get element text                                                    |
+| `element_set_text`         | Set element text                                                    |
+| `element_bounds`           | Get element bounds (left, top, right, bottom)                       |
+| `element_swipe`            | Swipe inside an element                                             |
+| `element_scroll`           | Scroll an element (`forward`/`backward`)                            |
+| `element_scroll_to`        | Scroll to element with max swipes                                   |
 
 ### Scrcpy
-| Tool | Description |
-|------|-------------|
+| Tool           | Description                                              |
+| -------------- | -------------------------------------------------------- |
 | `start_scrcpy` | Start `scrcpy` in background and return process id (pid) |
-| `stop_scrcpy` | Stop a running `scrcpy` process by pid |
+| `stop_scrcpy`  | Stop a running `scrcpy` process by pid                   |
 
 > **Notes:**
 > - `screenshot` and `element_screenshot` return image data in a JPEG data URL (`data:image/jpeg;base64,...`) along with `width`/`height`.

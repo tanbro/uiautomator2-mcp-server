@@ -6,6 +6,7 @@ An MCP (Model Context Protocol) server that provides tools for controlling Andro
 
 This project exposes Android device automation capabilities as MCP tools. It uses:
 - **fastmcp** for MCP server implementation
+- **cyclopts** for CLI argument parsing (via fastmcp dependency)
 - **uiautomator2** for Android device control
 - **anyio** for async operations
 - **Pillow** for image handling
@@ -92,6 +93,7 @@ pytest --cov=src/u2mcp --cov-report=html
 - Type hints required for all function signatures
 - Use `from __future__ import annotations` for deferred evaluation
 - Use `typing_extensions` for Python < 3.12 compatibility
+- Use `Annotated[type, Parameter(...)]` for CLI parameters with custom names
 - Ruff for linting
 - mypy for type checking
 
@@ -184,7 +186,7 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `health.py` provides ADB availability check at server startup
 - Shows ADB server version and connected devices
 - Provides platform-specific installation instructions when ADB is not found
-- Can be bypassed with `--no-check-adb` CLI flag
+- Can be bypassed with `--no-check-adb` CLI flag (default: enabled)
 
 ### CLI Helpers
 - `helpers.py` provides functions for displaying tools, tags, and help information
@@ -251,16 +253,16 @@ async def my_tool(serial: str, param: str) -> dict[str, Any]:
 
 ```bash
 # Run the server (alternative entry points: uiautomator2-mcp, uiautomator2-mcp-server)
-u2mcp http --host 0.0.0.0 --port 8000
+u2mcp http -H 0.0.0.0 -p 8000
 
 # Run in stdio mode
 u2mcp stdio
 
 # Run with auth token
-u2mcp http --token MY_TOKEN
+u2mcp http -t MY_TOKEN
 
 # Run with disabled token verification (HTTP only)
-u2mcp http --no-token
+u2mcp http -n
 
 # Enable JSON response format (HTTP only)
 u2mcp http --json-response
@@ -273,11 +275,11 @@ u2mcp tools              # List all available tools
 u2mcp info screenshot    # Show detailed info for a tool
 u2mcp info "device:*"    # Show info for all device tools (supports wildcards)
 u2mcp tags               # List all available tool tags
-u2mcp version            # Show version information
+u2mcp --version          # Show version information
 
-# Tool filtering - only expose specific tools
-u2mcp stdio --include-tags device:manage,action:touch
-u2mcp stdio --exclude-tags screen:mirror,device:shell
+# Tool filtering - only expose specific tools (short options available)
+u2mcp stdio -i device:manage,action:touch
+u2mcp stdio -e screen:mirror,device:shell
 
 # Lint
 ruff check src/
@@ -288,6 +290,18 @@ ruff format src/
 # Type check
 mypy src/
 ```
+
+### CLI Short Options
+
+| Short | Long | Description |
+|-------|------|-------------|
+| `-l` | `--log-level` | Set log level |
+| `-i` | `--include-tags` | Include tools by tags |
+| `-e` | `--exclude-tags` | Exclude tools by tags |
+| `-H` | `--host` | Set host address (HTTP mode) |
+| `-p` | `--port` | Set port number (HTTP mode) |
+| `-t` | `--token` | Set authentication token (HTTP mode) |
+| `-n` | `--no-token` | Disable token verification (HTTP mode) |
 
 ## Environment Variables
 

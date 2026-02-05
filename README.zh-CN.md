@@ -209,10 +209,10 @@ u2mcp stdio
 
 ```bash
 # 基本 HTTP 服务器
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http -H 0.0.0.0 -p 8000 -n
 
 # 带认证令牌
-u2mcp http --host 0.0.0.0 --port 8000 --token YOUR_SECRET_TOKEN
+u2mcp http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
 ```
 
 服务器将监听 `http://localhost:8000/mcp`（或你指定的主机/端口）。
@@ -236,7 +236,7 @@ u2mcp info "*screenshot*" # 名称中包含 'screenshot' 的工具
 u2mcp tags
 
 # 显示版本信息
-u2mcp version
+u2mcp --version
 ```
 
 ### 工具过滤
@@ -245,41 +245,52 @@ u2mcp version
 
 ```bash
 # 只暴露设备管理工具
-u2mcp stdio --include-tags device:manage
+u2mcp stdio -i device:manage
 
 # 只暴露触摸和手势操作
-u2mcp stdio --include-tags action:touch,action:gesture
+u2mcp stdio -i action:touch,action:gesture
 
 # 排除屏幕镜像工具
-u2mcp stdio --exclude-tags screen:mirror
+u2mcp stdio -e screen:mirror
 
 # 只暴露应用生命周期和元素交互工具
-u2mcp stdio --include-tags app:lifecycle,element:interact
+u2mcp stdio -i app:lifecycle,element:interact
 
 # 排除 shell 命令工具（出于安全考虑）
-u2mcp stdio --exclude-tags device:shell
+u2mcp stdio -e device:shell
 
 # 只暴露输入相关工具
-u2mcp stdio --include-tags input:text,input:keyboard
+u2mcp stdio -i input:text,input:keyboard
 
 # 组合使用 include 和 exclude
-u2mcp stdio --include-tags device:info,action:touch --exclude-tags screen:capture
+u2mcp stdio -i device:info,action:touch -e screen:capture
 
 # 通配符模式 - 包含所有设备工具
-u2mcp stdio --include-tags "device:*"
+u2mcp stdio -i "device:*"
 
 # 通配符模式 - 包含所有触摸和手势工具
-u2mcp stdio --include-tags "action:to*"
+u2mcp stdio -i "action:to*"
 
 # 通配符模式 - 排除所有屏幕工具
-u2mcp stdio --exclude-tags "screen:*"
+u2mcp stdio -e "screen:*"
 
 # 通配符模式 - 排除所有镜像工具（screen:mirror 等）
-u2mcp stdio --exclude-tags "*:mirror"
+u2mcp stdio -e "*:mirror"
 
 # 列出所有可用标签
 u2mcp tags
 ```
+
+**短选项：**
+
+所有常用选项都支持短标志以方便使用：
+- `-l` / `--log-level` - 设置日志级别
+- `-i` / `--include-tags` - 按标签包含工具
+- `-e` / `--exclude-tags` - 按标签排除工具
+- `-H` / `--host` - 设置主机地址（HTTP 模式）
+- `-p` / `--port` - 设置端口号（HTTP 模式）
+- `-t` / `--token` - 设置认证令牌（HTTP 模式）
+- `-n` / `--no-token` - 禁用令牌验证（HTTP 模式）
 
 **通配符支持：**
 
@@ -292,33 +303,33 @@ u2mcp tags
 
 **可用标签：**
 
-| 标签 | 描述 |
-|-----|------|
-| `device:manage` | 设备连接、初始化和管理 |
-| `device:info` | 设备信息和状态 |
-| `device:capture` | 截图和 UI 层级 |
-| `device:shell` | Shell 命令执行 |
-| `action:touch` | 点击和触摸操作 |
-| `action:gesture` | 滑动和拖动手势 |
-| `action:key` | 物理按键操作 |
-| `action:screen` | 屏幕控制（开/关） |
-| `app:manage` | 安装和卸载应用 |
-| `app:lifecycle` | 启动和停止应用 |
-| `app:info` | 应用信息和列表 |
-| `app:config` | 应用配置（清除数据、权限） |
-| `element:wait` | 等待元素/活动 |
-| `element:interact` | 点击和交互元素 |
-| `element:query` | 获取元素信息（文本、边界） |
-| `element:modify` | 修改元素（设置文本） |
-| `element:gesture` | 元素特定手势（滑动、滚动） |
-| `element:capture` | 元素截图 |
-| `input:text` | 文本输入和清除 |
-| `input:keyboard` | 键盘控制 |
-| `clipboard:read` | 读取剪贴板 |
-| `clipboard:write` | 写入剪贴板 |
-| `screen:mirror` | 屏幕镜像（scrcpy） |
-| `screen:capture` | 屏幕截图 |
-| `util:delay` | 延迟/休眠实用工具 |
+| 标签               | 描述                       |
+| ------------------ | -------------------------- |
+| `device:manage`    | 设备连接、初始化和管理     |
+| `device:info`      | 设备信息和状态             |
+| `device:capture`   | 截图和 UI 层级             |
+| `device:shell`     | Shell 命令执行             |
+| `action:touch`     | 点击和触摸操作             |
+| `action:gesture`   | 滑动和拖动手势             |
+| `action:key`       | 物理按键操作               |
+| `action:screen`    | 屏幕控制（开/关）          |
+| `app:manage`       | 安装和卸载应用             |
+| `app:lifecycle`    | 启动和停止应用             |
+| `app:info`         | 应用信息和列表             |
+| `app:config`       | 应用配置（清除数据、权限） |
+| `element:wait`     | 等待元素/活动              |
+| `element:interact` | 点击和交互元素             |
+| `element:query`    | 获取元素信息（文本、边界） |
+| `element:modify`   | 修改元素（设置文本）       |
+| `element:gesture`  | 元素特定手势（滑动、滚动） |
+| `element:capture`  | 元素截图                   |
+| `input:text`       | 文本输入和清除             |
+| `input:keyboard`   | 键盘控制                   |
+| `clipboard:read`   | 读取剪贴板                 |
+| `clipboard:write`  | 写入剪贴板                 |
+| `screen:mirror`    | 屏幕镜像（scrcpy）         |
+| `screen:capture`   | 屏幕截图                   |
+| `util:delay`       | 延迟/休眠实用工具          |
 
 ## 测试和调试
 
@@ -560,7 +571,7 @@ Continue 是 VS Code 和 JetBrains 的 AI 结对程序员扩展。
 对于支持 HTTP 连接的客户端（或用于远程访问），首先启动服务器：
 
 ```bash
-u2mcp --host 0.0.0.0 --port 8000 --no-token http
+u2mcp http -H 0.0.0.0 -p 8000 -n
 ```
 
 然后配置你的客户端连接到 `http://localhost:8000/mcp`。
@@ -611,15 +622,15 @@ AI 将会：
 
 ### 测试覆盖
 
-| 类别 | 测试内容 |
-|------|---------|
-| 设备 | 连接、信息、截图、层级 |
-| 触摸 | 点击、长按、双击 |
-| 手势 | 滑动、拖拽、按键 |
-| 应用 | 列表、启动、等待、信息 |
-| 元素 | 等待、边界、获取文本、点击 |
-| 输入 | 文本输入、键盘 |
-| 剪贴板 | 读取/写入（有已知限制） |
+| 类别   | 测试内容                   |
+| ------ | -------------------------- |
+| 设备   | 连接、信息、截图、层级     |
+| 触摸   | 点击、长按、双击           |
+| 手势   | 滑动、拖拽、按键           |
+| 应用   | 列表、启动、等待、信息     |
+| 元素   | 等待、边界、获取文本、点击 |
+| 输入   | 文本输入、键盘             |
+| 剪贴板 | 读取/写入（有已知限制）    |
 
 ### 测试规范
 
@@ -658,83 +669,83 @@ u2mcp UI 测试总结
 ## 可用工具
 
 ### 设备
-| 工具 | 描述 |
-|------|-------------|
-| `device_list` | 列出连接的 Adb 设备 |
-| `init` | 安装所需资源到设备（**首先运行**） |
-| `purge` | 从设备移除已安装的 uiautomator 资源 |
-| `connect` | 连接到设备并返回设备信息 |
-| `disconnect` | 断开单个设备的连接 |
-| `disconnect_all` | 断开所有设备连接 |
-| `shell_command` | 在设备上运行 shell 命令，返回 `(exit_code, output)` |
-| `window_size` | 获取窗口尺寸（`width`, `height`） |
-| `screenshot` | 截图，返回 `width`、`height` 和 `image`（JPEG data URL） |
-| `save_screenshot` | 保存截图到文件（返回文件路径，格式由文件扩展名决定） |
-| `dump_hierarchy` | 获取 UI 层次结构 XML |
-| `info` | 获取设备信息 |
+| 工具              | 描述                                                     |
+| ----------------- | -------------------------------------------------------- |
+| `device_list`     | 列出连接的 Adb 设备                                      |
+| `init`            | 安装所需资源到设备（**首先运行**）                       |
+| `purge`           | 从设备移除已安装的 uiautomator 资源                      |
+| `connect`         | 连接到设备并返回设备信息                                 |
+| `disconnect`      | 断开单个设备的连接                                       |
+| `disconnect_all`  | 断开所有设备连接                                         |
+| `shell_command`   | 在设备上运行 shell 命令，返回 `(exit_code, output)`      |
+| `window_size`     | 获取窗口尺寸（`width`, `height`）                        |
+| `screenshot`      | 截图，返回 `width`、`height` 和 `image`（JPEG data URL） |
+| `save_screenshot` | 保存截图到文件（返回文件路径，格式由文件扩展名决定）     |
+| `dump_hierarchy`  | 获取 UI 层次结构 XML                                     |
+| `info`            | 获取设备信息                                             |
 
 ### 操作
-| 工具 | 描述 |
-|------|-------------|
-| `click` | 在坐标处点击 |
-| `long_click` | 在坐标处长按 |
-| `double_click` | 在坐标处双击 |
-| `swipe` | 从点 A 滑动到点 B |
-| `swipe_points` | 滑动经过多个点 |
-| `drag` | 从点 A 拖动到点 B |
-| `press_key` | 按键（主屏幕、返回等） |
-| `send_text` | 输入文本（支持 `clear` 参数） |
-| `clear_text` | 清除文本字段 |
-| `screen_on` | 打开屏幕 |
-| `screen_off` | 关闭屏幕 |
-| `hide_keyboard` | 隐藏软键盘 |
+| 工具            | 描述                          |
+| --------------- | ----------------------------- |
+| `click`         | 在坐标处点击                  |
+| `long_click`    | 在坐标处长按                  |
+| `double_click`  | 在坐标处双击                  |
+| `swipe`         | 从点 A 滑动到点 B             |
+| `swipe_points`  | 滑动经过多个点                |
+| `drag`          | 从点 A 拖动到点 B             |
+| `press_key`     | 按键（主屏幕、返回等）        |
+| `send_text`     | 输入文本（支持 `clear` 参数） |
+| `clear_text`    | 清除文本字段                  |
+| `screen_on`     | 打开屏幕                      |
+| `screen_off`    | 关闭屏幕                      |
+| `hide_keyboard` | 隐藏软键盘                    |
 
 ### 应用
-| 工具 | 描述 |
-|------|-------------|
-| `app_install` | 安装 APK（文件路径或 URL） |
-| `app_uninstall` | 卸载应用 |
-| `app_uninstall_all` | 卸载多个应用（支持排除列表） |
-| `app_start` | 启动应用 |
-| `app_wait` | 等待应用启动（`timeout`, `front`） |
-| `app_stop` | 停止应用 |
-| `app_stop_all` | 停止所有第三方应用（支持排除） |
-| `app_clear` | 清除应用数据 |
-| `app_info` | 获取应用信息（`versionName`, `versionCode`） |
-| `app_current` | 获取当前前台应用 |
-| `app_list` | 列出已安装应用（支持 `filter`） |
-| `app_list_running` | 列出正在运行的应用 |
-| `app_auto_grant_permissions` | 自动授予应用运行时权限 |
+| 工具                         | 描述                                         |
+| ---------------------------- | -------------------------------------------- |
+| `app_install`                | 安装 APK（文件路径或 URL）                   |
+| `app_uninstall`              | 卸载应用                                     |
+| `app_uninstall_all`          | 卸载多个应用（支持排除列表）                 |
+| `app_start`                  | 启动应用                                     |
+| `app_wait`                   | 等待应用启动（`timeout`, `front`）           |
+| `app_stop`                   | 停止应用                                     |
+| `app_stop_all`               | 停止所有第三方应用（支持排除）               |
+| `app_clear`                  | 清除应用数据                                 |
+| `app_info`                   | 获取应用信息（`versionName`, `versionCode`） |
+| `app_current`                | 获取当前前台应用                             |
+| `app_list`                   | 列出已安装应用（支持 `filter`）              |
+| `app_list_running`           | 列出正在运行的应用                           |
+| `app_auto_grant_permissions` | 自动授予应用运行时权限                       |
 
 ### 剪切板
-| 工具 | 描述 |
-|------|-------------|
-| `read_clipboard` | 读取设备剪切板文本 |
+| 工具              | 描述               |
+| ----------------- | ------------------ |
+| `read_clipboard`  | 读取设备剪切板文本 |
 | `write_clipboard` | 写入设备剪切板文本 |
 
 ### 元素操作
-| 工具 | 描述 |
-|------|-------------|
-| `activity_wait` | 等待某个 Activity 出现 |
-| `element_wait` | 等待元素出现 |
-| `element_wait_gone` | 等待元素消失 |
-| `element_click` | 按 xpath 查找并点击（带等待） |
-| `element_click_nowait` | 立即点击元素（不等待） |
-| `element_click_until_gone` | 点击直到元素消失 |
-| `element_long_click` | 长按元素 |
-| `element_screenshot` | 截取元素图片（返回与 `screenshot` 相同格式） |
-| `element_get_text` | 获取元素文本 |
-| `element_set_text` | 设置元素文本 |
-| `element_bounds` | 获取元素边界（left, top, right, bottom） |
-| `element_swipe` | 在元素内部滑动 |
-| `element_scroll` | 滚动元素（`forward`/`backward`） |
-| `element_scroll_to` | 滚动到元素，最多指定次数 |
+| 工具                       | 描述                                         |
+| -------------------------- | -------------------------------------------- |
+| `activity_wait`            | 等待某个 Activity 出现                       |
+| `element_wait`             | 等待元素出现                                 |
+| `element_wait_gone`        | 等待元素消失                                 |
+| `element_click`            | 按 xpath 查找并点击（带等待）                |
+| `element_click_nowait`     | 立即点击元素（不等待）                       |
+| `element_click_until_gone` | 点击直到元素消失                             |
+| `element_long_click`       | 长按元素                                     |
+| `element_screenshot`       | 截取元素图片（返回与 `screenshot` 相同格式） |
+| `element_get_text`         | 获取元素文本                                 |
+| `element_set_text`         | 设置元素文本                                 |
+| `element_bounds`           | 获取元素边界（left, top, right, bottom）     |
+| `element_swipe`            | 在元素内部滑动                               |
+| `element_scroll`           | 滚动元素（`forward`/`backward`）             |
+| `element_scroll_to`        | 滚动到元素，最多指定次数                     |
 
 ### scrcpy
-| 工具 | 描述 |
-|------|-------------|
+| 工具           | 描述                                   |
+| -------------- | -------------------------------------- |
 | `start_scrcpy` | 后台启动 `scrcpy` 并返回进程 id（pid） |
-| `stop_scrcpy` | 通过 pid 停止运行的 `scrcpy` 进程 |
+| `stop_scrcpy`  | 通过 pid 停止运行的 `scrcpy` 进程      |
 
 > **说明：**
 > - `screenshot` 与 `element_screenshot` 会返回 JPEG data URL（`data:image/jpeg;base64,...`）以及 `width`/`height`。
