@@ -12,15 +12,35 @@ metadata:
 
 # Release Manager Skill
 
-## ⚠️ CRITICAL: Git Tag Timing Warning
+## ⚠️ CRITICAL: Git Tag Timing & Branch Management
 
-**MOST IMPORTANT**: Git tagging MUST happen at the EXACT right moment:
+**MOST IMPORTANT**: Git tagging MUST happen at the EXACT LAST MOMENT before pushing to remote, on the main/master branch ONLY.
 
-❌ **WRONG**: Tag during development/testing phase  
-❌ **WRONG**: Tag before final validation  
-✅ **CORRECT**: Tag only AFTER all changes are finalized and validated  
+### The Absolute Rule
 
-**Why this matters**: Premature tagging creates broken releases where the tag points to incomplete/untested code.
+**Git tag creation is the FINAL step before pushing - nothing comes after it except `git push`.**
+
+### Tag Timing Rules
+❌ **WRONG**: Tag during development/testing phase
+❌ **WRONG**: Tag before final validation
+❌ **WRONG**: Tag before merging to main/master
+❌ **WRONG**: Tag on develop branch
+❌ **WRONG**: Tag → then discover uncommitted files
+❌ **WRONG**: Tag → then realize tests need to run
+✅ **CORRECT**: All work complete → Merged to main/master → Tag (FINAL STEP) → Push
+
+### Branch Management Rules
+- **Development happens on**: `develop` branch
+- **Release commits created on**: `develop` branch
+- **Merge direction**: `develop` → `main` (or `master`)
+- **Tag location**: `main` (or `master`) branch ONLY
+- **Push order**: Push main branch, then push tag
+
+**Why this matters**:
+- Premature tagging creates broken releases where the tag points to incomplete/untested code
+- Tags on wrong branches cause version confusion and deployment issues
+- Proper branch isolation ensures clean release history
+- Tagging as the final step guarantees the tagged commit is exactly what gets published
 
 ## Goals
 
@@ -44,7 +64,9 @@ metadata:
 1. Assess current Git status and branch position
 2. Review recent commits and changes since last release
 3. Check version numbers and changelog entries
-4. Evaluate overall project health and readiness
+4. **CRITICAL**: Verify all untracked files are handled (committed or .gitignore'd)
+5. Verify working directory is clean (no uncommitted changes)
+6. Evaluate overall project health and readiness
 
 ⚠️ **NO git operations in this phase**
 
@@ -65,11 +87,23 @@ metadata:
 ⚠️ **Changes made but NOT tagged yet**
 
 ### Phase 4: Execution (Critical Timing Phase)
-1. **CREATE FINAL RELEASE COMMIT** with all validated changes
-2. **MERGE to main branch** (if using GitFlow)
-3. **CREATE GIT TAG** ← **THE CRITICAL MOMENT**
-4. **PUSH changes and tag to GitHub**
-5. Monitor CI/CD pipeline status
+
+**DEVELOPMENT BRANCH**: develop
+**RELEASE BRANCH**: main (or master)
+
+1. **VERIFY** all changes are committed (check `git status` - clean working directory)
+2. **CREATE FINAL RELEASE COMMIT** on develop branch
+3. **SWITCH to main/master branch**: `git checkout main` (or `master`)
+4. **MERGE develop to main/master**: `git merge develop`
+5. **VERIFY** merge is clean (fast-forward preferred, or clean merge)
+6. **VERIFY** on correct branch (main/master)
+7. **VERIFY** working directory is still clean
+8. **CREATE GIT TAG** on main/master ← **THE FINAL STEP**
+   - This is the LAST action before pushing
+   - NOTHING should happen after tagging except push
+9. **PUSH main/master branch** to remote
+10. **PUSH tag** to remote
+11. Monitor CI/CD pipeline status
 
 ### Phase 5: Verification
 1. Confirm successful GitHub release creation
@@ -77,16 +111,21 @@ metadata:
 3. Check documentation deployment
 4. Send release notifications
 
-## Critical Git Tag Timing Rules
+## Critical Git Tag Timing & Branch Rules
 
 ### ✅ **CORRECT SEQUENCE:**
 ```
-1. Make all necessary code/documentation changes
-2. Run complete tests and validation
-3. Get final approval for release
-4. Create final release commit
-5. CREATE GIT TAG (this is the critical moment!)
-6. Push everything to remote
+1. Make all necessary code/documentation changes (on develop)
+2. Verify git status - ensure ALL files are committed
+3. Run complete tests and validation
+4. Get final approval for release
+5. Create final release commit on develop
+6. Switch to main/master branch
+7. Merge develop to main/master
+8. Verify on correct branch (main/master)
+9. Verify working directory is clean
+10. CREATE GIT TAG on main/master (FINAL STEP - NOTHING AFTER THIS)
+11. Push everything to remote
 ```
 
 ### ❌ **INCORRECT SEQUENCES TO AVOID:**
@@ -94,6 +133,9 @@ metadata:
 ❌ Test → Tag → Fix issues → Push (Tag points to broken code)
 ❌ Develop → Tag → Test → Push (Tag created too early)
 ❌ Tag → Test → Fix → Push (Backwards workflow)
+❌ Tag → Find uncommitted files → Commit → Tag wrong commit (Version confusion)
+❌ Tag → Realize need to merge → Merge → Tag wrong commit (Wrong branch)
+❌ Merge → Push → Remember to tag → Tag → Push tag (Tag missed the release)
 ```
 
 ## Interactive Decision Points
@@ -108,11 +150,13 @@ The skill will pause at key decision points to allow human review:
 ## Error Handling & Rollback
 
 ### Common Issues Handled:
-- Test failures during QA phase
-- Git conflicts during merge
-- Version numbering inconsistencies
-- Documentation validation errors
-- CI/CD pipeline failures
+- **Tag created on wrong branch**: Delete and recreate on correct branch
+- **Uncommitted changes discovered**: Commit and restart tag process
+- **Test failures during QA phase**: Fix and re-run tests before tagging
+- **Git conflicts during merge**: Resolve and verify clean merge
+- **Version numbering inconsistencies**: Validate across all files
+- **Documentation validation errors**: Fix before proceeding
+- **CI/CD pipeline failures**: Monitor and handle appropriately
 
 ### Rollback Procedures:
 - Automatic stash/unstash for failed operations
