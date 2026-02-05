@@ -1,13 +1,19 @@
 # CHANGELOG
 
-## 0.2.0(developing)
+## 0.2.0
 
-> 📅 2026-01-31
+> 📅 2026-02-05
 
 - ⛓️‍💥 Breaking:
-    - CLI now requires explicit subcommand (`http`, `stdio`, `tools`, `info`, `tags`, or `version`). Running `u2mcp --help` without arguments shows help instead of starting server with default stdio transport. Migrate by appending `stdio` to your command: `u2mcp` → `u2mcp stdio`
+    - CLI now requires explicit subcommand (`http`, `stdio`, `tools`, `info`, `tags`, or `version`). Running `u2mcp` without arguments shows help instead of starting server with default stdio transport. Migrate by appending `stdio` to your command: `u2mcp` → `u2mcp stdio`
+    - Change project license from MIT to Apache-2.0
 
 - 🆕 New:
+    - Add CLI short options: `-l` (log-level), `-i` (include-tags), `-e` (exclude-tags), `-H` (host), `-p` (port), `-t` (token), `-n` (no-token)
+    - Add `--show-fastmcp-banner` option to stdio and http commands to control fastmcp banner display
+    - Add `save_screenshot` tool to save screenshots to file with format determined by extension
+    - Add AI-driven UI testing framework with comprehensive test specification
+    - Add Android UI test skill as dual-purpose educational example and production test suite
     - Add CLI utility commands: `u2mcp tools`, `u2mcp info <tool>`, `u2mcp tags`, `u2mcp version`
     - Add tag-based tool filtering with wildcard support (`--include-tags`, `--exclude-tags`)
     - Add `element_bounds` tool to get bounding box coordinates of elements
@@ -21,10 +27,11 @@
     - Add alternative CLI entry points: `uiautomator2-mcp`, `uiautomator2-mcp-server`
 
 - ⚙️ Changed:
-    - Refactor CLI with Typer subcommands
+    - Refactor CLI with cyclopts subcommands (migrated from typer)
     - Move tag parsing and wildcard expansion logic to mcp module
     - Rename `_version.py` to `version.py`
     - Rename `monitor_task_group` to `background_task_group`
+    - Rename internal `tags` variable to `tags_map` for clarity
     - Update `shell_command` to return exit code and output
     - Enhance ADB connectivity check with detailed information and platform-specific guidance
 
@@ -33,6 +40,7 @@
     - Improve scrcpy error handling for process exit during startup
     - Correct scrcpy tool name and add Windows executable support
     - Fix `element_bounds` tool - `bounds` is a property, not a method
+    - Correct help command reference in breaking changes documentation
 
 - 📚 Docs:
     - Add CLAUDE.md with comprehensive project documentation
