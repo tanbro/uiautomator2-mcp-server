@@ -1,9 +1,11 @@
 # uiautomator2-mcp-server
 
 [![PyPI](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
+![GitHub Tag](https://img.shields.io/github/v/tag/tanbro/uiautomator2-mcp-server)
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/gh/tanbro/uiautomator2-mcp-server)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
-[![GitHub release](https://img.shields.io/github/v/release/tanbro/uiautomator2-mcp-server)](https://github.com/tanbro/uiautomator2-mcp-server/releases)
+
+
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
