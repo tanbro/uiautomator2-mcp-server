@@ -702,7 +702,7 @@ Claude: [Uses swipe to scroll down]
 
 ## License
 
-GPL-3.0
+Apache-2.0
 
 ------
 

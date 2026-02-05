@@ -10,7 +10,7 @@ dependencies = [
   "typing_extensions>=4.12; python_version < '3.12'",
   "uiautomator2>=3.5,<4.0",
 ]
-license = "GPL-3.0-or-later"
+license = "Apache-2.0"
 keywords = ["uiautomator2", "mcp", "fastmcp", "adb", "android", "adbutils"]
 classifiers = [
   # How mature is this project? Common values are
