@@ -22,9 +22,10 @@ def check_adb(console: Console | None = None) -> bool:
         import adbutils
 
         # Try to connect to ADB server
-        adbutils.adb.server_version()
-        console.print(f"[green]✓ ADB server version: {adbutils.adb.server_version()}[/green]")
-        console.print(f"[green]✓ ADB device list:    {adbutils.adb.device_list()}[/green]")
+        adb_server_version = adbutils.adb.server_version()
+        console.print(f"[green]✓ ADB server version: {adb_server_version}[/green]")
+        adb_device_list = adbutils.adb.device_list()
+        console.print(f"[green]✓ ADB device list:    {adb_device_list}[/green]")
         return True
 
     except Exception as e:
@@ -41,12 +42,12 @@ def _print_adb_fix_help(console: Console) -> None:
 
     # Install ADB
     console.print("  1. Install ADB:")
-    if sys.platform == "darwin":
+    if sys.platform == "darwin":  # pragma: no cover
         console.print("     [white]brew install android-platform-tools[/white]")
-    elif sys.platform == "linux":
+    elif sys.platform == "linux":  # pragma: no cover
         console.print("     [white]sudo apt install adb[/white]  # Debian/Ubuntu")
         console.print("     [white]sudo yum install android-tools[/white]  # Fedora/RHEL")
-    elif sys.platform == "win32":
+    elif sys.platform == "win32":  # pragma: no cover
         console.print("     Download: https://developer.android.com/tools/releases/platform-tools")
         console.print("     Or use: [white]winget install Google.PlatformTools[/white]")
 
@@ -56,10 +57,10 @@ def _print_adb_fix_help(console: Console) -> None:
 
     # Custom ADB path
     console.print("  3. Set custom ADB path (if needed):")
-    if sys.platform == "win32":
+    if sys.platform == "win32":  # pragma: no cover
         console.print("     CMD:        [white]set ADBUTILS_ADB_PATH=C:\\path\\to\\adb.exe[/white]")
         console.print("     PowerShell: [white]$env:ADBUTILS_ADB_PATH='C:\\path\\to\\adb.exe'[/white]")
-    else:
+    else:  # pragma: no cover
         console.print("     [white]export ADBUTILS_ADB_PATH=/path/to/adb[/white]")
 
     console.print()

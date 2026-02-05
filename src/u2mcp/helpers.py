@@ -169,7 +169,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
 def _print_single_tool_help(console: Console, name: str, tool: Any) -> None:
     """Print detailed help for a single tool.
 
-    Parses Google-style docstrings and formats Args/Returns with markdown.
+    Parses doc-strings and formats Args/Returns with markdown.
     """
     # Build markdown content
     md_lines = []

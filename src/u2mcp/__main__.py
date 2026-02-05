@@ -75,6 +75,13 @@ def stdio_cmd(
             help="Convert null tool responses to empty string compatibility",
         ),
     ] = False,
+    show_fastmcp_banner: Annotated[
+        bool,
+        typer.Option(
+            "--show-fastmcp-banner/--no-show-fastmcp-banner",
+            help="Show FastMCP banner on startup",
+        ),
+    ] = False,
 ):
     """Run the MCP server with stdio transport."""
     _setup_logging(log_level)
@@ -82,7 +89,7 @@ def stdio_cmd(
     mcp = make_mcp(
         show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags, fix_empty_responses=fix_empty_responses
     )
-    mcp.run(transport="stdio", log_level=log_level)
+    mcp.run(transport="stdio", show_banner=show_fastmcp_banner, log_level=log_level)
 
 
 @cli.command("http")
@@ -130,6 +137,13 @@ def http_cmd(
             help="Convert null tool responses to empty string compatibility",
         ),
     ] = False,
+    show_fastmcp_banner: Annotated[
+        bool,
+        typer.Option(
+            "--show-fastmcp-banner/--no-show-fastmcp-banner",
+            help="Show FastMCP banner on startup",
+        ),
+    ] = False,
 ):
     """Run the MCP server with HTTP (streamable-http) transport."""
     _setup_logging(log_level)
@@ -151,6 +165,7 @@ def http_cmd(
     )
     mcp.run(
         transport="streamable-http",
+        show_banner=show_fastmcp_banner,
         host=host,
         port=port,
         json_response=json_response,
