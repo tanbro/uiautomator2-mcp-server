@@ -315,18 +315,30 @@ This project includes an AI-driven UI testing framework using the `.skills/` sys
 ### Skill Structure
 
 ```
-.skills/
-├── u2mcp-uitest/
-│   ├── skill.md      # Skill description and usage
-│   └── test.spec.md  # Test specification with steps and expected results
+.skills/android-ui-test/
+├── SKILL.md                     # Core skill definition (YAML metadata + dual-purpose documentation)
+├── README.md                    # Architecture overview and quick start
+├── examples/                    # Learning materials
+│   └── usage-examples.md        # Detailed usage patterns and examples
+├── references/                  # Technical specifications
+│   └── test-specification.md    # Complete test specification with TC### test cases
+└── (scripts/)                   # Executable scripts (in project root)
+    └── demo-android-test.py     # Demonstration script
 ```
+
+### Dual-Purpose Design
+
+The `android-ui-test` skill serves two purposes:
+
+1. **Educational Example**: Demonstrates best practices for MCP skill development
+2. **Production Testing**: Acts as the project's automated UI test suite for CI/CD
 
 ### Running Tests
 
 Simply ask the AI to execute a test:
 
 ```
-Execute u2mcp UI test
+Run the Android UI test suite on my connected device
 ```
 
 The AI will:
@@ -334,13 +346,26 @@ The AI will:
 - Run comprehensive tests covering all device operations
 - Provide a detailed test report with pass/fail/skip status
 
+### Test Coverage
+
+| Category    | Tests                                    |
+|-------------|------------------------------------------|
+| Device      | Connection, info, screenshot, hierarchy  |
+| Touch       | Click, long press, double click          |
+| Gesture     | Swipe, drag, key press                   |
+| App         | List, launch, wait, info                 |
+| Element     | Wait, bounds, get text, click            |
+| Input       | Text input, keyboard                     |
+| Clipboard   | Read/write (with known limitations)      |
+
 ### Creating Custom Skills
 
-Each skill requires:
-- `skill.md` - Description and usage instructions
-- `test.spec.md` - Test cases with steps, expected results, and cleanup
+See [`.skills/android-ui-test/`](../skills/android-ui-test/) for a complete reference implementation.
 
-See `.skills/u2mcp-uitest/` for a complete example.
+Key components:
+- `SKILL.md` - YAML frontmatter with metadata and lightweight description
+- `examples/` - Detailed usage patterns for learning
+- `references/` - Technical specifications and test cases
 
 ## Troubleshooting
 

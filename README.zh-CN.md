@@ -605,20 +605,37 @@ u2mcp http -H 0.0.0.0 -p 8000 -n
 
 ## AI 驱动的 UI 测试
 
-本项目包含一个 AI 驱动的 UI 测试技能，允许你使用自然语言在 Android 设备上运行全面的自动化测试。AI 充当自动化测试员，根据设备状态自适应地执行测试步骤。
+本项目包含一个使用 `.skills/` 系统的 AI 驱动 UI 测试框架。`android-ui-test` 技能具有双重用途：
+
+1. **教育示例**：演示 MCP 技能开发的最佳实践
+2. **生产测试**：作为项目的自动化 UI 测试套件，用于 CI/CD
+
+### 技能结构
+
+```
+.skills/android-ui-test/
+├── SKILL.md                     # 核心技能定义（YAML 元数据）
+├── README.md                    # 架构概览和快速入门
+├── examples/                    # 学习资料
+│   └── usage-examples.md        # 详细使用模式和示例
+├── references/                  # 技术规范
+│   └── test-specification.md    # 完整测试规范（TC001-TC008）
+└── (scripts/)                   # 可执行脚本（在项目根目录）
+    └── demo-android-test.py     # 演示脚本
+```
 
 ### 运行 UI 测试
 
 只需让 AI 执行 UI 测试：
 
 ```
-执行 u2mcp UI 测试
+在我连接的设备上运行 Android UI 测试套件
 ```
 
 AI 将会：
 - 自动检测并连接到第一个可用设备
 - 运行涵盖所有设备操作的全面测试
-- 提供详细的测试报告，包括通过/失败状态
+- 提供详细的测试报告，包括通过/失败/跳过状态
 
 ### 测试覆盖
 
@@ -632,14 +649,10 @@ AI 将会：
 | 输入   | 文本输入、键盘             |
 | 剪贴板 | 读取/写入（有已知限制）    |
 
-### 测试规范
-
-测试套件定义在 `.skills/u2mcp-uitest/test.spec.md` 中。你可以通过编辑此文件来查看或扩展测试用例。
-
 ### 测试报告示例
 
 ```
-u2mcp UI 测试总结
+Android UI 测试总结
 ==================
 
 设备: UGAILFCIU88TT469 (PDKM00, Android 11, SDK 31)
@@ -657,14 +670,14 @@ u2mcp UI 测试总结
 总计: 7 通过, 1 跳过, 0 失败
 ```
 
-### 创建自定义测试
+### 创建自定义技能
 
-你可以通过在 `.skills/` 下添加新的技能目录来创建自己的测试规范。每个技能应包含：
+参考 [`.skills/android-ui-test/`](.skills/android-ui-test/) 获取完整参考实现。
 
-- `skill.md` - 技能描述和使用说明
-- `test.spec.md` - 测试用例，包含步骤和预期结果
-
-参考 `.skills/u2mcp-uitest/` 获取完整示例。
+每个技能目录包含：
+- `SKILL.md` - YAML 前置元数据和轻量级描述
+- `examples/` - 供学习使用的详细使用模式
+- `references/` - 技术规范和测试用例
 
 ## 可用工具
 

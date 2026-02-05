@@ -517,20 +517,37 @@ Refer to your client's documentation for specific configuration details.
 
 ## AI-Driven UI Testing
 
-This project includes an AI-driven UI testing skill that allows you to run comprehensive automated tests on your Android device using natural language. The AI acts as an automated tester, executing test steps adaptively based on the device state.
+This project includes an AI-driven UI testing framework using the `.skills/` system. The `android-ui-test` skill serves a dual purpose:
+
+1. **Educational Example**: Demonstrates best practices for MCP skill development
+2. **Production Testing**: Acts as the project's automated UI test suite for CI/CD
+
+### Skill Structure
+
+```
+.skills/android-ui-test/
+├── SKILL.md                     # Core skill definition (YAML metadata)
+├── README.md                    # Architecture overview and quick start
+├── examples/                    # Learning materials
+│   └── usage-examples.md        # Detailed usage patterns and examples
+├── references/                  # Technical specifications
+│   └── test-specification.md    # Complete test specification (TC001-TC008)
+└── (scripts/)                   # Executable scripts (in project root)
+    └── demo-android-test.py     # Demonstration script
+```
 
 ### Running UI Tests
 
 Simply ask the AI to execute the UI test:
 
 ```
-Execute u2mcp UI test
+Run the Android UI test suite on my connected device
 ```
 
 The AI will:
 - Auto-detect and connect to the first available device
 - Run comprehensive tests covering all device operations
-- Provide a detailed test report with pass/fail status
+- Provide a detailed test report with pass/fail/skip status
 
 ### Test Coverage
 
@@ -544,15 +561,11 @@ The AI will:
 | Input     | Text Input, Keyboard                    |
 | Clipboard | Read/Write (with known limitations)     |
 
-### Test Specification
-
-The test suite is defined in `.skills/u2mcp-uitest/test.spec.md`. You can review or extend the test cases by editing this file.
-
 ### Sample Test Report
 
 ```
-u2mcp UI Test Summary
-=====================
+Android UI Test Summary
+=======================
 
 Device: UGAILFCIU88TT469 (PDKM00, Android 11, SDK 31)
 
@@ -569,14 +582,14 @@ Test Cases:
 Total: 7 passed, 1 skipped, 0 failed
 ```
 
-### Creating Custom Tests
+### Creating Custom Skills
 
-You can create your own test specifications by adding new skill directories under `.skills/`. Each skill should contain:
+See [`.skills/android-ui-test/`](.skills/android-ui-test/) for a complete reference implementation.
 
-- `skill.md` - Skill description and usage
-- `test.spec.md` - Test cases with steps and expected results
-
-See `.skills/u2mcp-uitest/` for a complete example.
+Each skill directory contains:
+- `SKILL.md` - YAML frontmatter with metadata and lightweight description
+- `examples/` - Detailed usage patterns for learning
+- `references/` - Technical specifications and test cases
 
 ## Available Tools
 

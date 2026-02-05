@@ -1,7 +1,7 @@
-# u2mcp UI Test Specification
+# Android UI Test Specification
 
 ## Overview
-Comprehensive test suite for uiautomator2-mcp-server using real Android device.
+Comprehensive test suite for Android device automation using uiautomator2-mcp-server.
 
 ## Prerequisites
 - ADB server running
@@ -10,8 +10,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 
 ## Environment Variables
 - `U2_SKIP_INIT` - Skip device initialization if already done (default: `false`)
-
----
 
 ## Test Cases
 
@@ -28,8 +26,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - Init completes without errors
 - Device info returns valid model, SDK version, screen size
 
----
-
 ### TC002: Device Info & Capture
 
 **Steps:**
@@ -42,8 +38,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - Screenshot returns image data with valid dimensions
 - Hierarchy returns valid XML structure
 
----
-
 ### TC003: Touch Actions
 
 **Steps:**
@@ -54,8 +48,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 **Expected Results:**
 - All touch actions complete without errors
 - Visual confirmation on device (if visible)
-
----
 
 ### TC004: Gesture Actions
 
@@ -69,8 +61,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - All gestures execute successfully
 - Home key returns to launcher
 - Back key navigates back
-
----
 
 ### TC005: Application Management
 
@@ -86,8 +76,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - Running apps list contains multiple entries
 - Settings app launches successfully
 - App info contains version information
-
----
 
 ### TC006: Element Operations
 
@@ -105,8 +93,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - Click executes successfully
 - Settings app becomes foreground
 
----
-
 ### TC007: Input & Keyboard
 
 **Steps:**
@@ -118,8 +104,6 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - Text input executes
 - Keyboard hide command executes
 
----
-
 ### TC008: Clipboard Operations
 
 **Steps:**
@@ -130,25 +114,21 @@ Comprehensive test suite for uiautomator2-mcp-server using real Android device.
 - **Known Limitation:** Write may fail due to Android security restrictions
 - Read returns null or content (depends on app context)
 
----
-
 ## Cleanup
 
 **Steps:**
 1. Press HOME key to return to launcher
 2. (Optional) Clear test app data
 
----
-
 ## Test Report Format
 
 After execution, provide summary in format:
 
 ```
-u2mcp UI Test Summary
-=====================
+Android UI Test Summary
+=======================
 
-Device: UGAILFCIU88TT469 (PDKM00, Android 11, SDK 31)
+Device: [DEVICE_SERIAL] ([MODEL], Android [VERSION], SDK [SDK_VERSION])
 
 Test Cases:
   [PASS] TC001: Device Connection & Initialization
@@ -162,8 +142,6 @@ Test Cases:
 
 Total: 7 passed, 1 skipped, 0 failed
 ```
-
----
 
 ## Notes
 
