@@ -53,6 +53,7 @@ def stdio_cmd(
         str | None,
         typer.Option(
             "--include-tags",
+            "-i",
             help="Only expose tools with these tags (comma-separated, supports * and ? wildcards, e.g., device:*,*:shell)",
         ),
     ] = None,
@@ -60,6 +61,7 @@ def stdio_cmd(
         str | None,
         typer.Option(
             "--exclude-tags",
+            "-e",
             help="Exclude tools with these tags (comma-separated, supports * and ? wildcards, e.g., screen:*,*:mirror)",
         ),
     ] = None,
@@ -96,6 +98,7 @@ def http_cmd(
         bool,
         typer.Option(
             "--no-token",
+            "-n",
             help="Disable authentication bearer token verification. If not set, a token will be generated randomly.",
         ),
     ] = False,
@@ -105,6 +108,7 @@ def http_cmd(
         str | None,
         typer.Option(
             "--include-tags",
+            "-i",
             help="Only expose tools with these tags (comma-separated, supports * and ? wildcards, e.g., device:*,*:shell)",
         ),
     ] = None,
@@ -112,6 +116,7 @@ def http_cmd(
         str | None,
         typer.Option(
             "--exclude-tags",
+            "-e",
             help="Exclude tools with these tags (comma-separated, supports * and ? wildcards, e.g., screen:*,*:mirror)",
         ),
     ] = None,

@@ -5,7 +5,7 @@
 > 📅 2026-01-31
 
 - ⛓️‍💥 Breaking:
-    - CLI now requires explicit subcommand (`http`, `stdio`, `tools`, `info`, `tags`, or `version`). Running `u2mcp` without arguments shows help instead of starting server with default stdio transport. Migrate by appending `stdio` to your command: `u2mcp` → `u2mcp stdio`
+    - CLI now requires explicit subcommand (`http`, `stdio`, `tools`, `info`, `tags`, or `version`). Running `u2mcp --help` without arguments shows help instead of starting server with default stdio transport. Migrate by appending `stdio` to your command: `u2mcp` → `u2mcp stdio`
 
 - 🆕 New:
     - Add CLI utility commands: `u2mcp tools`, `u2mcp info <tool>`, `u2mcp tags`, `u2mcp version`

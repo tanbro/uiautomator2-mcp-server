@@ -10,8 +10,7 @@ from mcp.types import CallToolRequestParams, TextContent
 class EmptyResponseMiddleware(Middleware):
     """Middleware that converts empty tool responses to non-empty values.
 
-    This is needed for compatibility with Zhipu AI model service, which doesn't
-    handle empty responses (content: []) correctly.
+    This is needed for compatibility with ZhiPu AI model service, which doesn't handle empty responses (content: []) correctly.
 
     When enabled, this middleware will convert empty content to "" (empty string).
     """
@@ -24,7 +23,7 @@ class EmptyResponseMiddleware(Middleware):
         """Intercept tool calls and fix empty responses."""
         result = await call_next(context)
 
-        # Convert empty content to empty string for Zhipu compatibility
+        # Convert empty content to empty string for ZhiPu compatibility
         if isinstance(result, ToolResult):
             if not result.content:
                 # Empty content - return empty string
