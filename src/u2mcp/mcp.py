@@ -28,7 +28,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from .background import set_background_task_group
-from .helpers import print_tags
+from .helpers import print_tags as async_print_tags
 from .middlewares import EmptyResponseMiddleware
 
 if sys.version_info >= (3, 12):  # pragma: no cover
@@ -39,9 +39,9 @@ else:  # pragma: no cover
 __all__ = ["mcp", "make_mcp"]
 
 
-# Warning: You can NOT import this module unless call `make_mcp()`
-# because it uses a global variable to store the MCP instance, which is not initialized until `make_mcp()` is called.
-# This design allows tools to register themselves with the MCP instance when they are imported, but it also means that importing this module before calling `make_mcp()` will result in an error.
+# Global MCP instance.
+# Initialized by make_mcp() function.
+# Do not use before calling make_mcp()
 mcp: FastMCP
 
 
@@ -85,13 +85,13 @@ def _expand_wildcards(tags: set[str] | None, all_available_tags: set[str] | None
 
 
 @asynccontextmanager
-async def _lifespan(instance: FastMCP, /, show_tags: bool = True, token: str | None = None):
+async def _lifespan(instance: FastMCP, /, *, token: str | None = None, print_tags: bool = True):
     console = Console(stderr=True)
 
     # Show enabled tags and tools if requested
-    if show_tags:
+    if print_tags:
         console.print("\n[bold cyan]Enabled Tags and Tools:[/bold cyan]")
-        await print_tags(instance, console)
+        await async_print_tags(instance, console)
         console.print("")
 
     if token:
@@ -136,12 +136,12 @@ def make_mcp(
     token: str | None = None,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
-    show_tags: bool = False,
+    print_tags: bool = False,
     fix_empty_responses: bool = False,
 ) -> FastMCP:
     global mcp
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
-    lifespan_kwargs: dict[str, Any] = {"show_tags": show_tags}
+    lifespan_kwargs: dict[str, Any] = {"print_tags": print_tags}
     if token:
         lifespan_kwargs["token"] = token
         params.update(lifespan=partial(_lifespan, **lifespan_kwargs), auth=_SimpleTokenAuthProvider(token=token))

@@ -1,3 +1,5 @@
+"""CLI entrypoint for u2mcp."""
+
 from __future__ import annotations
 
 import logging
@@ -17,18 +19,16 @@ from .helpers import print_tool_help
 from .mcp import make_mcp
 from .version import __version__
 
-
-def _version_callback() -> str:
-    """Return version information."""
-    return f"{__name__} {__version__} (Python {sys.version})"
-
-
 # Organize commands into groups
 server_group = Group("Server Commands")
 info_group = Group("Information Commands")
 
 # Create CLI app with cyclopts
-app = App(name="u2mcp", help="uiautomator2-mcp-server - MCP server for Android device automation", version=_version_callback())
+app = App(
+    name=__package__,
+    help="MCP server enabling AI-powered Android device automation - Take screenshots, perform taps/swipes, manage apps, send text input, and control Android devices through standardized tool interfaces",
+    version=f"{__package__} {__version__} Python {sys.version}",
+)
 
 
 def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]) -> None:
@@ -86,7 +86,7 @@ def stdio(
     _setup_logging(log_level)
     _check_adb(Console(stderr=True), check_adb)
     mcp = make_mcp(
-        show_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags, fix_empty_responses=fix_empty_responses
+        print_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags, fix_empty_responses=fix_empty_responses
     )
     mcp.run("stdio", show_fastmcp_banner, log_level=log_level)
 
@@ -141,7 +141,7 @@ def http(
 
     mcp = make_mcp(
         token,
-        show_tags=print_tags,
+        print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
         fix_empty_responses=fix_empty_responses,
