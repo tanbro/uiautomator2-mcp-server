@@ -26,7 +26,8 @@ info_group = Group("Information Commands")
 # Create CLI app with cyclopts
 app = App(
     name=__package__,
-    help="MCP server enabling AI-powered Android device automation - Take screenshots, perform taps/swipes, manage apps, send text input, and control Android devices through standardized tool interfaces",
+    help_format="rich",
+    help="[bold cyan]MCP server[/bold cyan] for [bold green]AI-powered[/bold green] Android device automation via [magenta]uiautomator2[/magenta]",
     version=f"{__package__} {__version__} Python {sys.version}",
 )
 
