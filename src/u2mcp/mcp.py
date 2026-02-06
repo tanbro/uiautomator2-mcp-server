@@ -31,15 +31,17 @@ from .background import set_background_task_group
 from .helpers import print_tags
 from .middlewares import EmptyResponseMiddleware
 
-if sys.version_info >= (3, 12):  # qa: noqa
+if sys.version_info >= (3, 12):  # pragma: no cover
     from typing import override
-else:  # qa: noqa
+else:  # pragma: no cover
     from typing_extensions import override
 
 __all__ = ["mcp", "make_mcp"]
 
 
-# Warning: You can NOT import it unless call `make_mcp()`
+# Warning: You can NOT import this module unless call `make_mcp()`
+# because it uses a global variable to store the MCP instance, which is not initialized until `make_mcp()` is called.
+# This design allows tools to register themselves with the MCP instance when they are imported, but it also means that importing this module before calling `make_mcp()` will result in an error.
 mcp: FastMCP
 
 
