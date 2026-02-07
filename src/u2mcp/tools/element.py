@@ -188,9 +188,9 @@ async def element_get_text(serial: str, xpath: str) -> str | None:
 
 
 @mcp.tool("element_set_text", tags={"element:modify"})
-async def element_set_text(serial: str, xpath: str, text: str) -> None:
+async def element_set_text(serial: str, xpath: str, text: str):
     """
-    find and set element text
+    Find and set element text.
 
     Args:
         serial (str): Android device serialno
@@ -198,7 +198,7 @@ async def element_set_text(serial: str, xpath: str, text: str) -> None:
         text (str): string of node text
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
+        await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
 
 
 @mcp.tool("element_bounds", tags={"element:query"})
