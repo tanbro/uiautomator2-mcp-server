@@ -5,7 +5,6 @@
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/gh/tanbro/uiautomator2-mcp-server)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
 
-
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
@@ -197,12 +196,18 @@ pip install uiautomator2-mcp-server
 
 ### 运行模式
 
+> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以直接使用 `uvx uiautomator2-mcp-server ...` 运行。
+
 MCP 服务器可以两种模式运行：
 
 #### STDIO 模式（用于本地 MCP 客户端）
 
 ```bash
+# 如果已安装
 u2mcp stdio
+
+# 或直接运行无需安装
+uvx uiautomator2-mcp-server stdio
 ```
 
 此模式通过标准输入/输出通信，通常由直接生成服务器进程的 MCP 客户端使用。
@@ -210,22 +215,33 @@ u2mcp stdio
 #### HTTP 模式（用于远程/网络访问）
 
 ```bash
-# 基本 HTTP 服务器
+# 如果已安装
 u2mcp http -H 0.0.0.0 -p 8000 -n
 
-# 带认证令牌
+# 或直接运行无需安装
+uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -n
+
+# 带认证令牌（如果已安装）
 u2mcp http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
+
+# 或直接运行无需安装
+uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
 ```
 
 服务器将监听 `http://localhost:8000/mcp`（或你指定的主机/端口）。
 
 ### CLI 实用命令
 
+> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以直接使用 `uvx uiautomator2-mcp-server ...` 运行。
+
 `u2mcp` CLI 提供了几个实用命令用于探索可用的工具和标签：
 
 ```bash
 # 列出所有可用工具
 u2mcp tools
+
+# 或直接运行
+uvx uiautomator2-mcp-server tools
 
 # 显示特定工具的详细信息
 u2mcp info screenshot
@@ -243,11 +259,16 @@ u2mcp --version
 
 ### 工具过滤
 
+> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以将命令替换为 `uvx uiautomator2-mcp-server ...` 直接运行。
+
 你可以使用基于标签的过滤来选择性暴露工具。这会减少 LLM 可用的工具数量，从而提高性能并减少困惑。
 
 ```bash
 # 只暴露设备管理工具
 u2mcp stdio -i device:manage
+
+# 或直接运行
+uvx uiautomator2-mcp-server stdio -i device:manage
 
 # 只暴露触摸和手势操作
 u2mcp stdio -i action:touch,action:gesture
@@ -282,6 +303,23 @@ u2mcp stdio -e "*:mirror"
 # 列出所有可用标签
 u2mcp tags
 ```
+
+## 快速开始
+
+> **开始之前：** 确保你已经配置了 MCP 客户端（如 Claude Desktop）来使用此服务器。详情请参阅下方的 [MCP 客户端配置](#mcp-客户端配置)。
+
+1. **连接你的 Android 设备**，通过 USB 并启用 USB 调试
+2. **配置你的 MCP 客户端**以使用此服务器（参见 [MCP 客户端配置](#mcp-客户端配置)）
+3. **初始化设备**（首次必需）：
+
+   > "初始化我的 Android 设备"
+
+4. **开始自动化**：
+
+   > "截图"
+   > "点击坐标 500, 1000"
+   > "向上滑动"
+   > "打开 YouTube 应用"
 
 **短选项：**
 
@@ -591,21 +629,11 @@ u2mcp http -H 0.0.0.0 -p 8000 -n
 
 有关特定配置详细信息，请参阅你客户端的文档。
 
-## 快速开始
-
-1. **连接你的 Android 设备**，通过 USB 并启用 USB 调试
-2. **初始化设备**（首次必需）：
-
-   > "初始化我的 Android 设备"
-
-3. **开始自动化**：
-
-   > "截图"
-   > "点击坐标 500, 1000"
-   > "向上滑动"
-   > "打开 YouTube 应用"
-
 ## AI 驱动的 UI 测试
+
+> **前置条件：** 要使用 AI 驱动的 UI 测试，你必须先配置 MCP 客户端（如 Claude Desktop、Cursor 或 Cherry Studio）来连接到此服务器。设置说明请参阅上方的 [MCP 客户端配置](#mcp-客户端配置) 部分。
+
+本项目包含一个使用 `.skills/` 系统的 AI 驱动 UI 测试框架。`android-ui-test` 技能具有双重用途：
 
 本项目包含一个使用 `.skills/` 系统的 AI 驱动 UI 测试框架。`android-ui-test` 技能具有双重用途：
 

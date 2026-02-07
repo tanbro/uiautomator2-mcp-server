@@ -5,7 +5,6 @@
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/gh/tanbro/uiautomator2-mcp-server)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
 
-
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
@@ -109,12 +108,18 @@ pip install uiautomator2-mcp-server
 
 ### Running Modes
 
+> **Note:** The commands below use `u2mcp`, which requires the package to be installed. If you haven't installed it yet, you can run directly using `uvx uiautomator2-mcp-server ...` instead.
+
 The MCP server can run in two modes:
 
 #### STDIO Mode (for local MCP clients)
 
 ```bash
+# If installed
 u2mcp stdio
+
+# Or run directly without installation
+uvx uiautomator2-mcp-server stdio
 ```
 
 This mode communicates via standard input/output and is typically used by MCP clients that spawn the server process directly.
@@ -122,22 +127,33 @@ This mode communicates via standard input/output and is typically used by MCP cl
 #### HTTP Mode (for remote/network access)
 
 ```bash
-# Basic HTTP server
+# If installed
 u2mcp http -H 0.0.0.0 -p 8000 -n
 
-# With authentication token
+# Or run directly without installation
+uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -n
+
+# With authentication token (if installed)
 u2mcp http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
+
+# Or run directly without installation
+uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
 ```
 
 The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
 
 ### CLI Utility Commands
 
+> **Note:** The commands below use `u2mcp`, which requires the package to be installed. If you haven't installed it yet, you can run directly using `uvx uiautomator2-mcp-server ...` instead.
+
 The `u2mcp` CLI provides several utility commands for exploring available tools and tags:
 
 ```bash
 # List all available tools
 u2mcp tools
+
+# Or run directly
+uvx uiautomator2-mcp-server tools
 
 # Show detailed information about a specific tool
 u2mcp info screenshot
@@ -155,11 +171,16 @@ u2mcp --version
 
 ### Tool Filtering
 
+> **Note:** The commands below use `u2mcp`, which requires the package to be installed. Replace with `uvx uiautomator2-mcp-server ...` if running directly.
+
 You can selectively expose tools using tag-based filtering. This reduces the number of tools available to the LLM, which can improve performance and reduce confusion.
 
 ```bash
 # Only expose device management tools
 u2mcp stdio -i device:manage
+
+# Or run directly
+uvx uiautomator2-mcp-server stdio -i device:manage
 
 # Only expose touch and gesture operations
 u2mcp stdio -i action:touch,action:gesture
@@ -194,6 +215,23 @@ u2mcp stdio -e "*:mirror"
 # List all available tags
 u2mcp tags
 ```
+
+## Quick Start
+
+> **Before you start:** Make sure you have configured an MCP client (like Claude Desktop) to use this server. See [MCP Client Configuration](#mcp-client-configuration) below for details.
+
+1. **Connect your Android device** via USB with USB debugging enabled
+2. **Configure your MCP client** to use this server (see [MCP Client Configuration](#mcp-client-configuration))
+3. **Initialize the device** (required first time):
+
+   > "Initialize my Android device"
+
+4. **Start automating**:
+
+   > "Take a screenshot"
+   > "Tap at coordinates 500, 1000"
+   > "Swipe up"
+   > "Open YouTube app"
 
 **Short Options:**
 
@@ -503,21 +541,9 @@ The server follows the [Model Context Protocol](https://modelcontextprotocol.io/
 
 Refer to your client's documentation for specific configuration details.
 
-## Quick Start
-
-1. **Connect your Android device** via USB with USB debugging enabled
-2. **Initialize the device** (required first time):
-
-   > "Initialize my Android device"
-
-3. **Start automating**:
-
-   > "Take a screenshot"
-   > "Tap at coordinates 500, 1000"
-   > "Swipe up"
-   > "Open YouTube app"
-
 ## AI-Driven UI Testing
+
+> **Prerequisite:** To use AI-driven UI testing, you must first configure an MCP client (such as Claude Desktop, Cursor, or Cherry Studio) to connect to this server. See the [MCP Client Configuration](#mcp-client-configuration) section above for setup instructions.
 
 This project includes an AI-driven UI testing framework using the `.skills/` system. The `android-ui-test` skill serves a dual purpose:
 
