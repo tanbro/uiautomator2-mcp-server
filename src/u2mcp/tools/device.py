@@ -233,7 +233,7 @@ async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) ->
             im_data = fp.getvalue()
 
         return {
-            "image": "data:image/jpeg;base64," + b64encode(im_data).decode(),
+            "image": f"data:image/{format};base64," + b64encode(im_data).decode(),
             "height": im.height,
             "width": im.width,
         }
@@ -256,9 +256,8 @@ async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
 
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
-
-    if not isinstance(im, Image):
-        raise RuntimeError("Invalid image")
+        if not isinstance(im, Image):
+            raise RuntimeError("Invalid image")
 
     with closing(im):
         # Convert path to Path object and resolve

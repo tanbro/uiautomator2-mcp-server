@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from base64 import b64encode
+from contextlib import closing
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 
 from anyio import to_thread
@@ -19,6 +21,7 @@ __all__ = (
     "element_click_until_gone",
     "element_long_click",
     "element_screenshot",
+    "element_save_screenshot",
     "element_get_text",
     "element_set_text",
     "element_bounds",
@@ -141,13 +144,14 @@ async def element_long_click(serial: str, xpath: str):
 
 
 @mcp.tool("element_screenshot", tags={"element:capture"})
-async def element_screenshot(serial: str, xpath: str) -> dict[str, Any]:
+async def element_screenshot(serial: str, xpath: str, format: str = "jpeg") -> dict[str, Any]:
     """
     find element and take screenshot
 
     Args:
         serial (str): Android device serialno
         xpath (str): element xpath
+        format (str): Image format. Defaults to "jpeg".
 
     Returns:
         dict[str,Any]: Screenshot image JPEG data with the following keys:
@@ -156,18 +160,50 @@ async def element_screenshot(serial: str, xpath: str) -> dict[str, Any]:
     """
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
-        if not isinstance(im, Image):
-            raise RuntimeError("Invalid image")
 
+    if not isinstance(im, Image):
+        raise RuntimeError("Invalid image")
+
+    with closing(im):
         with BytesIO() as fp:
-            im.save(fp, "jpeg")
+            im.save(fp, format)
             im_data = fp.getvalue()
 
         return {
-            "width": im.width,
+            "image": f"data:image/{format};base64," + b64encode(im_data).decode(),
             "height": im.height,
-            "image": "data:image/jpeg;base64," + b64encode(im_data).decode(),
+            "width": im.width,
         }
+
+
+@mcp.tool("element_save_screenshot", tags={"element:capture"})
+async def element_save_screenshot(serial: str, xpath: str, file: str) -> str:
+    """
+    find element and save screenshot
+
+    Args:
+        serial (str): Android device serialno
+        xpath (str): element xpath
+        file (str): File path to save the screenshot. Supports both absolute and relative paths.
+
+    Returns:
+        str: Screenshot save file path
+    """
+    async with get_device(serial) as device:
+        im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
+
+    if not isinstance(im, Image):
+        raise RuntimeError("Invalid image")
+
+    with closing(im):
+        # Convert path to Path object and resolve
+        file_path = Path(file)
+        # Create parent directory if it doesn't exist
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        # Save the image
+        im.save(file_path)
+
+    return file_path.resolve().as_posix()
 
 
 @mcp.tool("element_get_text", tags={"element:query"})
