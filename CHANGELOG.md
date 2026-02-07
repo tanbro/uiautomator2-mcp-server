@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## 0.2.1(dev)
+
+> 📅 2026-02-07
+
+- 🆕 New:
+    - Add `element_save_screenshot` tool to capture screenshots of specific elements
+    - Add `set_focused_text` input tool for direct text input without IME requirements
+    - Auto-grant all permissions to installed apps with `app_auto_grant_permissions` tool
+
+- ⚙️ Changed:
+    - Improve error handling in element tools with better exception messages
+    - Update swipe function parameter documentation
+    - Improve Chinese documentation translation and clarity
+    - Update README structure with better organization
+
+- 🐛 Fixed:
+    - Fix element swipe direction validation to only accept valid directions
+    - Correct bounds parameter handling in element tools
+    - Improve error handling for element not found scenarios
+
 ## 0.2.0
 
 > 📅 2026-02-05
