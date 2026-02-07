@@ -8,11 +8,9 @@
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
-> **注**：本文件包含有关中国大陆用户加速下载（`pip` / `uv` 镜像源）的**详细说明**；英文版仅包含指向本文件的提示。
+用 [uiautomator2](https://github.com/openatx/uiautomator2) 控制 Android 设备的 [MCP](https://modelcontextprotocol.io/) 服务器。
 
-一个 [MCP](https://modelcontextprotocol.io/) 服务器，提供使用 [uiautomator2](https://github.com/openatx/uiautomator2) 控制 Android 设备的工具。
-
-> 使用 AI 自动化你的 Android 设备：截图、点击/滑动、管理应用、发送文本等。
+> 让 AI 自动化 Android 设备：截图、点击/滑动、管理应用、发送文本等。
 
 ## 📺 演示
 
