@@ -16,6 +16,44 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 > Use AI to automate your Android device: take screenshots, tap/swipe, manage apps, send text, and more.
 
+## ✨ Features
+
+- 🎯 **AI-Native** - Built from the ground up for LLM/MCP integration
+- 📱 **Comprehensive** - 50+ tools covering all Android automation needs
+- ⚡ **Zero-Config** - Run directly with `uvx` - no installation required
+- 🔒 **Safe** - Tag-based tool filtering for security control
+- 🧪 **Tested** - Built-in AI-driven UI testing framework
+- 🔄 **Flexible** - Both STDIO and HTTP modes supported
+
+## 🏗️ Architecture
+
+```mermaid
+graph LR
+    AI[AI Assistant<br/>Claude/GPT/etc.] --> MCP[MCP Protocol]
+    MCP --> Server[u2mcp Server]
+    Server --> uiautomator2[uiautomator2]
+    uiautomator2 --> ADB[ADB]
+    ADB --> Device[Android Device<br/>Physical/Emulator]
+
+    style AI fill:#e1f5ff
+    style MCP fill:#fff4e6
+    style Server fill:#f3e5f5
+    style uiautomator2 fill:#e8f5e9
+    style ADB fill:#fff3e0
+    style Device fill:#fce4ec
+```
+
+## 🎯 Use Cases
+
+| Scenario | Description |
+|----------|-------------|
+| **🧪 Automated Testing** | Run natural language UI tests with AI-driven test framework |
+| **⚡ Rapid Prototyping** | Quickly test Android app interactions without writing code |
+| **♿ Accessibility Testing** | Verify app accessibility features automatically |
+| **📊 Health Monitoring** | Periodic device health and status checks |
+| **🤖 Task Automation** | Automate repetitive tasks like form filling, navigation |
+| **🔬 Debugging** | Inspect UI hierarchy and capture screenshots remotely |
+
 ## Migration from v0.1.x
 
 **If you're upgrading from v0.1.3 or earlier:** The CLI now requires an explicit subcommand. Change your command from:

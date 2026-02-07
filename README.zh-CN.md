@@ -14,6 +14,44 @@
 
 > 使用 AI 自动化你的 Android 设备：截图、点击/滑动、管理应用、发送文本等。
 
+## ✨ 特性
+
+- 🎯 **AI 原生** - 专为 LLM/MCP 集成而设计
+- 📱 **功能全面** - 50+ 工具覆盖所有 Android 自动化需求
+- ⚡ **零配置** - 使用 `uvx` 直接运行 - 无需安装
+- 🔒 **安全可控** - 基于标签的工具过滤，安全可控
+- 🧪 **内置测试** - 内置 AI 驱动的 UI 测试框架
+- 🔄 **灵活部署** - 支持 STDIO 和 HTTP 两种模式
+
+## 🏗️ 架构
+
+```mermaid
+graph LR
+    AI[AI 助手<br/>Claude/GPT/等] --> MCP[MCP 协议]
+    MCP --> Server[u2mcp 服务器]
+    Server --> uiautomator2[uiautomator2]
+    uiautomator2 --> ADB[ADB]
+    ADB --> Device[Android 设备<br/>真机/模拟器]
+
+    style AI fill:#e1f5ff
+    style MCP fill:#fff4e6
+    style Server fill:#f3e5f5
+    style uiautomator2 fill:#e8f5e9
+    style ADB fill:#fff3e0
+    style Device fill:#fce4ec
+```
+
+## 🎯 使用场景
+
+| 场景 | 描述 |
+|------|------|
+| **🧪 自动化测试** | 使用 AI 驱动的测试框架运行自然语言 UI 测试 |
+| **⚡ 快速原型** | 无需编写代码即可快速测试 Android 应用交互 |
+| **♿ 无障碍测试** | 自动验证应用的无障碍功能 |
+| **📊 健康监控** | 定期设备健康和状态检查 |
+| **🤖 任务自动化** | 自动化表单填写、导航等重复性任务 |
+| **🔬 远程调试** | 远程检查 UI 层级和截图 |
+
 ## 从 v0.1.x 版本迁移
 
 **如果你正在从 v0.1.3 或更早版本升级：** CLI 现在需要显式指定子命令。请将你的命令从：
