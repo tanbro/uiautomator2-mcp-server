@@ -8,9 +8,9 @@
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
-**Code of Conduct:** Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating in this project.
+> **Note:** 中文说明请看这里: [README.zh-CN.md](README.zh-CN.md).
 
-> **Note:** If you need Mainland China-specific download acceleration (pip/uv mirrors), see the Chinese README for details: [README.zh-CN.md](README.zh-CN.md).
+**Code of Conduct:** Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating in this project.
 
 An [MCP](https://modelcontextprotocol.io/) server that provides tools for controlling Android devices using [uiautomator2](https://github.com/openatx/uiautomator2).
 
