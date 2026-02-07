@@ -14,6 +14,25 @@
 
 > 使用 AI 自动化你的 Android 设备：截图、点击/滑动、管理应用、发送文本等。
 
+## 📺 演示
+
+### 对话驱动的 Android 自动化
+
+**用户说**：*"在抖音搜索猫咪视频"*
+
+**AI 自动完成**：
+
+[![Bilibili](https://img.shields.io/badge/Bilibili-观看演示-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
+[![下载视频](https://img.shields.io/badge/下载-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
+
+- ✅ 启动应用 → 点击搜索 → 输入关键词 → 执行搜索 → 点击结果
+
+**无需编写代码，通过自然语言即可控制 Android 设备**
+
+详细示例：[.skills/douyin-search](.skills/douyin-search/SKILL.md)
+
+---
+
 ## ✨ 特性
 
 - 🎯 **AI 原生** - 专为 LLM/MCP 集成而设计

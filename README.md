@@ -16,6 +16,25 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 > Use AI to automate your Android device: take screenshots, tap/swipe, manage apps, send text, and more.
 
+## 📺 Demo
+
+### Conversational Android Automation
+
+**User says**: *"Search cat videos on Douyin"*
+
+**AI automatically**:
+
+[![Bilibili](https://img.shields.io/badge/Bilibili-Watch_Demo-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
+[![Download Video](https://img.shields.io/badge/Download-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
+
+- ✅ Launch app → Tap search → Enter keywords → Execute search → Tap result
+
+**Control Android devices with natural language, no coding required**
+
+Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
+
+---
+
 ## ✨ Features
 
 - 🎯 **AI-Native** - Built from the ground up for LLM/MCP integration
