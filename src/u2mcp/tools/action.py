@@ -69,8 +69,8 @@ async def swipe(serial: str, fx: int, fy: int, tx: int, ty: int, duration: float
         fy (int): From position Y coordinate
         tx (int): To position X coordinate
         ty (int): To position Y coordinate
-        duration (float): duration
-        steps: 1 steps is about 5ms, if set, duration will be ignore
+        duration (float): duration. Default is 0.0.
+        steps(int): 1 steps is about 5ms, if set, duration will be ignore. Default is 0.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(device.swipe, fx, fy, tx, ty, duration if duration > 0 else None, step if step > 0 else None)
