@@ -24,7 +24,7 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 ### Conversational Android Automation
 
-**User says**: *"Search cat videos on Douyin"*
+**User says**: *"Search cat videos on xxx App then play the video and swap to the next video"*
 
 **AI automatically**:
 
