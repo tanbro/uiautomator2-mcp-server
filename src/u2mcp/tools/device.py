@@ -12,6 +12,7 @@ import uiautomator2 as u2
 from adbutils import adb
 from anyio import Lock, to_thread
 from fastmcp.utilities.logging import get_logger
+from lxml import etree
 from PIL.Image import Image
 
 from ..mcp import mcp
@@ -27,6 +28,7 @@ __all__ = (
     "screenshot",
     "save_screenshot",
     "dump_hierarchy",
+    "save_dump_hierarchy",
     "info",
 )
 
@@ -271,23 +273,101 @@ async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
 
 
 @mcp.tool("dump_hierarchy", tags={"device:capture"})
-async def dump_hierarchy(serial: str, compressed: bool = False, pretty: bool = False, max_depth: int = -1) -> str:
-    """
-    Dump window hierarchy
+async def dump_hierarchy(
+    serial: str,
+    compressed: bool = False,
+    pretty: bool = False,
+    max_depth: int = -1,
+    xpath: str = "",
+) -> str:
+    """Dump window hierarchy.
 
     Args:
-        serial (str): Android device serialno
-        compressed (bool): return compressed xml
-        pretty (bool): pretty print xml
-        max_depth (int): max depth of hierarchy
+        serial (str): Android device serialno.
+        compressed (bool): return compressed xml.
+        pretty (bool): pretty print xml.
+        max_depth (int): max depth of hierarchy.
+        xpath (str): optional xpath expression to filter results.
+            If empty, returns the full hierarchy xml.
+            If provided, returns only matching elements as xml fragments.
 
     Returns:
-        str: xml string of the hierarchy tree
+        str: xml string of the hierarchy tree.
+            If xpath is provided, returns concatenated xml of all matching elements.
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(
+        xml_str = await to_thread.run_sync(
             lambda: device.dump_hierarchy(compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None)
         )
+
+    if not xpath:
+        return xml_str
+
+    # Parse and filter by xpath
+    root = etree.fromstring(xml_str.encode("utf-8"))
+    nodes = root.xpath(xpath)
+
+    if not nodes:
+        return ""
+
+    # Return concatenated xml of matching nodes
+    result_parts = []
+    for node in nodes:
+        result_parts.append(etree.tostring(node, encoding="unicode"))
+
+    return "\n".join(result_parts) if len(result_parts) > 1 else result_parts[0] if result_parts else ""
+
+
+@mcp.tool("save_dump_hierarchy", tags={"device:capture"})
+async def save_dump_hierarchy(
+    serial: str,
+    file: str,
+    compressed: bool = False,
+    pretty: bool = True,
+    max_depth: int = -1,
+    xpath: str = "",
+) -> str:
+    """Dump window hierarchy and save to file.
+
+    Args:
+        serial (str): Android device serialno.
+        file (str): File path to save the hierarchy XML. Supports both absolute and relative paths.
+        compressed (bool): return compressed xml.
+        pretty (bool): pretty print xml. Defaults to True for file output.
+        max_depth (int): max depth of hierarchy.
+        xpath (str): optional xpath expression to filter results.
+            If empty, saves the full hierarchy xml.
+            If provided, saves only matching elements as xml fragments.
+
+    Returns:
+        str: absolute path to the saved file.
+    """
+    async with get_device(serial) as device:
+        xml_str = await to_thread.run_sync(
+            lambda: device.dump_hierarchy(compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None)
+        )
+
+    if xpath:
+        # Parse and filter by xpath
+        root = etree.fromstring(xml_str.encode("utf-8"))
+        nodes = root.xpath(xpath)
+
+        if nodes:
+            result_parts = []
+            for node in nodes:
+                result_parts.append(etree.tostring(node, encoding="unicode"))
+            xml_str = "\n".join(result_parts) if len(result_parts) > 1 else result_parts[0] if result_parts else ""
+        else:
+            xml_str = ""
+
+    # Convert path to Path object and resolve
+    file_path = Path(file)
+    # Create parent directory if it doesn't exist
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    # Save the xml
+    file_path.write_text(xml_str, encoding="utf-8")
+
+    return file_path.resolve().as_posix()
 
 
 @mcp.tool("info", tags={"device:info"})
