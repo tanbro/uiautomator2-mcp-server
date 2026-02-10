@@ -228,12 +228,21 @@ graph TD
 
 8. **TRIGGER CI/CD PIPELINE EXECUTION**
 
+   After push, CI automatically:
+   - Runs all tests (lint, type-check, pytest)
+   - Builds distribution packages (wheel + sdist)
+   - Publishes to PyPI (via Trusted Publishing)
+   - Creates GitHub Release with CHANGELOG notes
+   - Attaches wheel files to the Release
+
 #### Success Criteria:
 - Release commit created with proper message format
 - Clean merge from develop to main (no conflicts)
 - **GIT TAG CREATED AT EXACTLY THE RIGHT MOMENT**
 - Changes successfully pushed to remote repository
 - CI/CD pipeline triggered without errors
+- PyPI package published successfully
+- GitHub Release created with correct assets
 
 ### 5. Verification Phase
 
@@ -243,18 +252,18 @@ graph TD
 - Monitor deployment processes
 
 #### Required Verifications:
-- ✅ GitHub release creation confirmation
-- ✅ PyPI package availability verification
+- ✅ GitHub release creation confirmation (automatic via CI)
+- ✅ PyPI package availability verification (automatic via CI)
 - ✅ CI/CD pipeline completion monitoring
-- ✅ Documentation site deployment verification
-- ✅ Notification sending confirmation
+- ✅ Release notes content verification (from CHANGELOG)
+- ✅ Wheel files attached to release
 
 #### Success Criteria:
-- GitHub release published with correct assets
+- GitHub release published automatically with correct assets
 - PyPI package available and installable
 - CI/CD pipelines completed successfully
-- Documentation site updated and accessible
-- Release notifications sent to appropriate channels
+- Release notes populated from CHANGELOG entry
+- Wheel and source distribution files attached
 
 ## Release Types and Variations
 

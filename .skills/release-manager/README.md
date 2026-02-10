@@ -11,6 +11,8 @@ This skill automates the complete software release lifecycle, from initial evalu
 ### Automated Workflow
 - **Complete Lifecycle Management**: End-to-end release orchestration
 - **Multi-phase Execution**: Evaluation → QA → Preparation → Execution → Verification
+- **Automatic GitHub Release**: CI creates releases with CHANGELOG notes and attached wheels
+- **Automatic PyPI Publishing**: Trusted Publishing for secure, credential-free uploads
 - **Flexible Release Types**: Standard, Hotfix, Pre-release, and Dry-run modes
 - **Configurable Safety Levels**: Conservative, Balanced, and Aggressive options
 
@@ -79,8 +81,11 @@ A release is considered successful when all phases complete with:
 - ✅ Pre-commit checks completing without errors
 - ✅ Documentation being complete and accurate
 - ✅ Version tags properly created and pushed
-- ✅ GitHub release published successfully
-- ✅ CI/CD pipelines completing successfully
+- ✅ CI/CD automatically creating GitHub Release with:
+  - Release notes from CHANGELOG
+  - Wheel and source distribution files attached
+- ✅ CI/CD automatically publishing to PyPI
+- ✅ All pipelines completing successfully
 
 ## 🆘 Error Handling
 
