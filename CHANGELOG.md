@@ -8,9 +8,7 @@
     - Add xpath filter parameter to `dump_hierarchy` tool for filtering XML results
 
 - ⚙️ Changed:
-    - Improve type hinting with `types-retry` dependency for better type checking
-    - Add `types-lxml` to dev dependencies for proper type checking
-    - Add type stubs to mypy pre-commit hook for comprehensive type coverage
+    - Add serval type stubs for comprehensive type coverage
 
 ## 0.2.1
 

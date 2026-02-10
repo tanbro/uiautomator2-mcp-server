@@ -1,0 +1,6 @@
+[run]
+omit =
+    scripts/*
+    tests/*
+    venv/*
+    src/**/version.py

@@ -230,7 +230,7 @@ async def test_dump_hierarchy_with_xpath_single_match(mock_u2_device: MagicMock)
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device: MagicMock) -> None:
-    """Test dump_hierarchy returns concatenated XML when xpath matches multiple nodes."""
+    """Test dump_hierarchy returns XML separated by === when xpath matches multiple nodes."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Button 1" clickable="true"/>
@@ -241,10 +241,12 @@ async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device: MagicM
 
     result = await dump_hierarchy.fn("emulator-5554", xpath="//*[@clickable='true']")
 
-    # Should return both clickable buttons
+    # Should return both clickable buttons separated by ===
     assert 'resource-id="button1"' in result
     assert 'resource-id="button2"' in result
     assert 'clickable="true"' in result
+    # Check for === separator
+    assert "\n===\n" in result
     # Should not contain the non-clickable element
     assert 'resource-id="text"' not in result
 

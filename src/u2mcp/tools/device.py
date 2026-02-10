@@ -289,11 +289,11 @@ async def dump_hierarchy(
         max_depth (int): max depth of hierarchy.
         xpath (str): optional xpath expression to filter results.
             If empty, returns the full hierarchy xml.
-            If provided, returns only matching elements as xml fragments.
+            If provided, returns only matching elements, separated by "===".
 
     Returns:
         str: xml string of the hierarchy tree.
-            If xpath is provided, returns concatenated xml of all matching elements.
+            If xpath is provided, returns matching elements separated by "===".
     """
     async with get_device(serial) as device:
         xml_str = await to_thread.run_sync(
@@ -310,12 +310,12 @@ async def dump_hierarchy(
     if not nodes:
         return ""
 
-    # Return concatenated xml of matching nodes
+    # Return xml of matching nodes, separated by ===
     result_parts: list[str] = []
     for node in nodes:
         result_parts.append(etree.tostring(node, encoding="unicode"))
 
-    return "\n".join(result_parts) if len(result_parts) > 1 else result_parts[0] if result_parts else ""
+    return "\n===\n".join(result_parts)
 
 
 @mcp.tool("save_dump_hierarchy", tags={"device:capture"})
@@ -337,7 +337,7 @@ async def save_dump_hierarchy(
         max_depth (int): max depth of hierarchy.
         xpath (str): optional xpath expression to filter results.
             If empty, saves the full hierarchy xml.
-            If provided, saves only matching elements as xml fragments.
+            If provided, saves only matching elements, separated by "===".
 
     Returns:
         str: absolute path to the saved file.
@@ -356,7 +356,7 @@ async def save_dump_hierarchy(
             result_parts: list[str] = []
             for node in nodes:
                 result_parts.append(etree.tostring(node, encoding="unicode"))
-            xml_str = "\n".join(result_parts) if len(result_parts) > 1 else result_parts[0] if result_parts else ""
+            xml_str = "\n===\n".join(result_parts)
         else:
             xml_str = ""
 
