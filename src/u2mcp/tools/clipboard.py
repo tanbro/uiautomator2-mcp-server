@@ -16,8 +16,7 @@ async def read_clipboard(serial: str) -> str | None:
         serial (str): Android device serialno
 
     Returns:
-        str: The actual text in the clip.
-        None: If there is no text in the clip.
+        The actual text in the clip, or None if there is no text.
     """
     async with get_device(serial) as device:
         return await to_thread.run_sync(lambda: device.clipboard)

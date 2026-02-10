@@ -13,7 +13,7 @@ __all__ = (
 
 
 @mcp.tool("get_toast", tags={"toast:query"})
-async def get_toast(serial: str, wait_timeout: float = 10) -> str:
+async def get_toast(serial: str, wait_timeout: float = 10) -> str | None:
     """Get the most recent Android Toast message from the device.
 
     Toast is a brief notification message in the Android system,
@@ -22,18 +22,15 @@ async def get_toast(serial: str, wait_timeout: float = 10) -> str:
     reliable than XPath-based UI hierarchy queries.
 
     Args:
-        serial(str): Android device serial number.
-        wait_timeout(float): Maximum time to wait for a Toast message (seconds).
+        serial (str): Android device serial number.
+        wait_timeout (float): Maximum time to wait for a Toast message (seconds).
 
     Returns:
-        str: Toast message text, empty string if not found.
+        None or toast message
     """
     async with get_device(serial) as device:
         return await to_thread.run_sync(
-            lambda: (
-                device.toast.get_message(wait_timeout=wait_timeout)  # type: ignore[arg-type]
-                or ""
-            )
+            lambda: device.toast.get_message(wait_timeout=wait_timeout)  # type: ignore[arg-type]
         )
 
 
@@ -42,9 +39,9 @@ async def show_toast(serial: str, text: str, duration: float = 1.0):
     """Display a Toast message on the Android device.
 
     Args:
-        serial(str): Android device serial number.
-        text(str): The message text to display in the Toast.
-        duration(float): Display duration in seconds (default: 1.0).
+        serial (str): Android device serial number.
+        text (str): The message text to display in the Toast.
+        duration (float): Display duration in seconds (default: 1.0).
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(lambda: device.toast.show(text, duration))
@@ -59,7 +56,7 @@ async def reset_toast(serial: str):
     from previous ones.
 
     Args:
-        serial(str): Android device serial number.
+        serial (str): Android device serial number.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(lambda: device.toast.reset())

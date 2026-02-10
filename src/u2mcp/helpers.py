@@ -166,7 +166,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
         console.print("[dim]Supports wildcards: 'u2mcp info device:*' (by tag) or 'u2mcp info *screenshot*' (by name)[/dim]")
 
 
-def _print_single_tool_help(console: Console, name: str, tool: Any) -> None:
+def _print_single_tool_help(console: Console, name: str, tool: Any):
     """Print detailed help for a single tool.
 
     Parses doc-strings and formats Args/Returns with markdown.

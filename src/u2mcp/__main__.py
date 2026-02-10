@@ -33,7 +33,7 @@ app = App(
 )
 
 
-def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]) -> None:
+def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]):
     """Configure logging for the MCP server."""
     logging.basicConfig(
         level=log_level.upper(),
@@ -47,7 +47,7 @@ def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "crit
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
 
-def _check_adb(console: Console, check: bool) -> None:
+def _check_adb(console: Console, check: bool):
     """Check ADB availability if enabled."""
     if check and not check_adb(console):
         console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
@@ -73,7 +73,7 @@ def stdio(
     print_tags: bool = True,
     fix_empty_responses: bool = False,
     show_fastmcp_banner: bool = False,
-) -> None:
+):
     """Run the MCP server with stdio transport.
 
     Args:
@@ -110,7 +110,7 @@ def http(
     print_tags: bool = True,
     fix_empty_responses: bool = False,
     show_fastmcp_banner: bool = False,
-) -> None:
+):
     """Run the MCP server with HTTP (streamable-http) transport.
 
     Args:
@@ -152,7 +152,7 @@ def http(
 
 
 @app.command(group=info_group)
-def tools() -> None:
+def tools():
     """List all available MCP tools."""
     console = Console()
     mcp = make_mcp()
@@ -160,9 +160,7 @@ def tools() -> None:
 
 
 @app.command(group=info_group)
-def info(
-    tool_name: str,
-) -> None:
+def info(tool_name: str):
     """Show detailed information about a specific tool.
 
     Examples:
@@ -179,7 +177,7 @@ def info(
 
 
 @app.command(group=info_group)
-def tags() -> None:
+def tags():
     """List all available tool tags."""
     console = Console()
     mcp = make_mcp()
@@ -193,7 +191,7 @@ def doctor(
     fix: bool = False,
     category: Annotated[str | None, Parameter(name=["--category", "-c"])] = None,
     exclude: Annotated[str | None, Parameter(name=["--exclude"])] = None,
-) -> None:
+):
     """Run comprehensive diagnostics on the uiautomator2-mcp-server setup.
 
     Performs checks on:
@@ -216,7 +214,7 @@ def doctor(
     sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
 
 
-def main() -> None:
+def main():
     """Entry point for the CLI."""
     app()
 

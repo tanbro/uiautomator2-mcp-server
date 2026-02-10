@@ -86,10 +86,6 @@ async def purge(serial: str = ""):
 
     Args:
         serial (str): Android device serialno to purge. If empty string, all devices will be purged.
-
-    Returns:
-        None upon successful completion
-        Raises an exception if the subprocess returns a non-zero exit code.
     """
     from uiautomator2.__main__ import cmd_purge
 
@@ -172,9 +168,6 @@ async def disconnect(serial: str):
 
     Args:
         serial (str): Android device serialno
-
-    Returns:
-        None
     """
     if not (serial := serial.strip()):
         raise ValueError("serial cannot be empty")

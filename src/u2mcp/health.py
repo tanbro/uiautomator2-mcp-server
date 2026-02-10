@@ -35,7 +35,7 @@ class CheckResult:
         message: str,
         details: dict | None = None,
         fix_suggestion: str | None = None,
-    ) -> None:
+    ):
         self.category = category
         self.status = status
         self.message = message
@@ -107,7 +107,7 @@ def check_adb(console: Console | None = None) -> bool:
         return False
 
 
-def _print_adb_fix_help(console: Console) -> None:
+def _print_adb_fix_help(console: Console):
     """Print helpful messages for fixing ADB issues."""
     console.print("[cyan]Possible fixes:[/cyan]")
 
@@ -397,7 +397,7 @@ def check_scrcpy(verbose: bool = False) -> CheckResult:
     )
 
 
-def _print_check_result(console: Console, result: CheckResult, verbose: bool = False) -> None:
+def _print_check_result(console: Console, result: CheckResult, verbose: bool = False):
     """Print a single check result with Rich formatting.
 
     Args:

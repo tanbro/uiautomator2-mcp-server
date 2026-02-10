@@ -13,7 +13,7 @@ def get_background_task_group() -> TaskGroup:
     return _task_group
 
 
-def set_background_task_group(tg: TaskGroup) -> None:
+def set_background_task_group(tg: TaskGroup):
     """Set the global monitor task group."""
     global _task_group
     _task_group = tg

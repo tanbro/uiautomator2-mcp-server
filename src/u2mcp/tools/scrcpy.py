@@ -108,7 +108,7 @@ async def start_scrcpy(serial: str = "", timeout: float = 5.0) -> int:
 
 
 @mcp.tool("stop_scrcpy", tags={"screen:mirror"})
-async def stop_scrcpy(pid: int, timeout: float = 5.0) -> None:
+async def stop_scrcpy(pid: int, timeout: float = 5.0):
     """Stop a running scrcpy process by pid.
 
     scrcpy is an application mirrors Android devices (video and audio) connected via USB or TCP/IP and allows control using the computer's keyboard and mouse.
@@ -116,9 +116,6 @@ async def stop_scrcpy(pid: int, timeout: float = 5.0) -> None:
     Args:
         pid (int): Process id of the scrcpy process to stop
         timeout (float): Seconds to wait for process to terminate.
-
-    Returns:
-        None
     """
     logger = get_logger(f"{__name__}.stop_scrcpy")
 
