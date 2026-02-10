@@ -1,5 +1,3 @@
-"""Middleware to fix empty responses for Zhipu AI compatibility."""
-
 from __future__ import annotations
 
 from fastmcp.server.middleware.middleware import CallNext, Middleware, MiddlewareContext
