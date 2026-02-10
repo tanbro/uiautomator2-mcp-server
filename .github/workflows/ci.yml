@@ -171,9 +171,11 @@ jobs:
             in_release && /^##[[:space:]]/ { exit }
             in_release { print }
           ' CHANGELOG.md > release_notes.md
-          echo "notes<<$EOF" >> $GITHUB_OUTPUT
-          cat release_notes.md >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+          {
+            echo "notes<<EOF"
+            cat release_notes.md
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
