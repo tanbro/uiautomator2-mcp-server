@@ -48,7 +48,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 - 🔍 **XPath Filtering** - Dump only the UI elements you need — save tokens and speed up responses
 - 🎛️ **Tool Filtering** - Show the AI only the tools it needs — fewer hallucinations, better results
 - ⚡ **Zero Setup** - Run with `uvx` immediately, no installation needed
-- 🧰 **50+ Tools** - Click, swipe, type, apps, screenshots — everything you need
+- 🧰 **60+ Tools** - Click, swipe, type, apps, screenshots — everything you need
 - 🧪 **Built-in Testing** - Includes AI-driven UI test framework out of the box
 - 🔄 **Two Modes** - STDIO for local, HTTP for remote
 - 🔒 **Clean Code** - Type hints, linted, formatted — easy to extend
