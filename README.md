@@ -10,7 +10,7 @@
 
 -----
 
-> **Note:** 中文 README: [README.zh-CN.md](README.zh-CN.md).
+> - 🇨🇳 **[中文说明](README.zh-CN.md)**
 
 -----
 
@@ -43,7 +43,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 
 ## ✨ Features
 
-- 📱 **Multi-Device** - One server, many phones — just pass the `serial` parameter
+- 📱 **Multi-Device** - One server, many phones
 - 🔍 **XPath Filtering** - Dump only the UI elements you need — save tokens and speed up responses
 - 🎛️ **Tool Filtering** - Show the AI only the tools it needs — fewer hallucinations, better results
 - ⚡ **Zero Setup** - Run with `uvx` immediately, no installation needed
