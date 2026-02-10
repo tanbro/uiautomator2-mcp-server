@@ -8,7 +8,11 @@
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
-> **Note:** 中文说明请看这里: [README.zh-CN.md](README.zh-CN.md).
+-----
+
+> **Note:** 中文 README: [README.zh-CN.md](README.zh-CN.md).
+
+-----
 
 **Code of Conduct:** Please follow our [Code of Conduct](CODE_OF_CONDUCT.md) when participating in this project.
 
@@ -24,6 +28,8 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 **AI automatically**:
 
+![Demo GIF](docs/assets/demo-quick.gif)
+
 [![Bilibili](https://img.shields.io/badge/Bilibili-Watch_Demo-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
 [![Download Video](https://img.shields.io/badge/Download-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
 
@@ -37,12 +43,25 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 
 ## ✨ Features
 
-- 🎯 **AI-Native** - Built from the ground up for LLM/MCP integration
-- 📱 **Comprehensive** - 50+ tools covering all Android automation needs
-- ⚡ **Zero-Config** - Run directly with `uvx` - no installation required
-- 🔒 **Safe** - Tag-based tool filtering for security control
-- 🧪 **Tested** - Built-in AI-driven UI testing framework
-- 🔄 **Flexible** - Both STDIO and HTTP modes supported
+- 📱 **Multi-Device** - One server, many phones — just pass the `serial` parameter
+- 🔍 **XPath Filtering** - Dump only the UI elements you need — save tokens and speed up responses
+- 🎛️ **Tool Filtering** - Show the AI only the tools it needs — fewer hallucinations, better results
+- ⚡ **Zero Setup** - Run with `uvx` immediately, no installation needed
+- 🧰 **50+ Tools** - Click, swipe, type, apps, screenshots — everything you need
+- 🧪 **Built-in Testing** - Includes AI-driven UI test framework out of the box
+- 🔄 **Two Modes** - STDIO for local, HTTP for remote
+- 🔒 **Clean Code** - Type hints, linted, formatted — easy to extend
+
+## 🎯 Use Cases
+
+| Scenario                     | Description                                                 |
+| ---------------------------- | ----------------------------------------------------------- |
+| **🧪 Automated Testing**    | Run natural language UI tests with AI-driven test framework |
+| **⚡ Rapid Prototyping**     | Quickly test Android app interactions without writing code  |
+| **♿ Accessibility Testing** | Verify app accessibility features automatically             |
+| **📊 Health Monitoring**    | Periodic device health and status checks                    |
+| **🤖 Task Automation**      | Automate repetitive tasks like form filling, navigation     |
+| **🔬 Remote Debugging**     | Inspect UI hierarchy and capture screenshots remotely       |
 
 ## 🏗️ Architecture
 
@@ -62,16 +81,14 @@ graph LR
     style Device fill:#fce4ec
 ```
 
-## 🎯 Use Cases
-
-| Scenario | Description |
-|----------|-------------|
-| **🧪 Automated Testing** | Run natural language UI tests with AI-driven test framework |
-| **⚡ Rapid Prototyping** | Quickly test Android app interactions without writing code |
-| **♿ Accessibility Testing** | Verify app accessibility features automatically |
-| **📊 Health Monitoring** | Periodic device health and status checks |
-| **🤖 Task Automation** | Automate repetitive tasks like form filling, navigation |
-| **🔬 Debugging** | Inspect UI hierarchy and capture screenshots remotely |
+| Scenario                     | Description                                                 |
+| ---------------------------- | ----------------------------------------------------------- |
+| **🧪 Automated Testing**    | Run natural language UI tests with AI-driven test framework |
+| **⚡ Rapid Prototyping**     | Quickly test Android app interactions without writing code  |
+| **♿ Accessibility Testing** | Verify app accessibility features automatically             |
+| **📊 Health Monitoring**    | Periodic device health and status checks                    |
+| **🤖 Task Automation**      | Automate repetitive tasks like form filling, navigation     |
+| **🔬 Debugging**            | Inspect UI hierarchy and capture screenshots remotely       |
 
 ## Migration from v0.1.x
 
