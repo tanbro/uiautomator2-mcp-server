@@ -20,7 +20,7 @@ src/u2mcp/
 ├── version.py           # Version info module
 ├── mcp.py               # MCP server factory and configuration
 ├── background.py        # Background task management
-├── health.py            # ADB availability check
+├── health.py            # ADB availability check and doctor command
 ├── helpers.py           # Helper functions for CLI output (tags, tools, info)
 ├── middlewares.py       # MCP middlewares for request/response handling
 └── tools/
@@ -35,9 +35,11 @@ src/u2mcp/
     └── scrcpy.py        # Screen mirroring (scrcpy integration)
 
 .skills/                  # AI-driven testing skills
-├── u2mcp-uitest/
-│   ├── skill.md         # Skill description
-│   └── test.spec.md     # Test specification
+├── android-ui-test/
+│   ├── SKILL.md         # Skill definition
+│   ├── README.md        # Skill documentation
+│   ├── examples/        # Usage examples
+│   └── references/      # Technical specifications
 
 tests/
 ├── conftest.py          # Pytest configuration and fixtures
@@ -95,7 +97,7 @@ pytest --cov=src/u2mcp --cov-report=html
 - Use `typing_extensions` for Python < 3.12 compatibility
 - Use `Annotated[type, Parameter(...)]` for CLI parameters with custom names
 - Ruff for linting
-- mypy for type checking
+- mypy for type checking with `types-lxml` and `types-retry` for proper type coverage
 
 ## CLI Entry Points
 
@@ -112,11 +114,13 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `device_list` - List connected devices
 - `init` - Install uiautomator2 resources to device (REQUIRED before other operations)
 - `connect`/`disconnect` - Manage device connections
+- `disconnect_all` - Disconnect from all Android devices
 - `info` - Get device information
 - `window_size` - Get screen dimensions
-- `screenshot` - Capture screen (returns base64-encoded JPEG)
+- `screenshot` - Capture screen (returns base64-encoded image)
 - `save_screenshot` - Save screenshot to file (format determined by extension)
-- `dump_hierarchy` - Get UI hierarchy XML
+- `dump_hierarchy` - Get UI hierarchy XML with optional xpath filter
+- `save_dump_hierarchy` - Save UI hierarchy XML to file with optional xpath filter
 - `purge` - Purge all resources (minicap, minitouch, uiautomator) from device
 - `shell_command` - Run arbitrary shell commands on device with timeout
 
@@ -129,6 +133,7 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 
 ### Input Tools
 - `send_text` - Type text into the focused input field
+- `set_focused_text` - Set text to the currently focused input element (bypasses IME)
 - `clear_text` - Clear text in the focused input field
 - `hide_keyboard` - Hide the on-screen keyboard
 
@@ -156,7 +161,8 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - `element_click_nowait` - Click on an element without waiting
 - `element_click_until_gone` - Click until element disappears
 - `element_long_click` - Long click on an element
-- `element_screenshot` - Take a screenshot of a specific element
+- `element_screenshot` - Take a screenshot of a specific element (returns base64)
+- `element_save_screenshot` - Save screenshot of a specific element to file
 - `element_get_text` - Get text from an element
 - `element_set_text` - Set text on an element
 - `element_bounds` - Get the bounding box coordinates of an element
@@ -187,6 +193,20 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 - Shows ADB server version and connected devices
 - Provides platform-specific installation instructions when ADB is not found
 - Can be bypassed with `--no-check-adb` CLI flag (default: enabled)
+
+### Doctor Command
+- `run_doctor()` provides comprehensive diagnostics for troubleshooting
+- Checks environment (Python version, platform, executable path)
+- Validates ADB availability (server version, device count)
+- Tests device connectivity (connection status, authorization)
+- Verifies uiautomator2 initialization status
+- Confirms MCP tool registration
+- Checks scrcpy availability (optional)
+- Options:
+  - `--verbose, -v`: Show detailed diagnostic output
+  - `--fix`: Attempt automatic fixes for issues
+  - `--category, -c`: Only check specific categories
+  - `--exclude`: Exclude specific categories
 
 ### CLI Helpers
 - `helpers.py` provides functions for displaying tools, tags, and help information
@@ -276,6 +296,9 @@ u2mcp info screenshot    # Show detailed info for a tool
 u2mcp info "device:*"    # Show info for all device tools (supports wildcards)
 u2mcp tags               # List all available tool tags
 u2mcp --version          # Show version information
+u2mcp doctor             # Run comprehensive diagnostics
+u2mcp doctor -v          # Run diagnostics with verbose output
+u2mcp doctor -c device   # Run only device-related checks
 
 # Tool filtering - only expose specific tools (short options available)
 u2mcp stdio -i device:manage,action:touch
@@ -302,6 +325,8 @@ mypy src/
 | `-p` | `--port` | Set port number (HTTP mode) |
 | `-t` | `--token` | Set authentication token (HTTP mode) |
 | `-n` | `--no-token` | Disable token verification (HTTP mode) |
+| `-v` | `--verbose` | Show detailed diagnostic output (doctor command) |
+| `-c` | `--category` | Only check specific categories (doctor command) |
 
 ## Environment Variables
 
@@ -322,7 +347,7 @@ This project includes an AI-driven UI testing framework using the `.skills/` sys
 │   └── usage-examples.md        # Detailed usage patterns and examples
 ├── references/                  # Technical specifications
 │   └── test-specification.md    # Complete test specification with TC### test cases
-└── (scripts/)                   # Executable scripts (in project root)
+└── scripts/                     # Executable scripts (in project root)
     └── demo-android-test.py     # Demonstration script
 ```
 
@@ -350,17 +375,17 @@ The AI will:
 
 | Category    | Tests                                    |
 |-------------|------------------------------------------|
-| Device      | Connection, info, screenshot, hierarchy  |
+| Device      | Connection, info, screenshot, hierarchy, doctor |
 | Touch       | Click, long press, double click          |
 | Gesture     | Swipe, drag, key press                   |
-| App         | List, launch, wait, info                 |
-| Element     | Wait, bounds, get text, click            |
-| Input       | Text input, keyboard                     |
+| App         | List, launch, wait, info, permissions    |
+| Element     | Wait, bounds, get text, click, screenshot save |
+| Input       | Text input, focused text, keyboard       |
 | Clipboard   | Read/write (with known limitations)      |
 
 ### Creating Custom Skills
 
-See [`.skills/android-ui-test/`](../skills/android-ui-test/) for a complete reference implementation.
+See [`.skills/android-ui-test/`](.skills/android-ui-test/) for a complete reference implementation.
 
 Key components:
 - `SKILL.md` - YAML frontmatter with metadata and lightweight description
