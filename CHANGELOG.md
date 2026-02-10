@@ -3,12 +3,22 @@
 ## [Unreleased]
 
 - 🆕 New:
+    - Add Toast tools for Android Toast message detection and display:
+      - `get_toast` - Get the most recent Android Toast message using uiautomator2's built-in toast detection
+      - `show_toast` - Display a Toast message on the Android device
+      - `reset_toast` - Clear the cached Toast message on the device
     - Add `doctor` command for comprehensive diagnostics with options for verbose output, auto-fix, category filtering, and exclusion
     - Add `save_dump_hierarchy` tool to save UI hierarchy XML to local file
     - Add xpath filter parameter to `dump_hierarchy` tool for filtering XML results
 
 - ⚙️ Changed:
     - Add serval type stubs for comprehensive type coverage
+    - Restructure README installation section with dedicated "Installing Enhanced Python Package Managers" subsection
+    - Add Toast tool documentation to both English and Chinese README
+
+- 📚 Docs:
+    - Update README structure with clearer package manager installation guidance
+    - Add Toast tools to Available Tools section in both English and Chinese README
 
 ## 0.2.1
 

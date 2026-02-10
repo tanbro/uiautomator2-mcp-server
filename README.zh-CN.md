@@ -25,7 +25,7 @@
 [![Bilibili](https://img.shields.io/badge/Bilibili-观看演示-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
 [![下载视频](https://img.shields.io/badge/下载-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
 
-- ✅ 启动应用 → 点击搜索 → 输入关键词 → 执行搜索 → 点击结果
+- ✅ 启动应用 → 点击搜索 → 输入关键词 → 执行搜索 → 点击结果 -> 刷视频
 
 **无需编写代码，通过自然语言即可控制 Android 设备**
 
@@ -58,7 +58,7 @@
 ## 🏗️ 架构
 
 ```mermaid
-graph LR
+graph TD
     AI[AI 助手<br/>Claude/GPT/等] --> MCP[MCP 协议]
     MCP --> Server[u2mcp 服务器]
     Server --> uiautomator2[uiautomator2]
@@ -108,129 +108,129 @@ u2mcp stdio
 
 ------
 
-> **💡 中国大陆用户加速：**
->
-> 如果使用 `pip` 安装软件包的速度较慢，建议配置国内镜像源。
->
-> **方法一：使用 pip config 命令（推荐）**
->
-> ```bash
-> # 设置（操作系统用户级别的）全局镜像源
-> pip config set --user global.index-url https://mirrors.aliyun.com/pypi/simple/
->
-> # 验证配置
-> pip config list
-> ```
->
-> **方法二：配置文件**
->
-> 创建或编辑配置文件：
-> - **Unix/macOS**: `~/.config/pip/pip.conf` 或 `~/.pip/pip.conf`（旧路径，仍支持）
-> - **Windows**: `%APPDATA%\pip\pip.ini`
->
-> ```ini
-> [global]
-> index-url = https://mirrors.aliyun.com/pypi/simple/
-> ```
->
-> **方法三：环境变量**
->
-> - **macOS/Linux** (添加到 `~/.bashrc`、`~/.zshrc` 等):
-> ```bash
-> export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
-> ```
->
-> - **Windows** (系统环境变量):
-> ```
-> PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
-> ```
->
-> 其他可用的镜像源：
-> - **腾讯云**：`https://mirrors.cloud.tencent.com/pypi/simple/`
-> - **华为云**：`https://mirrors.huaweicloud.com/repository/pypi/simple/`
-> - **清华大学**：`https://pypi.tuna.tsinghua.edu.cn/simple/`
-> - **中科大**：`https://pypi.mirrors.ustc.edu.cn/simple/`
->
-> 此配置对 `pip` 和 `pipx` 都生效。
+### 安装增强的第三方 Python 包管理器
 
-### 安装 `uv`（推荐用于 MCP 客户端）
+以下推荐两种可选的增强型包管理器，可仍选其一安装。如果不想使用，可跳过本步骤。
 
-大多数 MCP 客户端（如 Claude Desktop）使用 `uvx` 来运行 Python MCP 服务器。`uvx` 是 [uv][] 工具套件的一部分。
+- 安装 `uv`（推荐|可选）
 
-> **为什么选择 `uvx`？** `uvx` 可以直接从 PyPI 运行 Python 包，无需手动安装——只需使用 `uvx package-name`，其余的它会自动处理。这使得它非常适合 MCP 客户端配置。
+  大多数 MCP 客户端（如 Claude Desktop）使用 `uvx` 来运行 Python MCP 服务器。`uvx` 是 [uv][] 工具套件的一部分。
 
-**macOS / Linux:**
+  > **为什么选择 `uvx`？** `uvx` 可以直接从 PyPI 运行 Python 包，无需手动安装——只需使用 `uvx package-name`，其余的它会自动处理。这使得它非常适合 MCP 客户端配置。
+
+  **macOS / Linux:**
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
+
+  **Windows (PowerShell):**
+  ```powershell
+  powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
+
+  或使用 `winget`:
+  ```powershell
+  winget install --id=astral-sh.uv -e
+  ```
+
+  验证安装：
+  ```bash
+  uv --version
+  uvx --version
+  ```
+
+- 安装 `pipx`（可选）
+
+  [pipx][] 是另一个用于在隔离环境中安装和运行 Python CLI 应用程序的工具。
+
+  > **`pipx` vs `uvx`：** 和 `uvx` 一样，`pipx` 也可以通过 `pipx run package-name` 直接运行包。不过 `uvx` 通常更快，在 MCP 生态系统中也更常用。
+
+  **macOS / Linux:**
+  ```bash
+  python3 -m pip install --user pipx
+  python3 -m pipx ensurepath
+  ```
+
+  **Windows:**
+  ```powershell
+  python -m pip install --user pipx
+  python -m pipx ensurepath
+  ```
+
+### 国内可用的镜像源
+
+#### uv 镜像源
+
+安装完毕之后，如果 [uv][] 下载软件包的速度较慢，可以配置国内镜像源:
+
+**方法一：配置文件**
+
+创建或编辑 `~/.config/uv/uv.toml`（macOS/Linux）或 `%APPDATA%\uv\uv.toml`（Windows）：
+
+```toml
+[[index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true
+```
+
+**方法二：环境变量**
+
+- **macOS/Linux** (添加到 `~/.bashrc`、`~/.zshrc` 等):
 ```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
+export UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
 ```
 
-**Windows (PowerShell):**
-```powershell
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+- **Windows** (系统环境变量):
+```
+UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
 ```
 
-或使用 `winget`:
-```powershell
-winget install --id=astral-sh.uv -e
-```
+#### pip 镜像源
 
-验证安装：
+如果使用 [pip][] 或 [pipx][] ，可以这样配置国内镜像源:
+
+**方法一：使用 pip config 命令（推荐）**
+
 ```bash
-uv --version
-uvx --version
+# 设置（操作系统用户级别的）全局镜像源
+pip config set --user global.index-url https://mirrors.aliyun.com/pypi/simple/
+
+# 验证配置
+pip config list
 ```
 
-> **💡 中国大陆用户加速：**
->
-> 安装完毕之后，如果 [uv][] 下载软件包的速度较慢，可以配置国内镜像源。
->
-> **方法一：配置文件**
->
-> 创建或编辑 `~/.config/uv/uv.toml`（macOS/Linux）或 `%APPDATA%\uv\uv.toml`（Windows）：
->
-> ```toml
-> [[index]]
-> url = "https://mirrors.aliyun.com/pypi/simple/"
-> default = true
-> ```
->
-> **方法二：环境变量**
->
-> - **macOS/Linux** (添加到 `~/.bashrc`、`~/.zshrc` 等):
-> ```bash
-> export UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
-> ```
->
-> - **Windows** (系统环境变量):
-> ```
-> UV_DEFAULT_INDEX=https://mirrors.aliyun.com/pypi/simple/
-> ```
->
-> 其他可用的镜像源：
-> - **腾讯云**：`https://mirrors.cloud.tencent.com/pypi/simple/`
-> - **华为云**：`https://mirrors.huaweicloud.com/repository/pypi/simple/`
-> - **清华大学**：`https://pypi.tuna.tsinghua.edu.cn/simple/`
-> - **中科大**：`https://pypi.mirrors.ustc.edu.cn/simple/`
+**方法二：配置文件**
 
-### 安装 `pipx`（替代方案）
+创建或编辑配置文件：
+- **Unix/macOS**: `~/.config/pip/pip.conf` 或 `~/.pip/pip.conf`（旧路径，仍支持）
+- **Windows**: `%APPDATA%\pip\pip.ini`
 
-[pipx][] 是另一个用于在隔离环境中安装和运行 Python CLI 应用程序的工具。
+```ini
+[global]
+index-url = https://mirrors.aliyun.com/pypi/simple/
+```
 
-> **`pipx` vs `uvx`：** 和 `uvx` 一样，`pipx` 也可以通过 `pipx run package-name` 直接运行包。不过 `uvx` 通常更快，在 MCP 生态系统中也更常用。
+**方法三：环境变量**
 
-**macOS / Linux:**
+- **macOS/Linux** (添加到 `~/.bashrc`、`~/.zshrc` 等):
 ```bash
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
+export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
 ```
 
-**Windows:**
-```powershell
-python -m pip install --user pipx
-python -m pipx ensurepath
+- **Windows** (系统环境变量):
+```
+PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
 ```
 
-> **注意**：`pipx` 会使用上面配置的 pip 镜像源，无需额外配置。
+此配置对 [pip][] 和 [pipx][] 都生效。
+
+### 镜像源列表
+
+- **阿里云**：`https://mirrors.aliyun.com/pypi/simple/`
+- **腾讯云**：`https://mirrors.cloud.tencent.com/pypi/simple/`
+- **华为云**：`https://mirrors.huaweicloud.com/repository/pypi/simple/`
+- **清华大学**：`https://pypi.tuna.tsinghua.edu.cn/simple/`
+- **中科大**：`https://pypi.mirrors.ustc.edu.cn/simple/`
 
 ## 安装
 
@@ -252,14 +252,22 @@ uv tool install uiautomator2-mcp-server
 
 # 或使用 pipx 安装
 pipx install uiautomator2-mcp-server
-
-# 或使用 pip 安装
-pip install uiautomator2-mcp-server
 ```
+
+----
+
+如果不想使用 [uv][], [pipx][] 等第三方包管理器，可以直接使用 [Python][] 默认的包管理器 [pip][] 安装这个软件：
+
+```bash
+python -m pip install uiautomator2-mcp-server
+```
+
+> ℹ️ **注意**: \
+> [pip][] **不支持**免安装直接运行
 
 ### 运行模式
 
-> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以直接使用 `uvx uiautomator2-mcp-server ...` 运行。
+> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以直接使用 `uvx uiautomator2-mcp-server` 运行。
 
 MCP 服务器可以两种模式运行：
 
@@ -322,7 +330,7 @@ u2mcp --version
 
 ### 工具过滤
 
-> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以将命令替换为 `uvx uiautomator2-mcp-server ...` 直接运行。
+> **注意：** 以下命令使用 `u2mcp`，需要先安装软件包。如果尚未安装，可以直接使用 `uvx uiautomator2-mcp-server ...` 运行。
 
 你可以使用基于标签的过滤来选择性暴露工具。这会减少 LLM 可用的工具数量，从而提高性能并减少幻觉。
 
@@ -844,6 +852,13 @@ Android UI 测试总结
 | `element_swipe`            | 在元素内部滑动                               |
 | `element_scroll`           | 滚动元素（`forward`/`backward`）             |
 | `element_scroll_to`        | 滚动到元素，最多指定次数                     |
+
+### Toast
+| 工具           | 描述                               |
+| -------------- | ---------------------------------- |
+| `get_toast`    | 获取最新的 Android Toast 消息      |
+| `show_toast`   | 在 Android 设备上显示 Toast 消息    |
+| `reset_toast`  | 清除设备上的缓存 Toast 消息         |
 
 ### scrcpy
 | 工具           | 描述                                   |

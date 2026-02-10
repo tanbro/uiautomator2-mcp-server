@@ -33,7 +33,7 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 [![Bilibili](https://img.shields.io/badge/Bilibili-Watch_Demo-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
 [![Download Video](https://img.shields.io/badge/Download-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
 
-- ✅ Launch app → Tap search → Enter keywords → Execute search → Tap result
+- ✅ Launch app → Tap search → Enter keywords → Execute search → Tap result -> Swap to next video
 
 **Control Android devices with natural language, no coding required**
 
@@ -66,7 +66,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 ## 🏗️ Architecture
 
 ```mermaid
-graph LR
+graph TD
     AI[AI Assistant<br/>Claude/GPT/etc.] --> MCP[MCP Protocol]
     MCP --> Server[u2mcp Server]
     Server --> uiautomator2[uiautomator2]
@@ -105,54 +105,69 @@ All other commands remain the same (just add the transport subcommand).
 - `adb` in your PATH (install via [Android SDK Platform Tools](https://developer.android.com/tools/releases/platform-tools))
 - Android device with **USB debugging enabled**
 
-### Installing `uv` (recommended for MCP clients)
+------
 
-Most MCP clients (like Claude Desktop) use `uvx` to run Python MCP servers. `uvx` is part of the [uv][] toolkit.
+> **💡 Tool Selection Recommendation:**
+>
+> - **MCP Client Usage** (Claude Desktop, Cursor, etc.): **[uv][]** is recommended for direct package execution with `uvx`
+> - **Standalone/Debugging**: You can use **[uv][], [pip][], or [pipx][]**
+>
+> For most use cases, installing **uv** is sufficient.
 
-> **Why `uvx`?** `uvx` can run Python packages directly from PyPI without manual installation - just use `uvx package-name` and it handles the rest. This makes it perfect for MCP client configurations.
+------
 
-**macOS / Linux:**
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
+### Installing Enhanced Python Package Managers
 
-**Windows (PowerShell):**
-```powershell
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
+The following are two optional enhanced package managers. You can choose to install one of them, or skip this step if you prefer.
 
-Or use `winget`:
-```powershell
-winget install --id=astral-sh.uv -e
-```
+- Installing `uv` (Recommended | Optional)
 
-Verify installation:
-```bash
-uv --version
-uvx --version
-```
+  Most MCP clients (like Claude Desktop) use `uvx` to run Python MCP servers. `uvx` is part of the [uv][] toolkit.
 
-### Installing `pipx` (alternative)
+  > **Why choose `uvx`?** `uvx` can run Python packages directly from PyPI without manual installation - just use `uvx package-name` and it handles the rest. This makes it perfect for MCP client configurations.
 
-[pipx][] is another tool for installing and running Python CLI applications in isolated environments.
+  **macOS / Linux:**
+  ```bash
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  ```
 
-> **`pipx` vs `uvx`:** Like `uvx`, `pipx` can also run packages directly with `pipx run package-name`. However, `uvx` is generally faster and is more commonly used in the MCP ecosystem.
+  **Windows (PowerShell):**
+  ```powershell
+  powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
+  ```
 
-**macOS / Linux:**
-```bash
-python3 -m pip install --user pipx
-python3 -m pipx ensurepath
-```
+  Or use `winget`:
+  ```powershell
+  winget install --id=astral-sh.uv -e
+  ```
 
-**Windows:**
-```powershell
-python -m pip install --user pipx
-python -m pipx ensurepath
-```
+  Verify installation:
+  ```bash
+  uv --version
+  uvx --version
+  ```
+
+- Installing `pipx` (Optional)
+
+  [pipx][] is another tool for installing and running Python CLI applications in isolated environments.
+
+  > **`pipx` vs `uvx`:** Like `uvx`, `pipx` can also run packages directly with `pipx run package-name`. However, `uvx` is generally faster and is more commonly used in the MCP ecosystem.
+
+  **macOS / Linux:**
+  ```bash
+  python3 -m pip install --user pipx
+  python3 -m pipx ensurepath
+  ```
+
+  **Windows:**
+  ```powershell
+  python -m pip install --user pipx
+  python -m pipx ensurepath
+  ```
 
 ## Installation
 
-**Preferred (no-install):** Run directly from PyPI without installing using `uvx` (recommended) or `pipx`:
+**Preferred: Run directly without installation** using `uvx` (recommended) or `pipx run` from PyPI:
 
 ```bash
 # Run directly with uvx (recommended)
@@ -162,18 +177,26 @@ uvx uiautomator2-mcp-server stdio
 pipx run uiautomator2-mcp-server stdio
 ```
 
-**Or install globally** (if you want the command available system-wide):
+**If you need global installation for long-term use**, you can also choose to install:
 
 ```bash
-# Install using uv (tool-managed install)
+# Install using uv (tool method)
 uv tool install uiautomator2-mcp-server
 
 # Or install with pipx
 pipx install uiautomator2-mcp-server
-
-# Or install with pip
-pip install uiautomator2-mcp-server
 ```
+
+----
+
+If you don't want to use [uv][], [pipx][] or other third-party package managers, you can directly use [Python][]'s default package manager [pip][] to install this software:
+
+```bash
+python -m pip install uiautomator2-mcp-server
+```
+
+> ℹ️ **Note**: \
+> [pip][] **does not support** running without installation
 
 ### Running Modes
 
@@ -766,6 +789,13 @@ Each skill directory contains:
 | `element_swipe`            | Swipe inside an element                                             |
 | `element_scroll`           | Scroll an element (`forward`/`backward`)                            |
 | `element_scroll_to`        | Scroll to element with max swipes                                   |
+
+### Toast
+| Tool        | Description                                      |
+| ----------- | ------------------------------------------------ |
+| `get_toast` | Get the most recent Android Toast message        |
+| `show_toast`| Display a Toast message on the Android device    |
+| `reset_toast`| Clear the cached Toast message on the device     |
 
 ### Scrcpy
 | Tool           | Description                                              |
