@@ -80,7 +80,11 @@ graph LR
 ```bash
 # 旧版本（v0.1.3 及更早）
 u2mcp
+```
 
+改成:
+
+```bash
 # 新版本（v0.2.0+）
 u2mcp stdio
 ```

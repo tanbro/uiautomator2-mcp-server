@@ -88,7 +88,11 @@ graph LR
 ```bash
 # Old (v0.1.3 and earlier)
 u2mcp
+```
 
+to:
+
+```bash
 # New (v0.2.0+)
 u2mcp stdio
 ```
