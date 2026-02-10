@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## 0.2.1(dev)
+## 0.2.1
 
-> 📅 2026-02-07
+> 📅 2026-02-10
 
 - 🆕 New:
     - Add `element_save_screenshot` tool to capture screenshots of specific elements
