@@ -81,15 +81,6 @@ graph LR
     style Device fill:#fce4ec
 ```
 
-| Scenario                     | Description                                                 |
-| ---------------------------- | ----------------------------------------------------------- |
-| **🧪 Automated Testing**    | Run natural language UI tests with AI-driven test framework |
-| **⚡ Rapid Prototyping**     | Quickly test Android app interactions without writing code  |
-| **♿ Accessibility Testing** | Verify app accessibility features automatically             |
-| **📊 Health Monitoring**    | Periodic device health and status checks                    |
-| **🤖 Task Automation**      | Automate repetitive tasks like form filling, navigation     |
-| **🔬 Debugging**            | Inspect UI hierarchy and capture screenshots remotely       |
-
 ## Migration from v0.1.x
 
 **If you're upgrading from v0.1.3 or earlier:** The CLI now requires an explicit subcommand. Change your command from:
