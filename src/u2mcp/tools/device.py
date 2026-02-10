@@ -311,7 +311,7 @@ async def dump_hierarchy(
         return ""
 
     # Return concatenated xml of matching nodes
-    result_parts = []
+    result_parts: list[str] = []
     for node in nodes:
         result_parts.append(etree.tostring(node, encoding="unicode"))
 
@@ -353,7 +353,7 @@ async def save_dump_hierarchy(
         nodes = root.xpath(xpath)
 
         if nodes:
-            result_parts = []
+            result_parts: list[str] = []
             for node in nodes:
                 result_parts.append(etree.tostring(node, encoding="unicode"))
             xml_str = "\n".join(result_parts) if len(result_parts) > 1 else result_parts[0] if result_parts else ""
