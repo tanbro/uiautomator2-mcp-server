@@ -6,6 +6,7 @@ import os
 import platform
 import shutil
 import sys
+from typing import Any
 
 import adbutils
 import anyio
@@ -202,7 +203,7 @@ async def check_devices_async(verbose: bool = False) -> CheckResult:
                 fix_suggestion="Connect a device via USB with USB debugging enabled",
             )
 
-        device_info = []
+        device_info: list[dict[str, Any]] = []
 
         for device in devices:
             info = {

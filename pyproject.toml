@@ -48,5 +48,5 @@ changelog = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/CHANGEL
 
 [dependency-groups]
 dev = [{ include-group = "type" }, { include-group = "test" }]
-type = ["mypy", "types-lxml"]
+type = ["mypy", "types-lxml", "types-retry"]
 test = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-mock"]
