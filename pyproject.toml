@@ -7,11 +7,26 @@ authors = [{ name = "tanbro", email = "tanbro@163.com" }]
 requires-python = ">=3.11"
 dependencies = [
   "fastmcp>=2.11,<3.0",
-  "typing_extensions>=4.12; python_version < '3.12'",
   "uiautomator2>=3.5,<4.0",
+  "typing_extensions>=4.12; python_version < '3.12'",
 ]
 license = "Apache-2.0"
-keywords = ["uiautomator2", "mcp", "fastmcp", "adb", "android", "adbutils"]
+keywords = [
+  "uiautomator2",
+  "mcp",
+  "mcp-server",
+  "fastmcp",
+  "adb",
+  "android",
+  "adbutils",
+  "automation",
+  "testing",
+  "bot",
+  "ai",
+  "artificial-intelligence",
+  "rpa",
+  "test",
+]
 classifiers = [
   # How mature is this project? Common values are
   #   3 - Alpha
