@@ -1,14 +1,9 @@
 """
-This MCP server provides tools for controlling and interacting with Android devices using uiautomator2.
+MCP server for Android device automation using uiautomator2.
 
-It allows you to perform various operations on Android devices such as connecting to devices, taking screenshots,
-getting device information, accessing UI hierarchy, tap on screens, and more...
+Run init on the device first for UI and element operations.
 
-It also provides tools for managing Android applications, such as installing, uninstalling, starting, stopping, and clearing applications.
-
-Before performing operations on a device, you need to initialize it using the init tool.
-
-All operations require a device serial number to identify the target device.
+Most tools require a device serial number to identify the target device.
 """
 
 from __future__ import annotations
