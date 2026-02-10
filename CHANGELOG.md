@@ -1,6 +1,8 @@
 # CHANGELOG
 
-## [Unreleased]
+## 0.2.2
+
+> 📅 2026-02-10
 
 - 🆕 New:
     - Add Toast tools for Android Toast message detection and display:
@@ -15,10 +17,17 @@
     - Add serval type stubs for comprehensive type coverage
     - Restructure README installation section with dedicated "Installing Enhanced Python Package Managers" subsection
     - Add Toast tool documentation to both English and Chinese README
+    - Remove unnecessary `-> None` return type annotations from tool functions
+    - Simplify MCP server module docstring for clarity
+    - Clarify `init` tool scope: only required for UI and element operations
+    - Expand PyPI keywords to align with GitHub topics for better discoverability
 
 - 📚 Docs:
     - Update README structure with clearer package manager installation guidance
     - Add Toast tools to Available Tools section in both English and Chinese README
+    - Add GitHub Release badge to README for version visibility
+
+## [Unreleased]
 
 ## 0.2.1
 
