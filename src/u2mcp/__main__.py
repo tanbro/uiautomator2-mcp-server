@@ -13,7 +13,7 @@ from cyclopts import App, Group, Parameter
 from cyclopts.exceptions import ValidationError
 from rich.console import Console
 
-from .health import check_adb
+from .health import check_adb, run_doctor
 from .helpers import print_tags as print_tags_from_mcp
 from .helpers import print_tool_help
 from .mcp import make_mcp
@@ -22,6 +22,7 @@ from .version import __version__
 # Organize commands into groups
 server_group = Group("Server Commands")
 info_group = Group("Information Commands")
+doctor_group = Group("Diagnostic Commands")
 
 # Create CLI app with cyclopts
 app = App(
@@ -183,6 +184,36 @@ def tags() -> None:
     console = Console()
     mcp = make_mcp()
     anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
+
+
+@app.command(group=doctor_group)
+def doctor(
+    *,
+    verbose: Annotated[bool, Parameter(name=["--verbose", "-v"])] = False,
+    fix: bool = False,
+    category: Annotated[str | None, Parameter(name=["--category", "-c"])] = None,
+    exclude: Annotated[str | None, Parameter(name=["--exclude"])] = None,
+) -> None:
+    """Run comprehensive diagnostics on the uiautomator2-mcp-server setup.
+
+    Performs checks on:
+    - Environment (Python version, platform)
+    - ADB availability
+    - Device connectivity
+    - uiautomator2 initialization
+    - MCP tool registration
+    - scrcpy availability (optional)
+
+    Args:
+        verbose: Show detailed diagnostic output.
+        fix: Attempt automatic fixes for issues.
+        category: Only check specific categories (comma-separated).
+        exclude: Exclude specific categories (comma-separated).
+
+    Returns:
+        Exit code: 0 (all passed), 1 (some failed), 2 (doctor error).
+    """
+    sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
 
 
 def main() -> None:
