@@ -6,8 +6,18 @@ on:
     branches: [main]
     tags:
       - "*"
+    paths:
+      - .github/**
+      - src/**
+      - tests/**
+      - pyproject.toml
   pull_request:
     branches: [main]
+    paths:
+      - .github/**
+      - src/**
+      - tests/**
+      - pyproject.toml
 
 permissions:
   contents: write # Required for GitHub Release creation
