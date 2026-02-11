@@ -54,16 +54,16 @@ async def screen_record_stop(serial: str):
 
 
 @mcp.tool("screen_record", tags={"screen:record"})
-async def screen_record(serial: str, file: str, duration: float) -> str:
+async def screen_record(serial: str, filename: str, fps: int = 20):
     """Record screen to file with blocking wait. For non-blocking recording use screen_record_start.
 
     Args:
         serial: Android device serial number.
-        file: Output file path for the recording.
+        filename: Output file path for the recording.
         duration: Recording duration in seconds.
 
     Returns:
         str: Output file path.
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.screenrecord(file, duration))
+        await to_thread.run_sync(lambda: device.screenrecord(filename, fps))
