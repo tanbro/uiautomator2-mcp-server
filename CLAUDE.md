@@ -25,14 +25,19 @@ src/u2mcp/
 ├── middlewares.py       # MCP middlewares for request/response handling
 └── tools/
     ├── __init__.py      # Tools registry
-    ├── device.py        # Device management tools
-    ├── action.py        # Touch/gesture tools
+    ├── action.py        # Touch/gesture tools (click, swipe, drag, etc.)
     ├── app.py           # App management tools
     ├── clipboard.py     # Clipboard read/write tools
-    ├── element.py       # Element/UI interaction tools
+    ├── delay.py         # Delay utility
+    ├── device.py        # Device management tools
+    ├── gesture.py       # Edge swipe and multitouch gestures
     ├── input.py         # Text input and keyboard tools
-    ├── misc.py          # Miscellaneous tools
-    └── scrcpy.py        # Screen mirroring (scrcpy integration)
+    ├── scrcpy.py        # Screen mirroring (scrcpy integration)
+    ├── screenrecord.py  # Screen recording tools
+    ├── selector.py      # Selector-based element tools (recommended)
+    ├── system.py        # System controls (orientation, notification, unlock)
+    ├── toast.py         # Toast message utilities
+    └── xpath.py         # XPath-based element tools (more powerful)
 
 .skills/                  # AI-driven testing skills
 ├── android-ui-test/
@@ -110,72 +115,97 @@ The server can be invoked using any of these commands (they are aliases):
 
 All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to identify the target device.
 
-### Device Management
-- `device_list` - List connected devices
-- `init` - Install uiautomator2 resources to device (REQUIRED before other operations)
-- `connect`/`disconnect` - Manage device connections
-- `disconnect_all` - Disconnect from all Android devices
-- `info` - Get device information
-- `window_size` - Get screen dimensions
-- `screenshot` - Capture screen (returns base64-encoded image)
-- `save_screenshot` - Save screenshot to file (format determined by extension)
-- `dump_hierarchy` - Get UI hierarchy XML with optional xpath filter
-- `save_dump_hierarchy` - Save UI hierarchy XML to file with optional xpath filter
-- `purge` - Purge all resources (minicap, minitouch, uiautomator) from device
-- `shell_command` - Run arbitrary shell commands on device with timeout
+Tools are organized into modules:
+- **action.py** - Coordinate-based touch/gestures (click, swipe, drag)
+- **selector.py** - Selector-based element tools (recommended, device-side)
+- **xpath.py** - XPath-based element tools (more powerful, client-side parsing)
+- **device.py** - Device management and screen capture
+- **app.py** - Application lifecycle and management
+- **input.py** - Text input and keyboard control
+- **gesture.py** - Edge swipes and multitouch gestures
+- **system.py** - System controls (orientation, notification, unlock)
+- **screenrecord.py** - Screen recording
+- **scrcpy.py** - Screen mirroring
+- **clipboard.py** - Clipboard read/write
+- **delay.py** - Delay utility
+- **toast.py** - Toast messages
 
-### Action Tools
-- `click`/`long_click`/`double_click` - Touch actions
-- `swipe`/`swipe_points`/`drag` - Gesture actions
-- `press_key` - Press a physical key (e.g., HOME, BACK, ENTER)
-- `screen_on` - Turn the device screen on
-- `screen_off` - Turn the device screen off
+Use `u2mcp tools` to list all available tools.
 
-### Input Tools
-- `send_text` - Type text into the focused input field
-- `set_focused_text` - Set text to the currently focused input element (bypasses IME)
-- `clear_text` - Clear text in the focused input field
-- `hide_keyboard` - Hide the on-screen keyboard
+## Tool Function Design Principles
 
-### App Management
-- `app_install`/`app_uninstall` - Package management
-- `app_uninstall_all` - Uninstall all third-party applications
-- `app_start`/`app_stop` - App lifecycle
-- `app_stop_all` - Stop all running applications
-- `app_wait` - Wait for an app to start (with timeout)
-- `app_clear` - Clear app data and cache
-- `app_info`/`app_list` - App information
-- `app_current` - Get the current foreground app information
-- `app_list_running` - List all currently running applications
-- `app_auto_grant_permissions` - Auto-grant all permissions to an app
+**Core Philosophy: Naming, types, and docstrings are for LLM consumption.**
 
-### Clipboard Tools
-- `read_clipboard` - Read clipboard content from device
-- `write_clipboard` - Write text to device clipboard
+The audience for tool function signatures and documentation is the LLM, not human developers. Design for LLM understanding.
 
-### Element Tools
-- `activity_wait` - Wait for a specific activity to appear (with timeout)
-- `element_wait` - Wait for an element to appear
-- `element_wait_gone` - Wait for an element to disappear
-- `element_click` - Click on an element found by XPath (with wait)
-- `element_click_nowait` - Click on an element without waiting
-- `element_click_until_gone` - Click until element disappears
-- `element_long_click` - Long click on an element
-- `element_screenshot` - Take a screenshot of a specific element (returns base64)
-- `element_save_screenshot` - Save screenshot of a specific element to file
-- `element_get_text` - Get text from an element
-- `element_set_text` - Set text on an element
-- `element_bounds` - Get the bounding box coordinates of an element
-- `element_swipe` - Swipe within an element
-- `element_scroll` - Scroll within a scrollable container
-- `element_scroll_to` - Scroll to a specific element or position
+### 1. Mandatory Type Annotations
 
-### Screen Mirroring
-- `start_scrcpy` - Start scrcpy screen mirroring (requires scrcpy installed)
-- `stop_scrcpy` - Stop scrcpy screen mirroring
+All parameters and return values MUST have explicit type annotations.
 
-### Miscellaneous Tools
-- `delay` - Add a simple delay/sleep in seconds
+### 2. Minimize Type Complexity
+
+Keep parameter and return types simple for LLM understanding.
+
+**Avoid:**
+- `Optional[T]` - Use separate required parameters or provide defaults
+- `Dict[str, Any]` - Use specific dataclasses or named tuples
+- `List[T]` - Use fixed-size tuples or separate parameters
+- `Union[T1, T2]` - Use separate functions or overload
+
+**Prefer:**
+- `str`, `int`, `float`, `bool`
+- `tuple[int, int, int, int]` for coordinates
+- Literal types like `Literal["left", "right", "up", "down"]`
+
+### 3. No Redundant Return Type Annotations
+
+For functions with no meaningful return value, do NOT add `-> None` or include a `Returns:` section.
+
+```python
+# Good
+@mcp.tool("screen_on", tags={"action:screen"})
+async def screen_on(serial: str):
+    """Turn screen on.
+
+    Args:
+        serial: Android device serial number.
+    """
+    ...
+
+# Bad - redundant None
+async def screen_on(serial: str) -> None:
+    """Turn screen on.
+
+    Args:
+        serial: Android device serial number.
+
+    Returns:
+        None: Nothing.
+    """
+```
+
+### 4. Google-Style Docstrings with Types in Descriptions
+
+Docstrings MUST use Google Python style format. Include types in parameter descriptions.
+
+```python
+@mcp.tool("click", tags={"action:touch"})
+async def click(serial: str, x: int, y: int) -> bool:
+    """Click at specific coordinates.
+
+    Args:
+        serial: Android device serial number.
+        x: X coordinate in pixels.
+        y: Y coordinate in pixels.
+
+    Returns:
+        bool: True if click successful, False otherwise.
+    """
+```
+
+### 5. No Examples in Tool Docstrings
+
+Do NOT include usage examples in tool function docstrings unless absolutely critical for LLM understanding. Examples bloat the documentation and confuse the LLM.
 
 ## Key Implementation Details
 
