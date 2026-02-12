@@ -27,8 +27,6 @@
     - Add Toast tools to Available Tools section in both English and Chinese README
     - Add GitHub Release badge to README for version visibility
 
-## [Unreleased]
-
 ## 0.2.1
 
 > 📅 2026-02-10
