@@ -48,7 +48,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 - 🔍 **XPath Filtering** - Dump only the UI elements you need — save tokens and speed up responses
 - 🎛️ **Tool Filtering** - Show the AI only the tools it needs — fewer hallucinations, better results
 - ⚡ **Zero Setup** - Run with `uvx` immediately, no installation needed
-- 🧰 **60+ Tools** - Click, swipe, type, apps, screenshots — everything you need
+- 🧰 **70+ Tools** - Click, swipe, type, apps, screenshots — everything you need
 - 🧪 **Built-in Testing** - Includes AI-driven UI test framework out of the box
 - 🔄 **Two Modes** - STDIO for local, HTTP for remote
 - 🔒 **Clean Code** - Type hints, linted, formatted — easy to extend
@@ -174,6 +174,9 @@ The following are two optional enhanced package managers. You can choose to inst
 # Run directly with uvx (recommended)
 uvx uiautomator2-mcp-server stdio
 
+# Or use the shorter alias (v0.3.0+)
+uvx u2mcp stdio
+
 # Or run directly with pipx
 pipx run uiautomator2-mcp-server stdio
 ```
@@ -186,6 +189,9 @@ uv tool install uiautomator2-mcp-server
 
 # Or install with pipx
 pipx install uiautomator2-mcp-server
+
+# Or install the u2mcp alias (v0.3.0+)
+pip install u2mcp
 ```
 
 ----
@@ -195,6 +201,9 @@ If you don't want to use [uv][], [pipx][] or other third-party package managers,
 ```bash
 python -m pip install uiautomator2-mcp-server
 ```
+
+> **Note on Package Name:** \
+> While the CLI command is `u2mcp`, the PyPI package name is `uiautomator2-mcp-server`. We plan to simplify this to `u2mcp` in v1.0.0. For now, please install using the full package name above.
 
 > ℹ️ **Note**: \
 > [pip][] **does not support** running without installation
@@ -712,7 +721,7 @@ Each skill directory contains:
 
 ## Available Tools
 
-The server provides **60+ tools** organized into the following categories:
+The server provides **70+ tools** organized into the following categories:
 
 | Category   | Description                                        |
 | ---------- | -------------------------------------------------- |

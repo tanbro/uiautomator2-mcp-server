@@ -1,8 +1,8 @@
 # CHANGELOG
 
-## 0.3.0 (WIP)
+## 0.3.0
 
-> 📅 TBD
+> 📅 2026-02-12
 
 - 🆕 New:
     - Add three new XPath query tools:
