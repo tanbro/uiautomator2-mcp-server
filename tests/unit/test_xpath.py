@@ -7,22 +7,22 @@ from unittest.mock import MagicMock
 import pytest
 
 from u2mcp.tools.xpath import (
-    xpath_wait_appear,
-    xpath_wait_gone,
-    xpath_exists,
     xpath_click,
     xpath_click_nowait,
-    xpath_long_press,
-    xpath_screenshot,
-    xpath_save_screenshot,
-    xpath_get_text,
-    xpath_set_text,
+    xpath_exists,
+    xpath_get_attrib,
     xpath_get_bounds,
     xpath_get_info,
-    xpath_get_attrib,
-    xpath_swipe,
+    xpath_get_text,
+    xpath_long_press,
+    xpath_save_screenshot,
+    xpath_screenshot,
     xpath_scroll,
     xpath_scroll_to,
+    xpath_set_text,
+    xpath_swipe,
+    xpath_wait_appear,
+    xpath_wait_gone,
 )
 
 
@@ -74,9 +74,7 @@ async def test_xpath_long_press(mock_u2_device: MagicMock) -> None:
 @pytest.mark.unit
 async def test_xpath_screenshot(mock_u2_device: MagicMock) -> None:
     """Test xpath_screenshot returns base64 data URL."""
-    data_url, height, width = await xpath_screenshot.fn(
-        "emulator-5554", "//node[@resource-id='screenshot']", "jpeg"
-    )
+    data_url, height, width = await xpath_screenshot.fn("emulator-5554", "//node[@resource-id='screenshot']", "jpeg")
     assert data_url.startswith("data:image/jpeg;base64,")
     assert height == 200
     assert width == 100
@@ -89,9 +87,7 @@ async def test_xpath_save_screenshot(mock_u2_device: MagicMock) -> None:
     import tempfile
 
     with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as tmp:
-        result = await xpath_save_screenshot.fn(
-            "emulator-5554", "//node[@resource-id='screenshot']", tmp.name
-        )
+        result = await xpath_save_screenshot.fn("emulator-5554", "//node[@resource-id='screenshot']", tmp.name)
         assert result.endswith(".png")
 
 
@@ -198,7 +194,5 @@ async def test_xpath_scroll(mock_u2_device: MagicMock) -> None:
 @pytest.mark.unit
 async def test_xpath_scroll_to(mock_u2_device: MagicMock) -> None:
     """Test xpath_scroll_to executes without error."""
-    result = await xpath_scroll_to.fn(
-        "emulator-5554", "//node[@text='Target']", "forward", 10
-    )
+    result = await xpath_scroll_to.fn("emulator-5554", "//node[@text='Target']", "forward", 10)
     assert result is True
