@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 0.3.0 (WIP)
+
+> 📅 TBD
+
+- 🆕 New:
+    - Add three new XPath query tools:
+      - `xpath_exists` - Check if element exists by XPath without waiting
+      - `xpath_get_info` - Get complete element information as dict (text, bounds, className, clickable, etc.)
+      - `xpath_get_attrib` - Get specific attribute value from element by XPath
+    - Add `--xpath-timeout` CLI parameter to control default XPath element lookup timeout (default: 20.0 seconds)
+
+- ⚙️ Changed:
+    - Move `activity_wait_appear` from `xpath.py` to `device.py` (it's a device-level operation, not XPath)
+    - Apply XPath timeout during device connection for efficiency (once per connection instead of every operation)
+    - Simplify XPath tools - remove unnecessary return type annotations from void functions
+    - Add `scale=0.6` default parameter to `xpath_swipe` tool
+
 ## 0.2.2
 
 > 📅 2026-02-10
