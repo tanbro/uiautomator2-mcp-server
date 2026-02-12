@@ -83,7 +83,23 @@ def mock_u2_device() -> MagicMock:
         mock_xpath.set_text = MagicMock()
         mock_xpath.bounds = MagicMock(return_value=(100, 200, 300, 400))
         mock_xpath.swipe = MagicMock()
+        mock_xpath.scroll = MagicMock(return_value=True)
         mock_xpath.scroll_to = MagicMock(return_value=True)
+
+        # New v0.3.0 XPath methods
+        mock_xpath.exists = True
+
+        # Mock element for get() method (used by xpath_get_info and xpath_get_attrib)
+        mock_element = MagicMock()
+        mock_element.info = {
+            "text": "Sample",
+            "bounds": "(100,200)(300,400)",
+            "className": "android.widget.TextView",
+            "clickable": True,
+        }
+        mock_element.attrib = MagicMock()
+        mock_element.attrib.get = MagicMock(return_value="attribute_value")
+        mock_xpath.get = MagicMock(return_value=mock_element)
 
         # Mock screenshot method
         from PIL.Image import Image
