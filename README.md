@@ -647,14 +647,12 @@ This project includes an AI-driven UI testing framework using the `.skills/` sys
 
 ```
 .skills/android-ui-test/
-├── SKILL.md                     # Core skill definition (YAML metadata)
+├── SKILL.md                     # Core skill definition (YAML metadata + lightweight description)
 ├── README.md                    # Architecture overview and quick start
 ├── examples/                    # Learning materials
 │   └── usage-examples.md        # Detailed usage patterns and examples
-├── references/                  # Technical specifications
-│   └── test-specification.md    # Complete test specification (TC001-TC008)
-└── (scripts/)                   # Executable scripts (in project root)
-    └── demo-android-test.py     # Demonstration script
+└── references/                  # Technical specifications
+    └── test-specification.md    # Complete test specification (TC001-TC010)
 ```
 
 ### Running UI Tests
@@ -672,15 +670,15 @@ The AI will:
 
 ### Test Coverage
 
-| Category  | Tests                                   |
-| --------- | --------------------------------------- |
-| Device    | Connection, Info, Screenshot, Hierarchy |
-| Touch     | Click, Long Click, Double Click         |
-| Gesture   | Swipe, Drag, Key Press                  |
-| App       | List, Start, Wait, Info                 |
-| Element   | Wait, Bounds, Get Text, Click           |
-| Input     | Text Input, Keyboard                    |
-| Clipboard | Read/Write (with known limitations)     |
+| Category    | Tests                                                |
+| ----------- | ---------------------------------------------------- |
+| Device      | Connection, Info, Screenshot, Hierarchy, Doctor      |
+| Touch       | Click, Long Click, Double Click                      |
+| Gesture     | Swipe, Drag, Key Press                               |
+| App         | List, Start, Wait, Info, Permissions                 |
+| Element     | Wait, Exists, Bounds, Get Text, Click, Screenshot    |
+| Input       | Text Input, Focused Text, Keyboard                   |
+| Clipboard   | Read/Write (with known limitations)                   |
 
 ### Sample Test Report
 
@@ -714,100 +712,44 @@ Each skill directory contains:
 
 ## Available Tools
 
-### Device
-| Tool              | Description                                                                                                   |
-| ----------------- | ------------------------------------------------------------------------------------------------------------- |
-| `device_list`     | List connected Adb devices                                                                                    |
-| `init`            | Install required resources to device (**run first**)                                                          |
-| `purge`           | Purge installed uiautomator resources from device                                                             |
-| `connect`         | Connect to a device (returns device info)                                                                     |
-| `disconnect`      | Disconnect a device                                                                                           |
-| `disconnect_all`  | Disconnect all devices                                                                                        |
-| `shell_command`   | Run shell command on device (returns `(exit_code, output)`)                                                   |
-| `window_size`     | Get device window size (`width`, `height`)                                                                    |
-| `screenshot`      | Take screenshot (returns `width`, `height`, `image` where `image` is a data URL `data:image/jpeg;base64,...`) |
-| `save_screenshot` | Save screenshot to file (returns file path, format determined by file extension)                              |
-| `dump_hierarchy`  | Get UI hierarchy XML                                                                                          |
-| `info`            | Get device information                                                                                        |
+The server provides **60+ tools** organized into the following categories:
 
-### Actions
-| Tool           | Description                    |
-| -------------- | ------------------------------ |
-| `click`        | Tap at coordinates             |
-| `long_click`   | Long press at coordinates      |
-| `double_click` | Double tap at coordinates      |
-| `swipe`        | Swipe from point A to B        |
-| `swipe_points` | Swipe through multiple points  |
-| `drag`         | Drag from point A to B         |
-| `press_key`    | Press a key (home, back, etc.) |
-| `screen_on`    | Turn screen on                 |
-| `screen_off`   | Turn screen off                |
+| Category   | Description                                        |
+| ---------- | -------------------------------------------------- |
+| **Device** | Connection, info, screenshot, hierarchy, shell     |
+| **Actions** | Touch, gestures, key presses, screen control      |
+| **Apps**   | Install, launch, manage, list app info            |
+| **Element** | XPath-based element location and interaction (v0.3.0+) |
+| **Input**  | Text input, keyboard control, focused text        |
+| **Clipboard** | Read/write clipboard content                   |
+| **Toast**  | Android Toast message detection and display       |
+| **Scrcpy** | Screen mirroring with scrcpy                      |
 
-### Input
-| Tool            | Description                       |
-| --------------- | --------------------------------- |
-| `send_text`     | Type text (supports `clear` flag) |
-| `clear_text`    | Clear text field                  |
-| `hide_keyboard` | Hide virtual keyboard             |
+### Listing Tools
 
-### Apps
-| Tool                         | Description                                  |
-| ---------------------------- | -------------------------------------------- |
-| `app_install`                | Install APK (file path or url)               |
-| `app_uninstall`              | Uninstall an app                             |
-| `app_uninstall_all`          | Uninstall many apps (with excludes)          |
-| `app_start`                  | Launch an app                                |
-| `app_wait`                   | Wait until app launched (`timeout`, `front`) |
-| `app_stop`                   | Stop an app                                  |
-| `app_stop_all`               | Stop all third-party apps (with excludes)    |
-| `app_clear`                  | Clear app data                               |
-| `app_info`                   | Get app info (`versionName`, `versionCode`)  |
-| `app_current`                | Get current foreground app                   |
-| `app_list`                   | List installed apps (supports `filter`)      |
-| `app_list_running`           | List running apps                            |
-| `app_auto_grant_permissions` | Auto grant runtime permissions to app        |
+Run these commands to explore available tools:
 
-### Clipboard
-| Tool              | Description                     |
-| ----------------- | ------------------------------- |
-| `read_clipboard`  | Read clipboard text from device |
-| `write_clipboard` | Write text to device clipboard  |
+```bash
+# List all tools
+u2mcp tools
 
-### Element
-| Tool                       | Description                                                         |
-| -------------------------- | ------------------------------------------------------------------- |
-| `activity_wait`            | Wait until an activity appears                                      |
-| `element_wait`             | Wait until element found                                            |
-| `element_wait_gone`        | Wait until element gone                                             |
-| `element_click`            | Find element by xpath and click (waits)                             |
-| `element_click_nowait`     | Click element without waiting                                       |
-| `element_click_until_gone` | Click until element disappears                                      |
-| `element_long_click`       | Long click element                                                  |
-| `element_screenshot`       | Take element screenshot (returns same image format as `screenshot`) |
-| `element_get_text`         | Get element text                                                    |
-| `element_set_text`         | Set element text                                                    |
-| `element_bounds`           | Get element bounds (left, top, right, bottom)                       |
-| `element_swipe`            | Swipe inside an element                                             |
-| `element_scroll`           | Scroll an element (`forward`/`backward`)                            |
-| `element_scroll_to`        | Scroll to element with max swipes                                   |
+# Show detailed info for a specific tool
+u2mcp info screenshot
 
-### Toast
-| Tool        | Description                                      |
-| ----------- | ------------------------------------------------ |
-| `get_toast` | Get the most recent Android Toast message        |
-| `show_toast`| Display a Toast message on the Android device    |
-| `reset_toast`| Clear the cached Toast message on the device     |
+# Show tools matching a pattern (supports wildcards)
+u2mcp info "device:*"     # All device tools
+u2mcp info "*screenshot*" # Tools with 'screenshot' in name
+u2mcp info "xpath:*"      # All XPath tools (v0.3.0+)
 
-### Scrcpy
-| Tool           | Description                                              |
-| -------------- | -------------------------------------------------------- |
-| `start_scrcpy` | Start `scrcpy` in background and return process id (pid) |
-| `stop_scrcpy`  | Stop a running `scrcpy` process by pid                   |
+# List all tool tags
+u2mcp tags
+```
 
-> **Notes:**
-> - `screenshot` and `element_screenshot` return image data in a JPEG data URL (`data:image/jpeg;base64,...`) along with `width`/`height`.
-> - `shell_command` returns a tuple `(exit_code, output)`.
-> - `start_scrcpy` returns a background process id (pid) which can be passed to `stop_scrcpy`.
+### Key Features
+
+- **XPath-based element interaction** - Primary method for UI automation, LLM-optimized (v0.3.0+)
+- **Tag-based filtering** - Expose only relevant tools to reduce AI confusion
+- **Comprehensive coverage** - Everything from basic clicks to advanced element queries
 
 ## Example Usage
 
