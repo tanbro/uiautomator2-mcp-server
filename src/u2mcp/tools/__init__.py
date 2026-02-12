@@ -7,7 +7,6 @@ from .gesture import *
 from .input import *
 from .scrcpy import *
 from .screenrecord import *
-from .selector import *
 from .system import *
 from .toast import *
 from .xpath import *

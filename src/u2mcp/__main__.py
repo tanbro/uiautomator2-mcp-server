@@ -70,6 +70,7 @@ def stdio(
     ] = "info",
     include_tags: Annotated[str | None, Parameter(name=["--include-tags", "-i"])] = None,
     exclude_tags: Annotated[str | None, Parameter(name=["--exclude-tags", "-e"])] = None,
+    xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
     show_fastmcp_banner: bool = False,
@@ -81,6 +82,7 @@ def stdio(
         log_level: Log level.
         include_tags: Only expose tools with these tags (comma-separated, supports * and ? wildcards, e.g., device:*,*:shell).
         exclude_tags: Exclude tools with these tags (comma-separated, supports * and ? wildcards, e.g., screen:*,*:mirror).
+        xpath_timeout: Default timeout in seconds for XPath element lookup (default: 20.0).
         print_tags: Show enabled tags and tools at startup.
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
@@ -88,7 +90,11 @@ def stdio(
     _setup_logging(log_level)
     _check_adb(Console(stderr=True), check_adb)
     mcp = make_mcp(
-        print_tags=print_tags, include_tags=include_tags, exclude_tags=exclude_tags, fix_empty_responses=fix_empty_responses
+        print_tags=print_tags,
+        include_tags=include_tags,
+        exclude_tags=exclude_tags,
+        fix_empty_responses=fix_empty_responses,
+        xpath_timeout=xpath_timeout,
     )
     mcp.run("stdio", show_fastmcp_banner, log_level=log_level)
 
@@ -107,6 +113,7 @@ def http(
     ] = "info",
     include_tags: Annotated[str | None, Parameter(name=["--include-tags", "-i"])] = None,
     exclude_tags: Annotated[str | None, Parameter(name=["--exclude-tags", "-e"])] = None,
+    xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
     show_fastmcp_banner: bool = False,
@@ -123,6 +130,7 @@ def http(
         log_level: Log level.
         include_tags: Only expose tools with these tags (comma-separated, supports * and ? wildcards, e.g., device:*,*:shell).
         exclude_tags: Exclude tools with these tags (comma-separated, supports * and ? wildcards, e.g., screen:*,*:mirror).
+        xpath_timeout: Default timeout in seconds for XPath element lookup (default: 20.0).
         print_tags: Show enabled tags and tools at startup.
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
@@ -147,6 +155,7 @@ def http(
         include_tags=include_tags,
         exclude_tags=exclude_tags,
         fix_empty_responses=fix_empty_responses,
+        xpath_timeout=xpath_timeout,
     )
     mcp.run("streamable-http", show_fastmcp_banner, **transport_kwargs)
 

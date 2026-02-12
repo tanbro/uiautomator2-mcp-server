@@ -12,38 +12,23 @@ from ..mcp import mcp
 from .device import get_device
 
 __all__ = (
-    "activity_wait_appear",
     "xpath_wait_appear",
     "xpath_wait_gone",
+    "xpath_exists",
     "xpath_click",
     "xpath_click_nowait",
-    "xpath_click_until_gone",
     "xpath_long_press",
     "xpath_screenshot",
     "xpath_save_screenshot",
     "xpath_get_text",
     "xpath_set_text",
     "xpath_get_bounds",
+    "xpath_get_info",
+    "xpath_get_attrib",
     "xpath_swipe",
     "xpath_scroll",
     "xpath_scroll_to",
 )
-
-
-@mcp.tool("activity_wait_appear", tags={"xpath:wait"})
-async def activity_wait_appear(serial: str, activity: str, timeout: float) -> bool:
-    """Wait for an activity to appear.
-
-    Args:
-        serial (str): Android device serial number.
-        activity (str): Name of activity to wait for.
-        timeout (float): Maximum wait time in seconds.
-
-    Returns:
-        bool: True if activity appeared, False if timeout.
-    """
-    async with get_device(serial) as device:
-        return await to_thread.run_sync(device.wait_activity, activity, timeout)  # type: ignore[arg-type]
 
 
 @mcp.tool("xpath_wait_appear", tags={"xpath:wait"})
@@ -95,50 +80,27 @@ async def xpath_click(serial: str, xpath: str, timeout: float) -> bool:
 
 
 @mcp.tool("xpath_click_nowait", tags={"xpath:interact"})
-async def xpath_click_nowait(serial: str, xpath: str) -> bool:
+async def xpath_click_nowait(serial: str, xpath: str):
     """Find element by XPath and click immediately without waiting.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-
-    Returns:
-        bool: True if click successful, False otherwise.
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).click_nowait())
-
-
-@mcp.tool("xpath_click_until_gone", tags={"xpath:interact"})
-async def xpath_click_until_gone(serial: str, xpath: str, maxretry: int, interval: float) -> bool:
-    """Click element repeatedly until it disappears.
-
-    Args:
-        serial (str): Android device serial number.
-        xpath (str): Element XPath expression.
-        maxretry (int): Maximum click attempts.
-        interval (float): Sleep time between clicks in seconds.
-
-    Returns:
-        bool: True if element is gone, False if max retries reached.
-    """
-    async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).click_gone(maxretry, interval))
+        await to_thread.run_sync(lambda: device.xpath(xpath).click_nowait())
 
 
 @mcp.tool("xpath_long_press", tags={"xpath:interact"})
-async def xpath_long_press(serial: str, xpath: str) -> bool:
+async def xpath_long_press(serial: str, xpath: str):
     """Find element by XPath and perform long press.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-
-    Returns:
-        bool: True if long press successful, False otherwise.
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).long_click())
+        await to_thread.run_sync(lambda: device.xpath(xpath).long_click())
 
 
 @mcp.tool("xpath_screenshot", tags={"xpath:capture"})
@@ -241,8 +203,56 @@ async def xpath_get_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]
         return await to_thread.run_sync(lambda: device.xpath(xpath).bounds)
 
 
+@mcp.tool("xpath_exists", tags={"xpath:query"})
+async def xpath_exists(serial: str, xpath: str) -> bool:
+    """Check if element exists by XPath without waiting.
+
+    Args:
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+
+    Returns:
+        bool: True if element exists, False otherwise.
+    """
+    async with get_device(serial) as device:
+        return await to_thread.run_sync(lambda: device.xpath(xpath).exists)
+
+
+@mcp.tool("xpath_get_info", tags={"xpath:query"})
+async def xpath_get_info(serial: str, xpath: str) -> dict[str, object]:
+    """Find element by XPath and get its complete information.
+
+    Args:
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+
+    Returns:
+        dict[str, object]: Element information including text, bounds, className, clickable, etc.
+    """
+    async with get_device(serial) as device:
+        element = await to_thread.run_sync(lambda: device.xpath(xpath).get())
+        return element.info
+
+
+@mcp.tool("xpath_get_attrib", tags={"xpath:query"})
+async def xpath_get_attrib(serial: str, xpath: str, key: str) -> str:
+    """Find element by XPath and get a specific attribute value.
+
+    Args:
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        key (str): Attribute name to retrieve.
+
+    Returns:
+        str: Attribute value, empty string if attribute not found.
+    """
+    async with get_device(serial) as device:
+        element = await to_thread.run_sync(lambda: device.xpath(xpath).get())
+        return element.attrib.get(key, "")
+
+
 @mcp.tool("xpath_swipe", tags={"xpath:gesture"})
-async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float):
+async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.6):
     """Find element by XPath and swipe within it.
 
     Args:
@@ -268,21 +278,22 @@ async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
         bool: True if can scroll further, False otherwise.
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).swipe(direction))
+        return await to_thread.run_sync(lambda: device.xpath(xpath).scroll(direction))
 
 
 @mcp.tool("xpath_scroll_to", tags={"xpath:gesture"})
 async def xpath_scroll_to(serial: str, xpath: str, direction: str, max_swipes: int) -> bool:
-    """Find element by XPath and scroll to find a target element.
+    """Scroll the entire screen to find an element by XPath.
 
     Args:
         serial (str): Android device serial number.
-        xpath (str): Element XPath expression.
+        xpath (str): Target element XPath expression to scroll to.
         direction (str): Scroll direction, one of forward or backward.
         max_swipes (int): Maximum swipe attempts.
 
     Returns:
-        bool: True if can scroll further, False otherwise.
+        bool: True if element found, False otherwise.
     """
     async with get_device(serial) as device:
-        return await to_thread.run_sync(lambda: device.xpath(xpath).scroll_to(direction, max_swipes))
+        result = await to_thread.run_sync(lambda: device.xpath.scroll_to(xpath, direction, max_swipes))
+        return result is not None

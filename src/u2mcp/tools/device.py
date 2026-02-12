@@ -15,7 +15,7 @@ from fastmcp.utilities.logging import get_logger
 from lxml import etree
 from PIL.Image import Image
 
-from ..mcp import mcp
+from ..mcp import get_xpath_timeout, mcp
 
 __all__ = (
     "device_list",
@@ -30,6 +30,7 @@ __all__ = (
     "dump_hierarchy",
     "save_dump_hierarchy",
     "info",
+    "activity_wait_appear",
 )
 
 
@@ -46,7 +47,10 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
 
             def _connect():
                 _d = u2.connect(serial)
-                _d.info
+                # Apply global XPath timeout setting
+                _d.settings["wait_timeout"] = get_xpath_timeout()
+                # Fire a RPC call to make sure the device is ready
+                _ = _d.info
                 return _d
 
             device = await to_thread.run_sync(_connect)
@@ -377,3 +381,19 @@ async def info(serial: str) -> dict[str, Any]:
 
     async with get_device(serial) as device:
         return await to_thread.run_sync(lambda: device.info)
+
+
+@mcp.tool("activity_wait_appear", tags={"device:wait"})
+async def activity_wait_appear(serial: str, activity: str, timeout: float) -> bool:
+    """Wait for an activity to appear.
+
+    Args:
+        serial (str): Android device serial number.
+        activity (str): Name of activity to wait for.
+        timeout (float): Maximum wait time in seconds.
+
+    Returns:
+        bool: True if activity appeared, False if timeout.
+    """
+    async with get_device(serial) as device:
+        return await to_thread.run_sync(device.wait_activity, activity, timeout)  # type: ignore[arg-type]

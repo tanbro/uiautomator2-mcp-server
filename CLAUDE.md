@@ -34,10 +34,9 @@ src/u2mcp/
     ├── input.py         # Text input and keyboard tools
     ├── scrcpy.py        # Screen mirroring (scrcpy integration)
     ├── screenrecord.py  # Screen recording tools
-    ├── selector.py      # Selector-based element tools (recommended)
     ├── system.py        # System controls (orientation, notification, unlock)
     ├── toast.py         # Toast message utilities
-    └── xpath.py         # XPath-based element tools (more powerful)
+    └── xpath.py         # XPath-based element tools (primary)
 
 .skills/                  # AI-driven testing skills
 ├── android-ui-test/
@@ -117,8 +116,7 @@ All tools are decorated with `@mcp.tool()` and accept a `serial` parameter to id
 
 Tools are organized into modules:
 - **action.py** - Coordinate-based touch/gestures (click, swipe, drag)
-- **selector.py** - Selector-based element tools (recommended, device-side)
-- **xpath.py** - XPath-based element tools (more powerful, client-side parsing)
+- **xpath.py** - XPath-based element location and interaction (primary, LLM-optimized)
 - **device.py** - Device management and screen capture
 - **app.py** - Application lifecycle and management
 - **input.py** - Text input and keyboard control

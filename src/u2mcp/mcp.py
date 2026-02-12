@@ -39,6 +39,15 @@ __all__ = ["mcp", "make_mcp"]
 # Do not use before calling make_mcp()
 mcp: FastMCP
 
+# Global XPath timeout setting.
+# Initialized by make_mcp() function.
+_xpath_timeout: float = 20.0
+
+
+def get_xpath_timeout() -> float:
+    """Get the global XPath timeout setting."""
+    return _xpath_timeout
+
 
 def _parse_tags(tags: str | None) -> set[str] | None:
     """Parse comma-separated tags string into a set."""
@@ -133,8 +142,10 @@ def make_mcp(
     exclude_tags: str | None = None,
     print_tags: bool = False,
     fix_empty_responses: bool = False,
+    xpath_timeout: float = 20.0,
 ) -> FastMCP:
-    global mcp
+    global mcp, _xpath_timeout
+    _xpath_timeout = xpath_timeout
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
     lifespan_kwargs: dict[str, Any] = {"print_tags": print_tags}
     if token:
