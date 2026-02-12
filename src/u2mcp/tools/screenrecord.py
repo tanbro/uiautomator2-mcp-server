@@ -19,9 +19,9 @@ async def screen_record_start(serial: str, file: str, duration: float) -> str:
     """Start screen recording to file. Runs in background, use screen_record_stop to stop.
 
     Args:
-        serial: Android device serial number.
-        file: Output file path for the recording.
-        duration: Maximum recording duration in seconds.
+        serial (str): Android device serial number.
+        file (str): Output file path for the recording.
+        duration (float): Maximum recording duration in seconds.
 
     Returns:
         str: Output file path.
@@ -48,7 +48,7 @@ async def screen_record_stop(serial: str):
     """Stop screen recording for the device. Stops any active background recording task.
 
     Args:
-        serial: Android device serial number.
+        serial (str): Android device serial number.
     """
     _recording_active.pop(serial, None)
 
@@ -58,9 +58,9 @@ async def screen_record(serial: str, filename: str, fps: int = 20):
     """Record screen to file with blocking wait. For non-blocking recording use screen_record_start.
 
     Args:
-        serial: Android device serial number.
-        filename: Output file path for the recording.
-        duration: Recording duration in seconds.
+        serial (str): Android device serial number.
+        filename (str): Output file path for the recording.
+        fps (int): Frames per second for recording.
 
     Returns:
         str: Output file path.

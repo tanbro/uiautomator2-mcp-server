@@ -8,10 +8,10 @@ __all__ = ("delay",)
 
 
 @mcp.tool("delay", tags={"util:delay"})
-async def delay(seconds: float) -> None:
+async def delay(seconds: float):
     """Delay for a specific amount of time.
 
     Args:
-        seconds: Delay duration in seconds.
+        seconds (float): Delay duration in seconds.
     """
     await anyio.sleep(seconds)

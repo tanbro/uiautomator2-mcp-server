@@ -66,11 +66,11 @@ async def select_click(
     """Click on an element using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         bool: True if click successful, False otherwise.
@@ -93,12 +93,12 @@ async def select_long_press(
     """Long press on an element using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        duration: Duration of long press in seconds.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        duration (float): Duration of long press in seconds.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         bool: True if long press successful, False otherwise.
@@ -121,12 +121,12 @@ async def select_wait_appear(
     """Wait for an element to appear using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        timeout: Maximum wait time in seconds.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        timeout (float): Maximum wait time in seconds.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         bool: True if element appeared, False if timeout.
@@ -151,12 +151,12 @@ async def select_wait_gone(
     """Wait for an element to disappear using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        timeout: Maximum wait time in seconds.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        timeout (float): Maximum wait time in seconds.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         bool: True if element gone, False if still present after timeout.
@@ -178,11 +178,11 @@ async def select_get_text(
     """Get element text content using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         str: Element text content, empty string if not found.
@@ -209,11 +209,11 @@ async def select_get_bounds(
     """Get element bounding box using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         tuple[int, int, int, int]: Element bounds as (left, top, right, bottom).
@@ -242,12 +242,12 @@ async def select_set_text(
     """Set text on an element using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        text: Text content to set.
-        text_match: Element text content to match for selector.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        text (str): Text content to set.
+        text_match (str): Element text content to match for selector.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
     """
     selector = _build_selector(text=text_match, resource_id=resource_id, class_name=class_name, description=description)
 
@@ -268,13 +268,13 @@ async def select_swipe(
     """Swipe within an element using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        direction: Swipe direction, one of left, right, up, down.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
-        scale: Percentage of swipe distance, range (0, 1.0).
+        serial (str): Android device serial number.
+        direction (str): Swipe direction, one of left, right, up, down.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
+        scale (float): Percentage of swipe distance, range (0, 1.0).
     """
     selector = _build_selector(text=text, resource_id=resource_id, class_name=class_name, description=description)
 
@@ -294,12 +294,12 @@ async def select_scroll(
     """Scroll within a scrollable element using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        direction: Scroll direction, one of forward, backward, left, right, up, down.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        direction (str): Scroll direction, one of forward, backward, left, right, up, down.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         bool: True if can scroll further, False otherwise.
@@ -322,12 +322,12 @@ async def select_screenshot(
     """Take a screenshot of an element using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        format: Image format, jpeg or png.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        format (str): Image format, jpeg or png.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.
@@ -364,12 +364,12 @@ async def select_save_screenshot(
     """Save a screenshot of an element to file using selector-based location.
 
     Args:
-        serial: Android device serial number.
-        file: File path to save the screenshot. Format determined by extension.
-        text: Element text content to match.
-        resource_id: Element resource ID.
-        class_name: Element class name.
-        description: Element content description.
+        serial (str): Android device serial number.
+        file (str): File path to save the screenshot. Format determined by extension.
+        text (str): Element text content to match.
+        resource_id (str): Element resource ID.
+        class_name (str): Element class name.
+        description (str): Element content description.
 
     Returns:
         str: Absolute path to the saved screenshot file.

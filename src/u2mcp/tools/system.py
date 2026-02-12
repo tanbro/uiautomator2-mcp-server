@@ -24,8 +24,8 @@ async def set_orientation(serial: str, orientation: OrientationType):
     """Set device screen orientation.
 
     Args:
-        serial: Android device serial number.
-        orientation: Target orientation, one of natural, left, right, upsidedown.
+        serial (str): Android device serial number.
+        orientation (OrientationType): Target orientation, one of natural, left, right, upsidedown.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(device.set_orientation, orientation)
@@ -36,7 +36,7 @@ async def get_orientation(serial: str) -> str:
     """Get current device screen orientation.
 
     Args:
-        serial: Android device serial number.
+        serial (str): Android device serial number.
 
     Returns:
         str: Current orientation, one of natural, left, right, upsidedown, or unknown.
@@ -51,7 +51,7 @@ async def open_notification(serial: str):
     """Open the notification panel.
 
     Args:
-        serial: Android device serial number.
+        serial (str): Android device serial number.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(device.open_notification)
@@ -62,7 +62,7 @@ async def open_quick_settings(serial: str):
     """Open the quick settings panel.
 
     Args:
-        serial: Android device serial number.
+        serial (str): Android device serial number.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(device.open_quick_settings)
@@ -76,7 +76,7 @@ async def unlock(serial: str):
     this only brings up the lock screen.
 
     Args:
-        serial: Android device serial number.
+        serial (str): Android device serial number.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(device.unlock)

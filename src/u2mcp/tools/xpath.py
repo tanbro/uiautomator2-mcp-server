@@ -35,9 +35,9 @@ async def activity_wait_appear(serial: str, activity: str, timeout: float) -> bo
     """Wait for an activity to appear.
 
     Args:
-        serial: Android device serial number.
-        activity: Name of activity to wait for.
-        timeout: Maximum wait time in seconds.
+        serial (str): Android device serial number.
+        activity (str): Name of activity to wait for.
+        timeout (float): Maximum wait time in seconds.
 
     Returns:
         bool: True if activity appeared, False if timeout.
@@ -51,9 +51,9 @@ async def xpath_wait_appear(serial: str, xpath: str, timeout: float) -> bool:
     """Wait until element is found using XPath.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        timeout: Maximum wait time in seconds.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        timeout (float): Maximum wait time in seconds.
 
     Returns:
         bool: True if element found, False if timeout.
@@ -67,9 +67,9 @@ async def xpath_wait_gone(serial: str, xpath: str, timeout: float) -> bool:
     """Wait until element disappears using XPath.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        timeout: Maximum wait time in seconds.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        timeout (float): Maximum wait time in seconds.
 
     Returns:
         bool: True if element gone, False if still present after timeout.
@@ -83,9 +83,9 @@ async def xpath_click(serial: str, xpath: str, timeout: float) -> bool:
     """Find element by XPath and perform click.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        timeout: Maximum wait time in seconds.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        timeout (float): Maximum wait time in seconds.
 
     Returns:
         bool: True if click successful, False otherwise.
@@ -99,8 +99,8 @@ async def xpath_click_nowait(serial: str, xpath: str) -> bool:
     """Find element by XPath and click immediately without waiting.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
 
     Returns:
         bool: True if click successful, False otherwise.
@@ -114,10 +114,10 @@ async def xpath_click_until_gone(serial: str, xpath: str, maxretry: int, interva
     """Click element repeatedly until it disappears.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        maxretry: Maximum click attempts.
-        interval: Sleep time between clicks in seconds.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        maxretry (int): Maximum click attempts.
+        interval (float): Sleep time between clicks in seconds.
 
     Returns:
         bool: True if element is gone, False if max retries reached.
@@ -131,8 +131,8 @@ async def xpath_long_press(serial: str, xpath: str) -> bool:
     """Find element by XPath and perform long press.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
 
     Returns:
         bool: True if long press successful, False otherwise.
@@ -146,9 +146,9 @@ async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, i
     """Find element by XPath and take screenshot.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        format: Image format, jpeg or png.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        format (str): Image format, jpeg or png.
 
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.
@@ -176,9 +176,9 @@ async def xpath_save_screenshot(serial: str, xpath: str, file: str) -> str:
     """Find element by XPath and save screenshot to file.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        file: File path to save the screenshot. Format determined by extension.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        file (str): File path to save the screenshot. Format determined by extension.
 
     Returns:
         str: Absolute path to the saved screenshot file.
@@ -202,8 +202,8 @@ async def xpath_get_text(serial: str, xpath: str) -> str:
     """Find element by XPath and get its text content.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
 
     Returns:
         str: Element text content, empty string if element has no text.
@@ -218,9 +218,9 @@ async def xpath_set_text(serial: str, xpath: str, text: str):
     """Find element by XPath and set its text content.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        text: Text content to set.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        text (str): Text content to set.
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
@@ -231,8 +231,8 @@ async def xpath_get_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]
     """Find element by XPath and get its bounding box.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
 
     Returns:
         tuple[int, int, int, int]: Element bounds as (left, top, right, bottom).
@@ -246,10 +246,10 @@ async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float):
     """Find element by XPath and swipe within it.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        direction: Swipe direction, one of left, right, up, down.
-        scale: Percentage of swipe distance, range (0, 1.0).
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        direction (str): Swipe direction, one of left, right, up, down.
+        scale (float): Percentage of swipe distance, range (0, 1.0).
     """
     async with get_device(serial) as device:
         await to_thread.run_sync(lambda: device.xpath(xpath).swipe(direction, scale))
@@ -260,9 +260,9 @@ async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
     """Find element by XPath and scroll within it.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        direction: Scroll direction, one of forward or backward.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        direction (str): Scroll direction, one of forward or backward.
 
     Returns:
         bool: True if can scroll further, False otherwise.
@@ -276,10 +276,10 @@ async def xpath_scroll_to(serial: str, xpath: str, direction: str, max_swipes: i
     """Find element by XPath and scroll to find a target element.
 
     Args:
-        serial: Android device serial number.
-        xpath: Element XPath expression.
-        direction: Scroll direction, one of forward or backward.
-        max_swipes: Maximum swipe attempts.
+        serial (str): Android device serial number.
+        xpath (str): Element XPath expression.
+        direction (str): Scroll direction, one of forward or backward.
+        max_swipes (int): Maximum swipe attempts.
 
     Returns:
         bool: True if can scroll further, False otherwise.
