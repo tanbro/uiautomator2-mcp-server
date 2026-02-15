@@ -1,7 +1,7 @@
 # uiautomator2-mcp-server
 
 <!--
-mcp-name: io.github.tanbro.uiautomator2-mcp-server
+mcp-name: io.github.tanbro/uiautomator2-mcp-server
 -->
 
 [![PyPI](https://img.shields.io/pypi/v/uiautomator2-mcp-server)](https://pypi.org/project/uiautomator2-mcp-server/)
