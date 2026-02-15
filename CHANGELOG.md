@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 0.3.1
+
+> 📅 2026-02-XX
+
+- 🆕 New:
+    - Add default MCP server instance (`src/u2mcp/default.py`) for Prefect Horizon deployment
+
+- 🗑️ Removed:
+    - Remove `pyproject-u2mcp-alias.toml` and `u2mcp-alias-init.py` (abandoned PyPI alias package approach)
+
 ## 0.3.0
 
 > 📅 2026-02-12
