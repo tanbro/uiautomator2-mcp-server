@@ -1,9 +1,12 @@
 exclude .*
 exclude CLAUDE.md
+exclude CODE_OF_CONDUCT.md
+exclude CONTRIBUTING.md
 exclude coverage.*
 exclude pytest.ini
 exclude README.*.md
 exclude *.lock
+exclude server.json
 
 prune .*
 prune docs

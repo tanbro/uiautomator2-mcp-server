@@ -2,13 +2,27 @@
 
 ## 0.3.1
 
-> 📅 2026-02-XX
+> 📅 2026-02-16
 
 - 🆕 New:
-    - Add default MCP server instance (`src/u2mcp/default.py`) for Prefect Horizon deployment
+    - Add GitHub Actions workflow for automatic publishing to Official MCP Registry
+    - Use GitHub OIDC authentication for network-restricted environments
+
+- ⚙️ Changed:
+    - Add `server.json` for MCP Registry submission with proper format
+    - Update README with MCP name validation tag for PyPI verification
+    - MCP servers can now be installed with one click from VSCode's MCP gallery
 
 - 🗑️ Removed:
     - Remove `pyproject-u2mcp-alias.toml` and `u2mcp-alias-init.py` (abandoned PyPI alias package approach)
+    - Remove `src/u2mcp/default.py` (using standard `server.py` entry point instead)
+
+- 🐛 Fixed:
+    - Fix server.json to meet MCP Registry validation requirements:
+      - Shorten description to 100 characters (was 157)
+      - Fix name format from `io.github.tanbro.uiautomator2-mcp-server` to `io.github.tanbro/uiautomator2-mcp-server`
+      - Add `packageArguments` for required `stdio` subcommand
+
 
 ## 0.3.0
 

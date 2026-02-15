@@ -1,9 +1,9 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-  "name": "io.github.tanbro.uiautomator2-mcp-server",
+  "name": "io.github.tanbro/uiautomator2-mcp-server",
   "title": "UIAutomator2 MCP Server",
-  "description": "An MCP server that provides tools for controlling Android devices using uiautomator2. Use AI to automate your Android device: take screenshots, tap/swipe, manage apps, send text, and more.",
-  "version": "0.3.0",
+  "description": "Control Android devices with AI using uiautomator2. Automate taps, swipes, apps, and more.",
+  "version": "0.3.1",
   "author": "tanbro",
   "license": "Apache-2.0",
   "packages": [
