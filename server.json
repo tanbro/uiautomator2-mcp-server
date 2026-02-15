@@ -12,7 +12,6 @@
       "registryBaseUrl": "https://pypi.org",
       "identifier": "uiautomator2-mcp-server",
       "version": "0.3.0",
-      "runtimeHint": "uvx",
       "transport": {
         "type": "stdio"
       },
