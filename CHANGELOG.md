@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## 0.3.2
+
+> 📅 2026-02-16
+
+- 🐛 Fixed:
+    - Fix README MCP name validation tag format from dots to slash (`io.github.tanbro/uiautomator2-mcp-server`)
+    - Add missing MCP name validation tag to Chinese README (README.zh-CN.md)
+    - Update MANIFEST.in to exclude non-runtime files: `server.json`, `CODE_OF_CONDUCT.md`, `CONTRIBUTING.md`, `pytest.ini`
+
+
 ## 0.3.1
 
 > 📅 2026-02-16

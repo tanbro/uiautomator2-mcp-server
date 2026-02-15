@@ -3,7 +3,7 @@
   "name": "io.github.tanbro/uiautomator2-mcp-server",
   "title": "UIAutomator2 MCP Server",
   "description": "Control Android devices with AI using uiautomator2. Automate taps, swipes, apps, and more.",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "author": "tanbro",
   "license": "Apache-2.0",
   "packages": [
@@ -11,7 +11,7 @@
       "registryType": "pypi",
       "registryBaseUrl": "https://pypi.org",
       "identifier": "uiautomator2-mcp-server",
-      "version": "0.3.0",
+      "version": "0.3.2",
       "transport": {
         "type": "stdio"
       },
