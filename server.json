@@ -9,15 +9,19 @@
   "packages": [
     {
       "registryType": "pypi",
+      "registryBaseUrl": "https://pypi.org",
       "identifier": "uiautomator2-mcp-server",
       "version": "0.3.0",
+      "runtimeHint": "uvx",
       "transport": {
-        "type": "stdio",
-        "command": "uvx",
-        "args": ["uiautomator2-mcp-server", "stdio"],
-        "env": {}
+        "type": "stdio"
       },
-      "runtime": "python"
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "stdio"
+        }
+      ]
     }
   ]
 }
