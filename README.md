@@ -35,10 +35,10 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 **AI automatically**:
 
-![Demo GIF](docs/assets/demo-quick.gif)
+![Demo GIF](assets/demo-quick.gif)
 
 [![Bilibili](https://img.shields.io/badge/Bilibili-Watch_Demo-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
-[![Download Video](https://img.shields.io/badge/Download-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
+[![Download Video](https://img.shields.io/badge/Download-MP4-00C853?logo=video&logoColor=white)](assets/douyin-demo-2x.mp4)
 
 - ✅ Launch app → Tap search → Enter keywords → Execute search → Tap result -> Swap to next video
 

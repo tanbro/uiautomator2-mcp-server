@@ -27,10 +27,10 @@ mcp-name: io.github.tanbro/uiautomator2-mcp-server
 
 **AI 自动完成**：
 
-![演示 GIF](docs/assets/demo-quick.gif)
+![演示 GIF](assets/demo-quick.gif)
 
 [![Bilibili](https://img.shields.io/badge/Bilibili-观看演示-FF69B4?logo=bilibili&logoColor=white)](https://www.bilibili.com/video/BV1wGF4zFEev/)
-[![下载视频](https://img.shields.io/badge/下载-MP4-00C853?logo=video&logoColor=white)](docs/assets/douyin-demo-2x.mp4)
+[![下载视频](https://img.shields.io/badge/下载-MP4-00C853?logo=video&logoColor=white)](assets/douyin-demo-2x.mp4)
 
 - ✅ 启动应用 → 点击搜索 → 输入关键词 → 执行搜索 → 点击结果 -> 刷视频
 
