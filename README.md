@@ -10,6 +10,8 @@ mcp-name: io.github.tanbro/uiautomator2-mcp-server
 [![CI](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml/badge.svg)](https://github.com/tanbro/uiautomator2-mcp-server/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/gh/tanbro/uiautomator2-mcp-server)](https://codecov.io/gh/tanbro/uiautomator2-mcp-server)
 
+[![MCP Badge](https://lobehub.com/badge/mcp/tanbro-uiautomator2-mcp-server)](https://lobehub.com/mcp/tanbro-uiautomator2-mcp-server)
+
 [![Language](https://img.shields.io/badge/lang-English-blue)](README.md)
 [![Language](https://img.shields.io/badge/lang-中文-red)](README.zh-CN.md)
 
