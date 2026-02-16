@@ -1,13 +1,5 @@
 # CHANGELOG
 
-## 0.3.2.post1
-
-> 📅 2026-02-16
-
-- ✨ Improved:
-    - Update server.json description for better SEO: add keywords `mobile`, `bot`, `RPA`, `testing`, `XPath`
-
-
 ## 0.3.2
 
 > 📅 2026-02-16
