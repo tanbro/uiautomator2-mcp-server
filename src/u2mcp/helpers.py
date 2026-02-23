@@ -27,10 +27,13 @@ async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = Tr
                    If False, show all available tags. Defaults to True.
     """
     tags_map: dict[str, list[str]] = {}
-    include_tags = getattr(instance, "include_tags", None) if filtered else None
-    exclude_tags = getattr(instance, "exclude_tags", None) if filtered else None
+    # In v3, tag filters are applied via enable/disable, not stored as attributes
+    # We'll show all tools since filtering is handled by the server itself
+    include_tags = None
+    exclude_tags = None
 
-    for tool in (await instance.get_tools()).values():
+    # list_tools() returns list in v3, not dict
+    for tool in await instance.list_tools():
         # Skip tools with no tags
         if not tool.tags:
             continue
@@ -91,16 +94,8 @@ async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = Tr
 
     console.print(f"\n[bold]Total: {len(tags_map)} tags, {sum(len(v) for v in tags_map.values())} tool-tag assignments[/bold]")
 
-    # Show filter info if filters are active
-    include_tags = getattr(instance, "include_tags", None)
-    exclude_tags = getattr(instance, "exclude_tags", None)
-    if include_tags is not None or exclude_tags is not None:
-        console.print("\n[dim]Active filters:[/dim]")
-        if include_tags is not None:
-            console.print(f"  [cyan]include:[/cyan] {', '.join(sorted(include_tags))}")
-        if exclude_tags is not None:
-            console.print(f"  [cyan]exclude:[/cyan] {', '.join(sorted(exclude_tags))}")
-        console.print("\n[dim]Use --include-tags and --exclude-tags when running the server to filter available tools.[/dim]")
+    # Note: In v3, filtering is handled by the server's enable/disable methods
+    # The tools returned by list_tools() are already filtered
 
 
 async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | None = None):
@@ -115,22 +110,23 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
     """
     import fnmatch
 
-    tools = await instance.get_tools()
+    # list_tools() returns list in v3, not dict
+    tools_list = await instance.list_tools()
 
     if tool_name:
         # Filter tools by name pattern OR tag pattern
-        matched_tools: dict[str, Any] = {}
-        for name, tool in tools.items():
+        matched_tools: list = []
+        for tool in tools_list:
             # Check if tool name matches pattern
-            if fnmatch.fnmatch(name, tool_name):
-                matched_tools[name] = tool
+            if fnmatch.fnmatch(tool.name, tool_name):
+                matched_tools.append(tool)
                 continue
 
             # Check if any tag matches pattern
             if tool.tags:
                 for tag in tool.tags:
                     if fnmatch.fnmatch(tag, tool_name):
-                        matched_tools[name] = tool
+                        matched_tools.append(tool)
                         break
 
         if not matched_tools:
@@ -139,8 +135,8 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
             console.print("[dim]Tip: Use 'u2mcp tags' to list all available tags.[/dim]")
             return
 
-        for name, tool in sorted(matched_tools.items()):
-            _print_single_tool_help(console, name, tool)
+        for tool in sorted(matched_tools, key=lambda t: t.name):
+            _print_single_tool_help(console, tool.name, tool)
     else:
         # List all tools
         table = Table(show_header=True, header_style="bold magenta")
@@ -148,7 +144,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
         table.add_column("Description", style="white")
         table.add_column("Tags", style="green", width=30)
 
-        for name, tool in sorted(tools.items()):
+        for tool in sorted(tools_list, key=lambda t: t.name):
             tags_str = ", ".join(sorted(tool.tags or [])) if tool.tags else ""
             # Extract short description only, skip Args/Returns sections
             description = tool.description or ""
@@ -157,11 +153,11 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
             desc = parsed.short_description if parsed.short_description else description
             # Truncate if too long
             desc = desc[:57] + "..." if len(desc) > 60 else desc
-            table.add_row(name, desc, tags_str)
+            table.add_row(tool.name, desc, tags_str)
 
         console.print("\n[bold cyan]Available Tools:[/bold cyan]")
         console.print(table)
-        console.print(f"\n[dim]Total: {len(tools)} tools[/dim]")
+        console.print(f"\n[dim]Total: {len(tools_list)} tools[/dim]")
         console.print("\n[dim]Use 'u2mcp info <tool_name>' for detailed information about a specific tool.[/dim]")
         console.print("[dim]Supports wildcards: 'u2mcp info device:*' (by tag) or 'u2mcp info *screenshot*' (by name)[/dim]")
 

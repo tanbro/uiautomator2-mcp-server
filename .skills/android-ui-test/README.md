@@ -18,30 +18,24 @@ This skill serves as both a **learning example** and a **production testing tool
 
 ## 📚 Learning Resources
 
-See [`examples/usage-examples.md`](examples/usage-examples.md) for detailed usage patterns and learning examples.
+See [`SKILL.md`](SKILL.md) for skill specification and [`references/test-specification.md`](references/test-specification.md) for complete test case documentation.
 
 ## 🚀 Quick Start
 
 ### For Learning:
 1. Study the [`SKILL.md`](SKILL.md) structure and metadata
-2. Review the [`scripts/`](scripts/) directory for implementation patterns
-3. Examine [`references/test-specification.md`](references/test-specification.md) for test design
+2. Examine [`references/test-specification.md`](references/test-specification.md) for test design
 
 ### For Testing:
 1. Ensure Android device is connected with USB debugging enabled
-2. Deploy skill globally: `./scripts/deploy-skill.sh` (Linux/Mac) or `.\scripts\deploy-skill.bat` (Windows)
-3. Ask your AI client: "Run the Android UI test suite on my connected device"
+2. Ask your AI client: "Run the Android UI test suite on my connected device"
 
 ## 🏗️ Architecture Highlights
 
 ```
 android-ui-test/
-├── SKILL.md              # Dual-purpose documentation
+├── SKILL.md              # Skill specification with metadata
 ├── README.md             # This file
-├── examples/             # Learning materials and usage examples
-│   └── usage-examples.md # Detailed implementation patterns
-├── scripts/              # Executable test logic
-│   └── run-tests.py      # Test execution engine
 └── references/           # Technical specifications
     └── test-specification.md
 ```

@@ -73,7 +73,7 @@ def stdio(
     xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
-    show_fastmcp_banner: bool = False,
+    show_fastmcp_banner: bool | None = None,
 ):
     """Run the MCP server with stdio transport.
 
@@ -89,6 +89,7 @@ def stdio(
     """
     _setup_logging(log_level)
     _check_adb(Console(stderr=True), check_adb)
+
     mcp = make_mcp(
         print_tags=print_tags,
         include_tags=include_tags,
@@ -96,7 +97,8 @@ def stdio(
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
-    mcp.run("stdio", show_fastmcp_banner, log_level=log_level)
+    # v3: run() API - show_banner is now a parameter, transport is a string
+    mcp.run(transport="stdio", show_banner=show_fastmcp_banner, log_level=log_level)
 
 
 @app.command(group=server_group)
@@ -116,7 +118,7 @@ def http(
     xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
-    show_fastmcp_banner: bool = False,
+    show_fastmcp_banner: bool | None = None,
 ):
     """Run the MCP server with HTTP (streamable-http) transport.
 
@@ -143,12 +145,6 @@ def http(
     elif not no_token:
         token = secrets.token_urlsafe()
 
-    transport_kwargs: dict[str, Any] = {"json_response": json_response}
-    if host is not None:
-        transport_kwargs["host"] = host
-    if port is not None:
-        transport_kwargs["port"] = port
-
     mcp = make_mcp(
         token,
         print_tags=print_tags,
@@ -157,7 +153,16 @@ def http(
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
-    mcp.run("streamable-http", show_fastmcp_banner, **transport_kwargs)
+    # v3: transport config as keyword parameters
+    transport_kwargs: dict[str, Any] = {"log_level": log_level}
+    if host is not None:
+        transport_kwargs["host"] = host
+    if port is not None:
+        transport_kwargs["port"] = port
+    if json_response:
+        transport_kwargs["json_response"] = json_response
+
+    mcp.run(transport="streamable-http", show_banner=show_fastmcp_banner, **transport_kwargs)
 
 
 @app.command(group=info_group)

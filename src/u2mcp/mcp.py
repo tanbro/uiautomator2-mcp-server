@@ -89,8 +89,31 @@ def _expand_wildcards(tags: set[str] | None, all_available_tags: set[str] | None
 
 
 @asynccontextmanager
-async def _lifespan(instance: FastMCP, /, *, token: str | None = None, print_tags: bool = True):
+async def _lifespan(
+    instance: FastMCP,
+    /,
+    *,
+    token: str | None = None,
+    print_tags: bool = True,
+    include_tags: str | None = None,
+    exclude_tags: str | None = None,
+):
     console = Console(stderr=True)
+
+    # Apply tag filters AFTER tools are registered (v3 API)
+    if include_tags is not None or exclude_tags is not None:
+        all_tools = await instance.list_tools()
+        all_tag_set: set[str] = set()
+        for tool in all_tools:
+            all_tag_set.update(tool.tags or [])
+
+        parsed_include_tags = _expand_wildcards(_parse_tags(include_tags), all_tag_set)
+        parsed_exclude_tags = _expand_wildcards(_parse_tags(exclude_tags), all_tag_set)
+
+        if parsed_include_tags is not None:
+            instance.enable(tags=parsed_include_tags, only=True)
+        if parsed_exclude_tags is not None:
+            instance.disable(tags=parsed_exclude_tags)
 
     # Show enabled tags and tools if requested
     if print_tags:
@@ -147,7 +170,12 @@ def make_mcp(
     global mcp, _xpath_timeout
     _xpath_timeout = xpath_timeout
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
-    lifespan_kwargs: dict[str, Any] = {"print_tags": print_tags}
+    # Pass tag filter configs to lifespan for v3 API application
+    lifespan_kwargs: dict[str, Any] = {
+        "print_tags": print_tags,
+        "include_tags": include_tags,
+        "exclude_tags": exclude_tags,
+    }
     if token:
         lifespan_kwargs["token"] = token
         params.update(lifespan=partial(_lifespan, **lifespan_kwargs), auth=_SimpleTokenAuthProvider(token=token))
@@ -159,22 +187,7 @@ def make_mcp(
     if fix_empty_responses:
         mcp.add_middleware(EmptyResponseMiddleware())
 
-    # Import tools to register them with the MCP (needed for wildcard expansion)
+    # Import tools to register them with the MCP
     from . import tools as _  # noqa: F401
-
-    # Collect all available tags from registered tools for wildcard expansion
-    all_tag_set: set[str] = set()
-    for tool in mcp._tool_manager._tools.values():
-        all_tag_set.update(tool.tags or [])
-
-    # Parse and expand tag filters
-    parsed_include_tags = _expand_wildcards(_parse_tags(include_tags), all_tag_set)
-    parsed_exclude_tags = _expand_wildcards(_parse_tags(exclude_tags), all_tag_set)
-
-    # Set tag filters on the MCP instance
-    if parsed_include_tags is not None:
-        mcp.include_tags = parsed_include_tags
-    if parsed_exclude_tags is not None:
-        mcp.exclude_tags = parsed_exclude_tags
 
     return mcp

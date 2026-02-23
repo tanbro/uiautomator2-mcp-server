@@ -32,7 +32,7 @@ async def test_device_list(mock_adb: MagicMock) -> None:
     mock_adb.device_list.return_value = [mock_device]
 
     # Execute using the underlying function
-    result = await device_list.fn()
+    result = await device_list()
 
     # Verify
     assert len(result) == 1
@@ -47,7 +47,7 @@ async def test_device_list_empty(mock_adb: MagicMock) -> None:
     """Test device_list returns empty list when no devices connected."""
     mock_adb.device_list.return_value = []
 
-    result = await device_list.fn()
+    result = await device_list()
 
     assert result == []
     mock_adb.device_list.assert_called_once()
@@ -58,7 +58,7 @@ async def test_device_list_empty(mock_adb: MagicMock) -> None:
 async def test_window_size(mock_u2_device: MagicMock) -> None:
     """Test window_size returns device screen dimensions."""
     # mock_u2_device is provided by autouse fixture
-    result = await window_size.fn("emulator-5554")
+    result = await window_size("emulator-5554")
 
     assert result == {"width": 1080, "height": 2400}
 
@@ -70,7 +70,7 @@ async def test_info(mock_u2_device: MagicMock) -> None:
     # mock_u2_device.info is already set to a dict in the fixture
     expected_info = mock_u2_device.info
 
-    result = await info.fn("emulator-5554")
+    result = await info("emulator-5554")
 
     assert result == expected_info
 
@@ -80,7 +80,7 @@ async def test_info(mock_u2_device: MagicMock) -> None:
 async def test_connect_success(mock_u2_device: MagicMock) -> None:
     """Test connect returns device information."""
     # connect function may return merged device_info and info
-    result = await connect.fn("emulator-5554")
+    result = await connect("emulator-5554")
 
     # Should return a dictionary with device information
     assert isinstance(result, dict)
@@ -94,7 +94,7 @@ async def test_connect_success(mock_u2_device: MagicMock) -> None:
 async def test_disconnect(mock_u2_device: MagicMock) -> None:
     """Test disconnect executes without error."""
     # disconnect may return None or a message
-    result = await disconnect.fn("emulator-5554")
+    result = await disconnect("emulator-5554")
     # Just ensure no exception raised
     assert result is None or isinstance(result, str)
 
@@ -103,7 +103,7 @@ async def test_disconnect(mock_u2_device: MagicMock) -> None:
 @pytest.mark.unit
 async def test_disconnect_all(mock_u2_device: MagicMock) -> None:
     """Test disconnect_all executes without error."""
-    result = await disconnect_all.fn()
+    result = await disconnect_all()
     # Just ensure no exception raised
     assert result is None or isinstance(result, str)
 
@@ -125,7 +125,7 @@ async def test_save_screenshot_png(mock_u2_device: MagicMock, tmp_path: Path) ->
     output_path = tmp_path / "screenshot.png"
 
     # Execute
-    result = await save_screenshot.fn("emulator-5554", str(output_path))
+    result = await save_screenshot("emulator-5554", str(output_path))
 
     # Verify the image was saved and path is returned
     mock_image.save.assert_called_once()
@@ -144,7 +144,7 @@ async def test_save_screenshot_jpeg(mock_u2_device: MagicMock, tmp_path: Path) -
     mock_u2_device.screenshot = MagicMock(return_value=mock_image)
 
     output_path = tmp_path / "screenshot.jpg"
-    result = await save_screenshot.fn("emulator-5554", str(output_path))
+    result = await save_screenshot("emulator-5554", str(output_path))
 
     mock_image.save.assert_called_once()
     assert isinstance(result, str)
@@ -164,7 +164,7 @@ async def test_save_screenshot_creates_directory(mock_u2_device: MagicMock, tmp_
     # Create a path with non-existent subdirectories
     output_path = tmp_path / "subdir1" / "subdir2" / "screenshot.png"
 
-    result = await save_screenshot.fn("emulator-5554", str(output_path))
+    result = await save_screenshot("emulator-5554", str(output_path))
 
     # Verify the save was called (directory should have been created)
     mock_image.save.assert_called_once()
@@ -182,7 +182,7 @@ async def test_save_screenshot_with_display_id(mock_u2_device: MagicMock, tmp_pa
     mock_u2_device.screenshot = MagicMock(return_value=mock_image)
 
     output_path = tmp_path / "screenshot.png"
-    result = await save_screenshot.fn("emulator-5554", str(output_path), display_id=1)
+    result = await save_screenshot("emulator-5554", str(output_path), display_id=1)
 
     # Verify screenshot was called with display_id=1
     mock_u2_device.screenshot.assert_called_once_with(display_id=1)
@@ -200,7 +200,7 @@ async def test_dump_hierarchy_full(mock_u2_device: MagicMock) -> None:
 </hierarchy>"""
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    result = await dump_hierarchy.fn("emulator-5554")
+    result = await dump_hierarchy("emulator-5554")
 
     assert result == sample_xml
     mock_u2_device.dump_hierarchy.assert_called_once_with(compressed=False, pretty=False, max_depth=None)
@@ -217,7 +217,7 @@ async def test_dump_hierarchy_with_xpath_single_match(mock_u2_device: MagicMock)
 </hierarchy>"""
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    result = await dump_hierarchy.fn("emulator-5554", xpath="//*[@clickable='true']")
+    result = await dump_hierarchy("emulator-5554", xpath="//*[@clickable='true']")
 
     # Should return only the clickable button
     assert 'resource-id="button1"' in result
@@ -239,7 +239,7 @@ async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device: MagicM
 </hierarchy>"""
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    result = await dump_hierarchy.fn("emulator-5554", xpath="//*[@clickable='true']")
+    result = await dump_hierarchy("emulator-5554", xpath="//*[@clickable='true']")
 
     # Should return both clickable buttons separated by ===
     assert 'resource-id="button1"' in result
@@ -261,7 +261,7 @@ async def test_dump_hierarchy_with_xpath_no_match(mock_u2_device: MagicMock) -> 
 </hierarchy>"""
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    result = await dump_hierarchy.fn("emulator-5554", xpath="//*[@nonexistent='true']")
+    result = await dump_hierarchy("emulator-5554", xpath="//*[@nonexistent='true']")
 
     assert result == ""
 
@@ -273,7 +273,7 @@ async def test_dump_hierarchy_with_compressed_and_pretty(mock_u2_device: MagicMo
     sample_xml = "<hierarchy><node/></hierarchy>"
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    await dump_hierarchy.fn("emulator-5554", compressed=True, pretty=True)
+    await dump_hierarchy("emulator-5554", compressed=True, pretty=True)
 
     mock_u2_device.dump_hierarchy.assert_called_once_with(compressed=True, pretty=True, max_depth=None)
 
@@ -285,7 +285,7 @@ async def test_dump_hierarchy_with_max_depth(mock_u2_device: MagicMock) -> None:
     sample_xml = "<hierarchy><node/></hierarchy>"
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    await dump_hierarchy.fn("emulator-5554", max_depth=5)
+    await dump_hierarchy("emulator-5554", max_depth=5)
 
     mock_u2_device.dump_hierarchy.assert_called_once_with(compressed=False, pretty=False, max_depth=5)
 
@@ -297,7 +297,7 @@ async def test_dump_hierarchy_max_depth_negative_uses_none(mock_u2_device: Magic
     sample_xml = "<hierarchy><node/></hierarchy>"
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
-    await dump_hierarchy.fn("emulator-5554", max_depth=-1)
+    await dump_hierarchy("emulator-5554", max_depth=-1)
 
     mock_u2_device.dump_hierarchy.assert_called_once_with(compressed=False, pretty=False, max_depth=None)
 
@@ -313,7 +313,7 @@ async def test_save_dump_hierarchy_full(mock_u2_device: MagicMock, tmp_path: Pat
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
-    result = await save_dump_hierarchy.fn("emulator-5554", str(output_path))
+    result = await save_dump_hierarchy("emulator-5554", str(output_path))
 
     # Verify file was created and contains the full XML
     assert isinstance(result, str)
@@ -334,7 +334,7 @@ async def test_save_dump_hierarchy_with_xpath_filter(mock_u2_device: MagicMock, 
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
-    result = await save_dump_hierarchy.fn("emulator-5554", str(output_path), xpath="//*[@clickable='true']")
+    result = await save_dump_hierarchy("emulator-5554", str(output_path), xpath="//*[@clickable='true']")
 
     # Verify file was created and contains only the filtered element
     assert isinstance(result, str)
@@ -351,7 +351,7 @@ async def test_save_dump_hierarchy_creates_directory(mock_u2_device: MagicMock, 
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "subdir1" / "subdir2" / "hierarchy.xml"
-    result = await save_dump_hierarchy.fn("emulator-5554", str(output_path))
+    result = await save_dump_hierarchy("emulator-5554", str(output_path))
 
     # Verify file was created in the new subdirectories
     assert isinstance(result, str)
@@ -370,7 +370,7 @@ async def test_save_dump_hierarchy_xpath_no_match_saves_empty(mock_u2_device: Ma
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
-    result = await save_dump_hierarchy.fn("emulator-5554", str(output_path), xpath="//*[@nonexistent='true']")
+    result = await save_dump_hierarchy("emulator-5554", str(output_path), xpath="//*[@nonexistent='true']")
 
     # Verify file was created but is empty
     assert isinstance(result, str)
@@ -386,7 +386,7 @@ async def test_save_dump_hierarchy_returns_absolute_path(mock_u2_device: MagicMo
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
-    result = await save_dump_hierarchy.fn("emulator-5554", str(output_path))
+    result = await save_dump_hierarchy("emulator-5554", str(output_path))
 
     # Verify result is an absolute path
     assert isinstance(result, str)
@@ -401,7 +401,7 @@ async def test_save_dump_hierarchy_default_pretty_true(mock_u2_device: MagicMock
     mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
-    await save_dump_hierarchy.fn("emulator-5554", str(output_path))
+    await save_dump_hierarchy("emulator-5554", str(output_path))
 
     # Verify pretty=True was passed
     mock_u2_device.dump_hierarchy.assert_called_once_with(compressed=False, pretty=True, max_depth=None)

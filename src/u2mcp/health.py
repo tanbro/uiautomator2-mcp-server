@@ -336,8 +336,8 @@ def check_mcp_tools(verbose: bool = False) -> CheckResult:
 
         async def get_tool_count() -> int:
             mcp = make_mcp()
-            tools = await mcp.get_tools()
-            return len(tools)
+            tools = await mcp.list_tools()  # Changed from get_tools() for v3
+            return len(tools)  # Direct length, no .values() needed
 
         tool_count = anyio.run(get_tool_count)
 
