@@ -107,4 +107,39 @@ This skill can be easily extended for:
 - Advanced reporting and analytics
 - Performance benchmarking
 
+## Release Workflow
+
+This skill is also used during the release process to validate uiautomator2-mcp-server functionality:
+
+### Pre-Release Testing
+Before each release:
+1. Ensure all 69 unit tests pass
+2. Run doctor command: `u2mcp doctor -v`
+3. Execute Android UI tests on physical device
+4. Verify all 77 MCP tools are registered
+
+### Release Process
+The project uses automated CI/CD pipeline:
+
+1. **Version Tag**: Create a PEP 440 compliant tag (e.g., `v0.3.3`)
+2. **CI Build**: GitHub Actions automatically:
+   - Runs lint, type check, and tests
+   - Builds distribution packages
+   - Publishes to PyPI
+   - Creates GitHub Release with CHANGELOG notes
+   - **Updates server.json version** automatically
+   - Publishes to MCP Registry
+
+3. **server.json Update**:
+   ```bash
+   # CI automatically does this during release:
+   jq --arg v "0.3.3" '.version = $v | .packages[0].version = $v' server.json > server.json.tmp
+   mv server.json.tmp server.json
+   ```
+
+4. **MCP Registry Publish**:
+   - Uses GitHub OIDC for authentication
+   - Validates package ownership via PyPI
+   - Publishes server.json to official MCP registry
+
 For implementation details, see the accompanying scripts and documentation.

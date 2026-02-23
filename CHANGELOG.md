@@ -1,5 +1,27 @@
 # CHANGELOG
 
+## 0.3.3
+
+> 📅 2026-02-23
+
+- ⚙️ Changed:
+    - **Upgrade to FastMCP v3.0**: Major framework update from FastMCP v2.x to v3.x
+    - Update `run()` API: transport parameter now accepts string values ("stdio", "http", "streamable-http")
+    - Update `show_banner` parameter: now passed directly to run() instead of environment variable
+    - Replace `get_tools()` with `list_tools()` which returns list instead of dict
+    - Update tag filtering: use `enable()`/`disable()` methods instead of setting attributes
+    - Fix all unit tests to work with v3 decorator behavior (decorators return original functions, no `.fn` attribute)
+    - Clean up documentation: remove redundant `examples/` directory from android-ui-test skill
+
+- 🐛 Fixed:
+    - Fix FastMCP v3 compatibility in helpers.py, health.py, __main__.py
+    - Fix tool filtering to use v3's enable/disable API with tag-based filtering
+    - Fix lifespan to apply tag filters after tool registration using v3 API
+
+- 📝 Documentation:
+    - Add release workflow documentation to android-ui-test skill
+    - Document server.json version update process in CI/CD pipeline
+
 ## 0.3.2
 
 > 📅 2026-02-16
