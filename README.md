@@ -181,9 +181,6 @@ The following are two optional enhanced package managers. You can choose to inst
 # Run directly with uvx (recommended)
 uvx uiautomator2-mcp-server stdio
 
-# Or use the shorter alias (v0.3.0+)
-uvx u2mcp stdio
-
 # Or run directly with pipx
 pipx run uiautomator2-mcp-server stdio
 ```
@@ -197,8 +194,14 @@ uv tool install uiautomator2-mcp-server
 # Or install with pipx
 pipx install uiautomator2-mcp-server
 
-# Or install the u2mcp alias (v0.3.0+)
-pip install u2mcp
+# Or install with pip
+python -m pip install uiautomator2-mcp-server
+```
+
+After installation, the short alias `u2mcp` is available:
+
+```bash
+u2mcp stdio
 ```
 
 ----
