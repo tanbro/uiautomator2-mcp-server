@@ -1,14 +1,25 @@
-exclude .*
+exclude AGENTS.md
 exclude CLAUDE.md
-exclude CODE_OF_CONDUCT.md
-exclude CONTRIBUTING.md
-exclude coverage.*
-exclude pytest.ini
+exclude MANIFEST.in
 exclude README.*.md
-exclude *.lock
+exclude main.py
 exclude server.json
+exclude server.py
+exclude uv.lock
 
-prune .*
-prune docs
+exclude .mypy.ini
+exclude .pre-commit-config.yaml
+exclude .readthedocs.yaml
+exclude .ruff.toml
+
+prune .claude
+prune .github
+prune .skills
+prune assets
 prune htmlcov
-prune tests
+
+global-exclude .DS_Store
+global-exclude .coverage
+global-exclude coverage.*
+global-exclude *.pyc
+global-exclude __pycache__
