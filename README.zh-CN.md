@@ -46,6 +46,7 @@ mcp-name: io.github.tanbro/uiautomator2-mcp-server
 - 🔍 **XPath 过滤** - 只 dump 你需要的 UI 元素 — 省 token、响应快
 - 🎛️ **工具过滤** - 只给 AI 看需要的工具 — 幻觉少、效果好
 - ⚡ **零安装** - 用 `uvx` 直接跑，无需手动安装
+- 📦 **独立可执行文件** - 用 Nuitka 打包成单个 `.exe`，目标机器无需 Python 环境
 - 🧰 **70+ 工具** - 点一点、滑一滑、输文字、管应用 — 全都有
 - 🧪 **自带测试** - 开箱即用的 AI 驱动 UI 测试框架
 - 🔄 **两种模式** - STDIO 本地用，HTTP 远程用
@@ -271,6 +272,34 @@ python -m pip install uiautomator2-mcp-server
 
 > ℹ️ **注意**: \
 > [pip][] **不支持**免安装直接运行
+
+### 打包为独立可执行文件（Nuitka）
+
+你可以使用 [Nuitka](https://nuitka.net/) 将服务器编译为独立应用——目标机器无需安装 Python。
+
+构建选项已通过 [Nuitka 项目指令](https://nuitka.net/user-documentation/user-manual.html#nuitka-project-options)预配置在 `main.py` 中，因此构建命令非常简单：
+
+```bash
+# 1. 安装打包依赖
+uv sync --group bundle
+
+# 2. 构建
+nuitka main.py
+```
+
+构建完成后会在输出目录生成 `u2mcp` 可执行文件及其运行时依赖文件（DLL、共享库等）。将整个输出目录作为便携应用分发即可。
+
+> **提示：** 如果同一环境中安装了开发依赖（如 mypy），Nuitka 可能会将其误打包。可通过 `--nofollow-import-to=<包名>`（如 `--nofollow-import-to=mypy`）排除。更干净的方式是在仅包含运行时依赖的独立环境中构建。
+
+```bash
+# STDIO 模式（本地 MCP 客户端）
+u2mcp stdio
+
+# HTTP 模式（远程访问）
+u2mcp http -H 0.0.0.0 -p 8000
+```
+
+> **注意：** 输出已包含 Python 运行时和所有 Python 依赖，目标机器不需要安装 Python、pip 或 uv。但系统 PATH 中仍需有 `adb`（或通过 `ADBUTILS_ADB_PATH` 环境变量指定路径）。
 
 ### 运行模式
 

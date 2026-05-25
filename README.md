@@ -54,6 +54,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 - 🔍 **XPath Filtering** - Dump only the UI elements you need — save tokens and speed up responses
 - 🎛️ **Tool Filtering** - Show the AI only the tools it needs — fewer hallucinations, better results
 - ⚡ **Zero Setup** - Run with `uvx` immediately, no installation needed
+- 📦 **Standalone Executable** - Bundle into a single `.exe` with Nuitka — no Python runtime required
 - 🧰 **70+ Tools** - Click, swipe, type, apps, screenshots — everything you need
 - 🧪 **Built-in Testing** - Includes AI-driven UI test framework out of the box
 - 🔄 **Two Modes** - STDIO for local, HTTP for remote
@@ -213,6 +214,36 @@ python -m pip install uiautomator2-mcp-server
 
 > ℹ️ **Note**: \
 > [pip][] **does not support** running without installation
+
+### Building a Standalone Executable (Nuitka)
+
+You can compile the server into a standalone application using [Nuitka](https://nuitka.net/) — no Python installation required on the target machine.
+
+Build options are pre-configured in `main.py` via [Nuitka project directives](https://nuitka.net/user-documentation/user-manual.html#nuitka-project-options), so the build command is simply:
+
+```bash
+# 1. Install bundle dependencies
+uv sync --group bundle
+
+# 2. Build
+nuitka main.py
+```
+
+This produces a `u2mcp` executable in the build output directory, along with its runtime dependency files (DLLs, shared libraries, etc.). Distribute the entire output folder as a portable application.
+
+> **Tip:** If dev dependencies (e.g. mypy) are installed in the same environment, Nuitka may include them unnecessarily. To exclude specific packages, add `--nofollow-import-to=<package>` (e.g. `--nofollow-import-to=mypy`). For a cleaner build, consider running in a dedicated environment with only runtime dependencies.
+
+To run the compiled server:
+
+```bash
+# STDIO mode (for local MCP clients)
+u2mcp stdio
+
+# HTTP mode (for remote access)
+u2mcp http -H 0.0.0.0 -p 8000
+```
+
+> **Note:** The output bundles the Python runtime and all Python dependencies, so the target machine does not need Python, pip, or uv installed. However, `adb` must still be available on the system PATH (or set via the `ADBUTILS_ADB_PATH` environment variable).
 
 ### Running Modes
 
