@@ -124,7 +124,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Build package
-        run: uv build --frozen
+        run: uv build
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.validate-tag.outputs.version }}
 
