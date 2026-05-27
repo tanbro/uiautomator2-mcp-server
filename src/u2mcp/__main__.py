@@ -232,6 +232,9 @@ def doctor(
     sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
 
 
+env_loader = Env(prefix=ENV_PREFIX)
+
+
 @app.meta.default
 def meta(
     *tokens: Annotated[str, Parameter(show=False, allow_leading_hyphen=True)],
@@ -242,13 +245,12 @@ def meta(
     Args:
         config_file: Path to config file (TOML, YAML, or JSON). Overrides auto-discovery.
     """
-    app.config = resolve_config(config_file)
+    app.config = [*resolve_config(config_file), env_loader]
     app(tokens)
 
 
 # Env loader for meta-level params (e.g. U2MCP_CONFIG_FILE -> --config-file)
-_env_loader = Env(prefix=ENV_PREFIX)
-app.meta.config = _env_loader
+app.meta.config = env_loader
 
 
 def main():

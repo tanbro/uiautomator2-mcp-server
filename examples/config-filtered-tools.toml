@@ -1,0 +1,9 @@
+# Filtered tools config - only expose device management and basic touch
+# Usage: u2mcp stdio --config-file examples/config-filtered-tools.toml
+
+[stdio]
+log-level = "warning"
+check-adb = true
+include-tags = "device:*,action:touch,element:interact,element:wait,element:query"
+print-tags = true
+show-fastmcp-banner = false
