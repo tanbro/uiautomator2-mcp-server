@@ -570,6 +570,11 @@ wheels = [
     { url = "https://mirrors.aliyun.com/pypi/packages/f9/45/9da25f3fe4b99e701b9a704bb6213e2d61bc44ae66294f9728574f3a607a/cyclopts-4.16.0-py3-none-any.whl", hash = "sha256:cbb9f8af92ace82c250178a3a51f5ecec1df95ab99116af3aa7140b218ccd2a1" },
 ]
 
+[package.optional-dependencies]
+yaml = [
+    { name = "pyyaml" },
+]
+
 [[package]]
 name = "decorator"
 version = "5.3.1"
@@ -2148,7 +2153,9 @@ wheels = [
 name = "uiautomator2-mcp-server"
 source = { editable = "." }
 dependencies = [
+    { name = "cyclopts", extra = ["yaml"] },
     { name = "fastmcp" },
+    { name = "platformdirs" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
     { name = "uiautomator2" },
 ]
@@ -2184,7 +2191,9 @@ typing = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cyclopts", extras = ["yaml"] },
     { name = "fastmcp", specifier = ">=3.0,<4.0" },
+    { name = "platformdirs", specifier = ">=4.0" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.12" },
     { name = "uiautomator2", specifier = ">=3.5,<4.0" },
 ]

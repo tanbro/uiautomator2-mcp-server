@@ -7,13 +7,16 @@ import logging
 import re
 import secrets
 import sys
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import anyio
 from cyclopts import App, Group, Parameter
+from cyclopts.config import Env
 from cyclopts.exceptions import ValidationError
 from rich.console import Console
 
+from .config import ENV_PREFIX, resolve_config
 from .health import check_adb, run_doctor
 from .helpers import print_tags as print_tags_from_mcp
 from .helpers import print_tool_help
@@ -102,17 +105,13 @@ def stdio(
     mcp.run(transport="stdio", show_banner=show_fastmcp_banner, log_level=log_level)
 
 
-# Use stdio as the default command (running `u2mcp` without subcommand)
-app.default_command = stdio
-
-
 @app.command(group=server_group)
 def http(
     *,
     host: Annotated[str | None, Parameter(name=["--host", "-H"])] = None,
     port: Annotated[int | None, Parameter(name=["--port", "-p"])] = None,
     token: Annotated[str | None, Parameter(name=["--token", "-t"])] = None,
-    no_token: Annotated[bool, Parameter(name=["--no-token", "-n"])] = False,
+    auth: bool = True,
     json_response: bool = True,
     check_adb: bool = True,
     log_level: Annotated[
@@ -131,7 +130,7 @@ def http(
         host: Host address to bind to.
         port: Port number to bind to.
         token: Explicit set authentication token.
-        no_token: Disable authentication bearer token verification. If not set, a token will be generated randomly.
+        auth: Enable authentication. If enabled and no token is set, a random one will be generated.
         json_response: Use JSON response format.
         check_adb: Check ADB availability at startup.
         log_level: Log level.
@@ -147,7 +146,7 @@ def http(
 
     if token:
         token = _validate_token(token)
-    elif not no_token:
+    elif auth:
         token = secrets.token_urlsafe()
 
     mcp = make_mcp(
@@ -233,10 +232,29 @@ def doctor(
     sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
 
 
+@app.meta.default
+def meta(
+    *tokens: Annotated[str, Parameter(show=False, allow_leading_hyphen=True)],
+    config_file: Annotated[Path | None, Parameter(name=["--config-file", "-c"])] = None,
+):
+    """Run the MCP server with configuration from files.
+
+    Args:
+        config_file: Path to config file (TOML, YAML, or JSON). Overrides auto-discovery.
+    """
+    app.config = resolve_config(config_file)
+    app(tokens)
+
+
+# Env loader for meta-level params (e.g. U2MCP_CONFIG_FILE -> --config-file)
+_env_loader = Env(prefix=ENV_PREFIX)
+app.meta.config = _env_loader
+
+
 def main():
     """Entry point for the CLI."""
     try:
-        app()
+        app.meta()
     except KeyboardInterrupt:
         pass
     except asyncio.CancelledError:
