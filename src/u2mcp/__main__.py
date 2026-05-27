@@ -144,6 +144,7 @@ def http(
     _setup_logging(log_level)
     _check_adb(Console(stderr=True), check_adb)
 
+    user_provided = bool(token)
     if token:
         token = _validate_token(token)
     elif auth:
@@ -151,6 +152,7 @@ def http(
 
     mcp = make_mcp(
         token,
+        user_provided_token=user_provided,
         print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,

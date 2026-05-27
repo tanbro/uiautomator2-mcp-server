@@ -94,6 +94,7 @@ async def _lifespan(
     /,
     *,
     token: str | None = None,
+    user_provided_token: bool = False,
     print_tags: bool = True,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
@@ -122,18 +123,34 @@ async def _lifespan(
         console.print("")
 
     if token:
-        content = Markdown(
-            dedent(f"""
-            ------
+        if user_provided_token:
+            console.print(
+                dedent("""\
+                [cyan]Authentication enabled. Use your token in the Authorization header as: Bearer <your-token>[/cyan]
+                """)
+            )
+        else:
+            content = Markdown(
+                dedent(f"""
+                ------
 
-            Server configured with **authentication token**. Connect using this token in the Authorization header:
+                **A random authentication token has been generated.**
+                Include it in the `Authorization` header when connecting:
 
-            `Authorization: Bearer {token}`
+                `Authorization: Bearer {token}`
 
-            ------
+                - To use your own, restart with `--token YOUR_TOKEN`.
+                - To disable authentication, restart with `--no-auth`.
+                ------
+                """)
+            )
+            console.print(content)
+    else:
+        console.print(
+            dedent("""\
+            [yellow][bold]Warning[/bold]: Authentication disabled. The server is accessible without a token.[/yellow]
             """)
         )
-        console.print(content)
 
     # Global task group for background tasks - keeps running until server shuts down
     async with create_task_group() as tg:
@@ -161,6 +178,7 @@ class _SimpleTokenAuthProvider(AuthProvider):
 
 def make_mcp(
     token: str | None = None,
+    user_provided_token: bool = False,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
     print_tags: bool = False,
@@ -178,6 +196,7 @@ def make_mcp(
     }
     if token:
         lifespan_kwargs["token"] = token
+        lifespan_kwargs["user_provided_token"] = user_provided_token
         params.update(lifespan=partial(_lifespan, **lifespan_kwargs), auth=_SimpleTokenAuthProvider(token=token))
     else:
         params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
