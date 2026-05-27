@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import secrets
@@ -230,7 +231,18 @@ def doctor(
 
 def main():
     """Entry point for the CLI."""
-    app()
+    try:
+        app()
+    except KeyboardInterrupt:
+        pass
+    except asyncio.CancelledError:
+        pass
+    except BaseException as exc:
+        # anyio cancel scopes may raise RuntimeError during cancellation
+        # when the scope chain is broken by Ctrl-C shutdown.
+        # Only suppress if the chain originates from CancelledError.
+        if not isinstance(exc.__context__, asyncio.CancelledError):
+            raise exc from None
 
 
 if __name__ == "__main__":
