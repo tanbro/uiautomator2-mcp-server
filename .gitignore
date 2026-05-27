@@ -407,3 +407,5 @@ http-client.private.env.json
 # nuitka built-out
 *.build/
 *.dist/
+
+!u2mcp.spec
