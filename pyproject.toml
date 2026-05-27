@@ -1,16 +1,24 @@
 [project]
-name = "uiautomator2-mcp-server"
-dynamic = ["version"]
-description = "uiautomator2 mcp server"
-readme = "README.md"
-authors = [{ name = "tanbro", email = "tanbro@163.com" }]
-requires-python = ">=3.11"
+authors = [{name = "tanbro", email = "tanbro@163.com"}]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 4 - Beta", # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
   "fastmcp>=3.0,<4.0",
   "uiautomator2>=3.5,<4.0",
   "typing_extensions>=4.12; python_version < '3.12'",
 ]
-license = "Apache-2.0"
+description = "uiautomator2 mcp server"
+dynamic = ["version"]
 keywords = [
   "uiautomator2",
   "mcp",
@@ -27,42 +35,33 @@ keywords = [
   "rpa",
   "test",
 ]
-classifiers = [
-  # How mature is this project? Common values are
-  #   3 - Alpha
-  #   4 - Beta
-  #   5 - Production/Stable
-  "Development Status :: 4 - Beta",
-
-  # Specify the Python versions you support here.
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
-]
+license = "Apache-2.0"
+name = "uiautomator2-mcp-server"
+readme = "README.md"
+requires-python = ">=3.11"
 
 [build-system]
-requires = ["setuptools>=80", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
+requires = ["setuptools>=80", "setuptools-scm>=8"]
 
 [tool.setuptools_scm]
 version_file = "src/u2mcp/version.py"
 
 [project.scripts]
+u2mcp = "u2mcp.__main__:main"
 uiautomator2-mcp = "u2mcp.__main__:main"
 uiautomator2-mcp-server = "u2mcp.__main__:main"
-u2mcp = "u2mcp.__main__:main"
 
 [project.urls]
-homepage = "https://github.com/tanbro/uiautomator2-mcp-server"
-documentation = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/README.md"
-repository = "https://github.com/tanbro/uiautomator2-mcp-server.git"
-issues = "https://github.com/tanbro/uiautomator2-mcp-server/issues"
 changelog = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/CHANGELOG.md"
+documentation = "https://github.com/tanbro/uiautomator2-mcp-server/blob/main/README.md"
+homepage = "https://github.com/tanbro/uiautomator2-mcp-server"
+issues = "https://github.com/tanbro/uiautomator2-mcp-server/issues"
+repository = "https://github.com/tanbro/uiautomator2-mcp-server.git"
 
 [dependency-groups]
-dev = [{ include-group = "type" }, { include-group = "test" }]
-type = ["mypy", "types-lxml", "types-retry"]
+dev = [{include-group = "typing"}, {include-group = "test"}]
+nuitka = ["nuitka", "importlib-metadata"]
+pyinstaller = ["PyInstaller"]
 test = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-mock"]
-bundle = ["nuitka"]
+typing = ["mypy", "types-lxml", "types-retry"]

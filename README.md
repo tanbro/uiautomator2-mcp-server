@@ -54,7 +54,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 - 🔍 **XPath Filtering** - Dump only the UI elements you need — save tokens and speed up responses
 - 🎛️ **Tool Filtering** - Show the AI only the tools it needs — fewer hallucinations, better results
 - ⚡ **Zero Setup** - Run with `uvx` immediately, no installation needed
-- 📦 **Standalone Executable** - Bundle into a single `.exe` with Nuitka — no Python runtime required
+- 📦 **Standalone Executable** - Bundle into a standalone app with PyInstaller or Nuitka — no Python runtime required
 - 🧰 **70+ Tools** - Click, swipe, type, apps, screenshots — everything you need
 - 🧪 **Built-in Testing** - Includes AI-driven UI test framework out of the box
 - 🔄 **Two Modes** - STDIO for local, HTTP for remote
@@ -218,25 +218,41 @@ python -m pip install uiautomator2-mcp-server
 > ℹ️ **Note**: \
 > [pip][] **does not support** running without installation
 
-### Building a Standalone Executable (Nuitka)
+### Building a Standalone Executable
 
-You can compile the server into a standalone application using [Nuitka](https://nuitka.net/) — no Python installation required on the target machine.
+You can bundle the server into a standalone application — no Python installation required on the target machine.
 
-Build options are pre-configured in `main.py` via [Nuitka project directives](https://nuitka.net/user-documentation/user-manual.html#nuitka-project-options), so the build command is simply:
+#### PyInstaller (Recommended)
+
+Fast build, no C compiler required.
 
 ```bash
-# 1. Install bundle dependencies
-uv sync --group bundle
+# 1. Install PyInstaller
+uv sync --group pyinstaller
+
+# 2. Build
+pyinstaller u2mcp.spec
+```
+
+This produces a `dist/u2mcp/` directory containing the executable and all runtime files. Distribute the entire folder as a portable application.
+
+#### Nuitka
+
+Compiles Python to C, producing native `.so`/`.pyd`/`.dll` binaries — provides a basic level of source code protection. Requires a C/C++ compiler (MSVC on Windows, GCC/Clang on Linux/macOS).
+
+Build options are pre-configured in `main.py` via [Nuitka project directives](https://nuitka.net/user-documentation/user-manual.html#nuitka-project-options):
+
+```bash
+# 1. Install Nuitka
+uv sync --group nuitka
 
 # 2. Build
 nuitka main.py
 ```
 
-This produces a `u2mcp` executable in the build output directory, along with its runtime dependency files (DLLs, shared libraries, etc.). Distribute the entire output folder as a portable application.
+#### Running the Bundled Server
 
-> **Tip:** If dev dependencies (e.g. mypy) are installed in the same environment, Nuitka may include them unnecessarily. To exclude specific packages, add `--nofollow-import-to=<package>` (e.g. `--nofollow-import-to=mypy`). For a cleaner build, consider running in a dedicated environment with only runtime dependencies.
-
-To run the compiled server:
+Regardless of which tool you used:
 
 ```bash
 # STDIO mode (for local MCP clients)
