@@ -102,6 +102,10 @@ def stdio(
     mcp.run(transport="stdio", show_banner=show_fastmcp_banner, log_level=log_level)
 
 
+# Use stdio as the default command (running `u2mcp` without subcommand)
+app.default_command = stdio
+
+
 @app.command(group=server_group)
 def http(
     *,
@@ -239,9 +243,14 @@ def main():
         pass
     except BaseException as exc:
         # anyio cancel scopes may raise RuntimeError during cancellation
-        # when the scope chain is broken by Ctrl-C shutdown.
-        # Only suppress if the chain originates from CancelledError.
-        if not isinstance(exc.__context__, asyncio.CancelledError):
+        # when the scope chain is broken by Ctrl-C or stdin close during shutdown.
+        # Only suppress if the chain originates from CancelledError or if this is
+        # an anyio cancel-scope mismatch (harmless during teardown).
+        if isinstance(exc.__context__, asyncio.CancelledError):
+            pass
+        elif isinstance(exc, RuntimeError) and "cancel scope" in str(exc):
+            pass
+        else:
             raise exc from None
 
 
