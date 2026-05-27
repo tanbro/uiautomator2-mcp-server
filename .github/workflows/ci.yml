@@ -52,7 +52,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Install dependencies
-        run: uv sync --frozen --group type
+        run: uv sync --frozen --group typing
 
       - name: Run mypy
         run: uv run mypy
