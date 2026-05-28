@@ -19,6 +19,7 @@ from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.text import Text
 
 from .config import ENV_PREFIX, resolve_config
+from .helpers import print_tags as print_tags_from_mcp
 from .helpers import print_tool_help
 from .version import __version__
 
@@ -40,6 +41,7 @@ def initial_mcp(console: Console, check_adb: bool = False, **kwargs):
     progress.add_task("", total=None)
 
     if check_adb:
+        # adbutils is heavy, so we only import it when needed
         from .health import check_adb as _check_adb
 
         if not _check_adb(console):
@@ -216,10 +218,6 @@ def info(tool_name: str):
     Args:
         tool_name: Tool name or pattern (supports * and ? wildcards).
     """
-    import anyio
-
-    from .helpers import print_tool_help
-
     console = Console()
     mcp = initial_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, tool_name))
@@ -228,10 +226,6 @@ def info(tool_name: str):
 @app.command(group=info_group)
 def tags():
     """List all available tool tags."""
-    import anyio
-
-    from .helpers import print_tags as print_tags_from_mcp
-
     console = Console()
     mcp = initial_mcp(console)
     anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
@@ -264,6 +258,7 @@ def doctor(
     Returns:
         Exit code: 0 (all passed), 1 (some failed), 2 (doctor error).
     """
+    # adbutils is heavy, so we don't want to import it unless we need it
     from .health import run_doctor
 
     sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
