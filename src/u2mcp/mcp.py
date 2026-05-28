@@ -13,7 +13,6 @@ import sys
 from contextlib import asynccontextmanager
 from functools import partial
 from textwrap import dedent
-from time import perf_counter
 from typing import Any
 
 from anyio import create_task_group
@@ -22,7 +21,7 @@ from fastmcp.server.auth import AccessToken, AuthProvider
 from pydantic import AnyHttpUrl
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.status import Status
+from rich.progress import Progress
 
 from .background import set_background_task_group
 from .helpers import print_tags as async_print_tags
@@ -95,25 +94,18 @@ async def _lifespan(
     instance: FastMCP,
     /,
     *,
+    console: Console,
+    progress: Progress | None = None,
     token: str | None = None,
     user_provided_token: bool = False,
     print_tags: bool = True,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
     show_auth_info: bool = False,
-    console: Console | None = None,
-    status: Status | None = None,
-    t0: float | None = None,
 ):
-    if console is None:
-        console = Console(stderr=True)
-
-    # Stop the startup spinner and show ready time
-    if status is not None:
-        status.stop()
-        if t0 is not None:
-            elapsed = perf_counter() - t0
-            console.print(f"[dim]Ready ({elapsed:.1f}s)[/dim]", highlight=False)
+    # Stop the startup spinner
+    if progress is not None:
+        progress.stop()
 
     # Apply tag filters AFTER tools are registered (v3 API)
     if include_tags is not None or exclude_tags is not None:
@@ -198,8 +190,7 @@ def make_mcp(
     print_tags: bool = False,
     fix_empty_responses: bool = False,
     xpath_timeout: float = 20.0,
-    status: Status | None = None,
-    t0: float = 0.0,
+    progress: Progress | None = None,
     console: Console | None = None,
 ) -> FastMCP:
     global mcp, _xpath_timeout
@@ -213,9 +204,8 @@ def make_mcp(
     if token:
         lifespan_kwargs["token"] = token
         lifespan_kwargs["user_provided_token"] = user_provided_token
-    if status is not None:
-        lifespan_kwargs["status"] = status
-        lifespan_kwargs["t0"] = t0
+    if progress is not None:
+        lifespan_kwargs["progress"] = progress
     if console is not None:
         lifespan_kwargs["console"] = console
     params.update(lifespan=partial(_lifespan, **lifespan_kwargs))

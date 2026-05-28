@@ -7,37 +7,47 @@ import logging
 import re
 import secrets
 import sys
-import time
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
+import anyio
 from cyclopts import App, Group, Parameter
 from cyclopts.config import Env
 from cyclopts.exceptions import ValidationError
 from rich.console import Console
-from rich.status import Status
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
+from rich.text import Text
 
 from .config import ENV_PREFIX, resolve_config
+from .helpers import print_tool_help
 from .version import __version__
+
+
+class CustomElapsedColumn(TimeElapsedColumn):
+    """Elapsed time with 0.1s precision."""
+
+    def render(self, task):
+        elapsed = task.elapsed
+        if elapsed is None:
+            return Text("-.---s")
+        return Text(f"{elapsed:.1f}s")
 
 
 def initial_mcp(console: Console, check_adb: bool = False, **kwargs):
     """Load heavy deps, optionally check ADB, and build MCP server with a spinner."""
-    t0 = time.perf_counter()
-    status = Status("Starting...", console=console)
-    status.start()
+    progress = Progress(SpinnerColumn(), CustomElapsedColumn(), console=console, transient=True)
+    progress.start()
+    progress.add_task("", total=None)
 
     if check_adb:
-        status.update("Checking ADB...")
         from .health import check_adb as _check_adb
 
         if not _check_adb(console):
             console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
 
-    status.update("Initializing server...")
     from .mcp import make_mcp
 
-    mcp = make_mcp(status=status, t0=t0, console=console, **kwargs)
+    mcp = make_mcp(console=console, progress=progress, **kwargs)
     return mcp
 
 
@@ -103,11 +113,11 @@ def stdio(
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
-    stderr = Console(stderr=True)
+    console = Console(stderr=True)
     setup_logging(log_level)
 
     mcp = initial_mcp(
-        stderr,
+        console,
         check_adb=check_adb,
         print_tags=print_tags,
         include_tags=include_tags,
@@ -154,7 +164,7 @@ def http(
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
-    stderr = Console(stderr=True)
+    console = Console(stderr=True)
     setup_logging(log_level)
 
     user_provided = bool(token)
@@ -164,7 +174,7 @@ def http(
         token = secrets.token_urlsafe()
 
     mcp = initial_mcp(
-        stderr,
+        console,
         check_adb=check_adb,
         token=token,
         user_provided_token=user_provided,
@@ -188,9 +198,6 @@ def http(
 @app.command(group=info_group)
 def tools():
     """List all available MCP tools."""
-    import anyio
-
-    from .helpers import print_tool_help
 
     console = Console()
     mcp = initial_mcp(console)

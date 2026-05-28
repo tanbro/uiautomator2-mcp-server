@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fnmatch import fnmatch
 from typing import TYPE_CHECKING, Any
 
 from docstring_parser import parse
@@ -108,8 +109,6 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
                    Can be a tool name pattern or a tag pattern (e.g., device:*).
                    If None, list all available tools. Supports * and ? wildcards.
     """
-    import fnmatch
-
     # list_tools() returns list in v3, not dict
     tools_list = await instance.list_tools()
 
@@ -118,14 +117,14 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
         matched_tools: list = []
         for tool in tools_list:
             # Check if tool name matches pattern
-            if fnmatch.fnmatch(tool.name, tool_name):
+            if fnmatch(tool.name, tool_name):
                 matched_tools.append(tool)
                 continue
 
             # Check if any tag matches pattern
             if tool.tags:
                 for tag in tool.tags:
-                    if fnmatch.fnmatch(tag, tool_name):
+                    if fnmatch(tag, tool_name):
                         matched_tools.append(tool)
                         break
 
@@ -136,7 +135,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
             return
 
         for tool in sorted(matched_tools, key=lambda t: t.name):
-            _print_single_tool_help(console, tool.name, tool)
+            print_single_tool_help(console, tool.name, tool)
     else:
         # List all tools
         table = Table(show_header=True, header_style="bold magenta")
@@ -162,7 +161,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
         console.print("[dim]Supports wildcards: 'u2mcp info device:*' (by tag) or 'u2mcp info *screenshot*' (by name)[/dim]")
 
 
-def _print_single_tool_help(console: Console, name: str, tool: Any):
+def print_single_tool_help(console: Console, name: str, tool: Any):
     """Print detailed help for a single tool.
 
     Parses doc-strings and formats Args/Returns with markdown.
