@@ -7,21 +7,45 @@ import logging
 import re
 import secrets
 import sys
+import time
 from pathlib import Path
 from typing import Annotated, Any, Literal
 
-import anyio
 from cyclopts import App, Group, Parameter
 from cyclopts.config import Env
 from cyclopts.exceptions import ValidationError
 from rich.console import Console
+from rich.status import Status
 
 from .config import ENV_PREFIX, resolve_config
-from .health import check_adb, run_doctor
-from .helpers import print_tags as print_tags_from_mcp
-from .helpers import print_tool_help
-from .mcp import make_mcp
 from .version import __version__
+
+
+def _load_mcp(console: Console, check_adb: bool = False, **kwargs):
+    """Load heavy deps, optionally check ADB, and build MCP server with a spinner."""
+    t0 = time.perf_counter()
+    status = Status("Loading...", console=console)
+    status.start()
+
+    try:
+        if check_adb:
+            status.update("Checking ADB...")
+            from .health import check_adb as _check_adb
+
+            if not _check_adb(console):
+                console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
+
+        status.update("Initializing server...")
+        from .mcp import make_mcp
+
+        mcp = make_mcp(**kwargs)
+    finally:
+        status.stop()
+
+    elapsed = time.perf_counter() - t0
+    console.print(f"[dim]Ready ({elapsed:.1f}s)[/dim]", highlight=False)
+    return mcp
+
 
 # Organize commands into groups
 server_group = Group("Server Commands")
@@ -49,12 +73,6 @@ def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "crit
     logging.getLogger("sse_starlette").setLevel(logging.WARNING)
     logging.getLogger("docket").setLevel(logging.WARNING)
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
-
-
-def _check_adb(console: Console, check: bool):
-    """Check ADB availability if enabled."""
-    if check and not check_adb(console):
-        console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
 
 
 def _validate_token(token: str) -> str:
@@ -91,17 +109,18 @@ def stdio(
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
+    stderr = Console(stderr=True)
     _setup_logging(log_level)
-    _check_adb(Console(stderr=True), check_adb)
 
-    mcp = make_mcp(
+    mcp = _load_mcp(
+        stderr,
+        check_adb=check_adb,
         print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
-    # v3: run() API - show_banner is now a parameter, transport is a string
     mcp.run(transport="stdio", show_banner=show_fastmcp_banner, log_level=log_level)
 
 
@@ -141,8 +160,8 @@ def http(
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
+    stderr = Console(stderr=True)
     _setup_logging(log_level)
-    _check_adb(Console(stderr=True), check_adb)
 
     user_provided = bool(token)
     if token:
@@ -150,8 +169,10 @@ def http(
     elif auth:
         token = secrets.token_urlsafe()
 
-    mcp = make_mcp(
-        token,
+    mcp = _load_mcp(
+        stderr,
+        check_adb=check_adb,
+        token=token,
         user_provided_token=user_provided,
         print_tags=print_tags,
         include_tags=include_tags,
@@ -159,7 +180,6 @@ def http(
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
-    # v3: transport config as keyword parameters
     transport_kwargs: dict[str, Any] = {"log_level": log_level}
     if host is not None:
         transport_kwargs["host"] = host
@@ -174,8 +194,12 @@ def http(
 @app.command(group=info_group)
 def tools():
     """List all available MCP tools."""
+    import anyio
+
+    from .helpers import print_tool_help
+
     console = Console()
-    mcp = make_mcp()
+    mcp = _load_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, None))
 
 
@@ -191,16 +215,24 @@ def info(tool_name: str):
     Args:
         tool_name: Tool name or pattern (supports * and ? wildcards).
     """
+    import anyio
+
+    from .helpers import print_tool_help
+
     console = Console()
-    mcp = make_mcp()
+    mcp = _load_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, tool_name))
 
 
 @app.command(group=info_group)
 def tags():
     """List all available tool tags."""
+    import anyio
+
+    from .helpers import print_tags as print_tags_from_mcp
+
     console = Console()
-    mcp = make_mcp()
+    mcp = _load_mcp(console)
     anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
 
 
@@ -231,6 +263,8 @@ def doctor(
     Returns:
         Exit code: 0 (all passed), 1 (some failed), 2 (doctor error).
     """
+    from .health import run_doctor
+
     sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
 
 

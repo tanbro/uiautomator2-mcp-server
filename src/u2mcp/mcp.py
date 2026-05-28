@@ -98,6 +98,7 @@ async def _lifespan(
     print_tags: bool = True,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
+    show_auth_info: bool = False,
 ):
     console = Console(stderr=True)
 
@@ -145,7 +146,7 @@ async def _lifespan(
                 """)
             )
             console.print(content)
-    else:
+    elif show_auth_info:
         console.print(
             dedent("""\
             [yellow][bold]Warning[/bold]: Authentication disabled. The server is accessible without a token.[/yellow]
