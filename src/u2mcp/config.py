@@ -56,17 +56,8 @@ def discover_config_files() -> Sequence[Path]:
     At most one file per directory (first match wins).
     """
     files: list[Path] = []
-    log = logging.getLogger(__name__)
-    for i, directory in enumerate(
-        (
-            get_system_config_dir(),
-            get_user_config_dir(),
-            Path.cwd(),
-        )
-    ):
+    for directory in (get_system_config_dir(), get_user_config_dir(), Path.cwd()):
         if not directory.is_dir():
-            if i != 2:
-                log.warning("Config directory does not exist: %s", directory)
             continue
         if (found := first_config_in_dir(directory, CONFIG_FILENAMES)) is not None:
             files.append(found)
@@ -100,11 +91,11 @@ def resolve_config(config_file: Path | None = None) -> Sequence[ConfigFromFile]:
             raise ValidationError(
                 f"Unsupported config file extension '{config_file.suffix}'. Supported: {', '.join(sorted(EXTENSION_MAP))}"
             )
-        log.info("Using config file: %s", config_file)
+        log.debug("Using config file: %s", config_file)
         loaders.append(loader_cls(path=config_file, must_exist=False))
     else:
         loaders.extend(build_config_loaders(discover_config_files()))
         for loader in loaders:
-            log.info("Using config file: %s", getattr(loader, "path", None))
+            log.debug("Using config file: %s", getattr(loader, "path", None))
 
     return loaders
