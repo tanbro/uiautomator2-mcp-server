@@ -21,7 +21,7 @@ from .config import ENV_PREFIX, resolve_config
 from .version import __version__
 
 
-def _load_mcp(console: Console, check_adb: bool = False, **kwargs):
+def initial_mcp(console: Console, check_adb: bool = False, **kwargs):
     """Load heavy deps, optionally check ADB, and build MCP server with a spinner."""
     t0 = time.perf_counter()
     status = Status("Starting...", console=console)
@@ -55,7 +55,7 @@ app = App(
 )
 
 
-def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]):
+def setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]):
     """Configure logging for the MCP server."""
     logging.basicConfig(
         level=log_level.upper(),
@@ -69,7 +69,7 @@ def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "crit
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
 
-def _validate_token(token: str) -> str:
+def validate_token(token: str) -> str:
     """Validate token format."""
     token = token.strip()
     if not re.match(r"^[a-zA-Z0-9\-_.~!$&'()*+,;=:@]{8,64}$", token):
@@ -104,9 +104,9 @@ def stdio(
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
     stderr = Console(stderr=True)
-    _setup_logging(log_level)
+    setup_logging(log_level)
 
-    mcp = _load_mcp(
+    mcp = initial_mcp(
         stderr,
         check_adb=check_adb,
         print_tags=print_tags,
@@ -155,15 +155,15 @@ def http(
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
     stderr = Console(stderr=True)
-    _setup_logging(log_level)
+    setup_logging(log_level)
 
     user_provided = bool(token)
     if token:
-        token = _validate_token(token)
+        token = validate_token(token)
     elif auth:
         token = secrets.token_urlsafe()
 
-    mcp = _load_mcp(
+    mcp = initial_mcp(
         stderr,
         check_adb=check_adb,
         token=token,
@@ -193,7 +193,7 @@ def tools():
     from .helpers import print_tool_help
 
     console = Console()
-    mcp = _load_mcp(console)
+    mcp = initial_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, None))
 
 
@@ -214,7 +214,7 @@ def info(tool_name: str):
     from .helpers import print_tool_help
 
     console = Console()
-    mcp = _load_mcp(console)
+    mcp = initial_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, tool_name))
 
 
@@ -226,7 +226,7 @@ def tags():
     from .helpers import print_tags as print_tags_from_mcp
 
     console = Console()
-    mcp = _load_mcp(console)
+    mcp = initial_mcp(console)
     anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
 
 
