@@ -24,26 +24,20 @@ from .version import __version__
 def _load_mcp(console: Console, check_adb: bool = False, **kwargs):
     """Load heavy deps, optionally check ADB, and build MCP server with a spinner."""
     t0 = time.perf_counter()
-    status = Status("Loading...", console=console)
+    status = Status("Starting...", console=console)
     status.start()
 
-    try:
-        if check_adb:
-            status.update("Checking ADB...")
-            from .health import check_adb as _check_adb
+    if check_adb:
+        status.update("Checking ADB...")
+        from .health import check_adb as _check_adb
 
-            if not _check_adb(console):
-                console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
+        if not _check_adb(console):
+            console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
 
-        status.update("Initializing server...")
-        from .mcp import make_mcp
+    status.update("Initializing server...")
+    from .mcp import make_mcp
 
-        mcp = make_mcp(**kwargs)
-    finally:
-        status.stop()
-
-    elapsed = time.perf_counter() - t0
-    console.print(f"[dim]Ready ({elapsed:.1f}s)[/dim]", highlight=False)
+    mcp = make_mcp(status=status, t0=t0, console=console, **kwargs)
     return mcp
 
 

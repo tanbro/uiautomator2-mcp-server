@@ -13,6 +13,7 @@ import sys
 from contextlib import asynccontextmanager
 from functools import partial
 from textwrap import dedent
+from time import perf_counter
 from typing import Any
 
 from anyio import create_task_group
@@ -21,6 +22,7 @@ from fastmcp.server.auth import AccessToken, AuthProvider
 from pydantic import AnyHttpUrl
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.status import Status
 
 from .background import set_background_task_group
 from .helpers import print_tags as async_print_tags
@@ -99,8 +101,19 @@ async def _lifespan(
     include_tags: str | None = None,
     exclude_tags: str | None = None,
     show_auth_info: bool = False,
+    console: Console | None = None,
+    status: Status | None = None,
+    t0: float | None = None,
 ):
-    console = Console(stderr=True)
+    if console is None:
+        console = Console(stderr=True)
+
+    # Stop the startup spinner and show ready time
+    if status is not None:
+        status.stop()
+        if t0 is not None:
+            elapsed = perf_counter() - t0
+            console.print(f"[dim]Ready ({elapsed:.1f}s)[/dim]", highlight=False)
 
     # Apply tag filters AFTER tools are registered (v3 API)
     if include_tags is not None or exclude_tags is not None:
@@ -185,11 +198,13 @@ def make_mcp(
     print_tags: bool = False,
     fix_empty_responses: bool = False,
     xpath_timeout: float = 20.0,
+    status: Status | None = None,
+    t0: float = 0.0,
+    console: Console | None = None,
 ) -> FastMCP:
     global mcp, _xpath_timeout
     _xpath_timeout = xpath_timeout
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
-    # Pass tag filter configs to lifespan for v3 API application
     lifespan_kwargs: dict[str, Any] = {
         "print_tags": print_tags,
         "include_tags": include_tags,
@@ -198,9 +213,14 @@ def make_mcp(
     if token:
         lifespan_kwargs["token"] = token
         lifespan_kwargs["user_provided_token"] = user_provided_token
-        params.update(lifespan=partial(_lifespan, **lifespan_kwargs), auth=_SimpleTokenAuthProvider(token=token))
-    else:
-        params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
+    if status is not None:
+        lifespan_kwargs["status"] = status
+        lifespan_kwargs["t0"] = t0
+    if console is not None:
+        lifespan_kwargs["console"] = console
+    params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
+    if token:
+        params["auth"] = _SimpleTokenAuthProvider(token=token)
     mcp = FastMCP(**params)
 
     # Add middleware to fix empty responses if enabled
