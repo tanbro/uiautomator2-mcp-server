@@ -228,7 +228,7 @@ def tags():
     """List all available tool tags."""
     console = Console()
     mcp = initial_mcp(console)
-    anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
+    anyio.run(lambda: print_tags_from_mcp(mcp, console))
 
 
 @app.command(group=doctor_group)

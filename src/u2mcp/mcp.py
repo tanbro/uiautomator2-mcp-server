@@ -101,8 +101,8 @@ async def _lifespan(
     print_tags: bool = True,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
-    show_auth_info: bool = False,
 ):
+
     # Stop the startup spinner
     if progress is not None:
         progress.stop()
@@ -151,12 +151,6 @@ async def _lifespan(
                 """)
             )
             console.print(content)
-    elif show_auth_info:
-        console.print(
-            dedent("""\
-            [yellow][bold]Warning[/bold]: Authentication disabled. The server is accessible without a token.[/yellow]
-            """)
-        )
 
     # Global task group for background tasks - keeps running until server shuts down
     async with create_task_group() as tg:

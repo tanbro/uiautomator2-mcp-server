@@ -18,42 +18,22 @@ if TYPE_CHECKING:
 __all__ = ["print_tags", "print_tool_help"]
 
 
-async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = True):
+async def print_tags(instance: FastMCP, console: Console):
     """Print tags from an MCP instance.
+
+    Tag filtering is handled by the server's enable/disable methods,
+    so list_tools() already returns only the active tools.
 
     Args:
         instance: The MCP instance to get tools from
         console: The Rich console to print to
-        filtered: If True, only show tags that match include/exclude filters.
-                   If False, show all available tags. Defaults to True.
     """
     tags_map: dict[str, list[str]] = {}
-    # In v3, tag filters are applied via enable/disable, not stored as attributes
-    # We'll show all tools since filtering is handled by the server itself
-    include_tags = None
-    exclude_tags = None
 
-    # list_tools() returns list in v3, not dict
     for tool in await instance.list_tools():
-        # Skip tools with no tags
         if not tool.tags:
             continue
-
-        # Apply include filter
-        if include_tags is not None and not any(tag in include_tags for tag in tool.tags):
-            continue
-
-        # Apply exclude filter
-        if exclude_tags is not None and any(tag in exclude_tags for tag in tool.tags):
-            continue
-
         for tag in tool.tags:
-            # Only include tags that pass the filters
-            if include_tags is not None and tag not in include_tags:
-                continue
-            if exclude_tags is not None and tag in exclude_tags:
-                continue
-
             if tag not in tags_map:
                 tags_map[tag] = []
             tags_map[tag].append(tool.name)
@@ -94,9 +74,6 @@ async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = Tr
         console.print(table)
 
     console.print(f"\n[bold]Total: {len(tags_map)} tags, {sum(len(v) for v in tags_map.values())} tool-tag assignments[/bold]")
-
-    # Note: In v3, filtering is handled by the server's enable/disable methods
-    # The tools returned by list_tools() are already filtered
 
 
 async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | None = None):

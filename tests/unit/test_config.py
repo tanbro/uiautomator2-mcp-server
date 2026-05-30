@@ -124,16 +124,16 @@ class TestResolveConfig:
 
     def test_explicit_file_missing(self, tmp_path: Path):
         f = tmp_path / "missing.toml"
-        with pytest.raises(SystemExit, match="Config file not found"):
+        with pytest.raises(SystemExit) as exc_info:
             resolve_config(f)
+        assert exc_info.value.code == 1
 
     def test_unsupported_extension(self, tmp_path: Path):
         f = tmp_path / "config.ini"
         f.write_text("")
-        from cyclopts.exceptions import ValidationError
-
-        with pytest.raises(ValidationError):
+        with pytest.raises(SystemExit) as exc_info:
             resolve_config(f)
+        assert exc_info.value.code == 1
 
     def test_auto_discover(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.chdir(tmp_path)

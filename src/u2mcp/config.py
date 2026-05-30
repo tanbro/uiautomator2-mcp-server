@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import logging
+import stat
 import sys
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cyclopts.config import ConfigFromFile, Json, Toml, Yaml
-from cyclopts.exceptions import ValidationError
 from platformdirs import site_config_dir, user_config_dir
+from rich.console import Console
+from rich.panel import Panel
 
 if __package__ is None:
     raise RuntimeError("Must be run as a module")
@@ -74,6 +76,12 @@ def build_config_loaders(files: Sequence[Path]) -> Sequence[ConfigFromFile]:
     return loaders
 
 
+def _exit_with_error(message: str, *, exit_code: int = 1) -> None:
+    """Print a formatted error panel and exit."""
+    Console(stderr=True).print(Panel(message, title="Error", border_style="red"))
+    sys.exit(exit_code)
+
+
 def resolve_config(config_file: Path | None = None) -> Sequence[ConfigFromFile]:
     """Resolve config loaders based on explicit file or auto-discovery.
 
@@ -84,15 +92,24 @@ def resolve_config(config_file: Path | None = None) -> Sequence[ConfigFromFile]:
     log = logging.getLogger(__name__)
 
     if config_file is not None:
-        if not config_file.is_file():
-            sys.exit(f"Error: Config file not found: {config_file}")
+        try:
+            st = config_file.stat()
+        except FileNotFoundError:
+            _exit_with_error(f"Config file not found: {config_file}")
+        except PermissionError:
+            _exit_with_error(f"Permission denied: cannot access config file {config_file}")
+        except OSError as e:
+            _exit_with_error(f"Cannot access config file {config_file}: {e}")
+        if not stat.S_ISREG(st.st_mode):
+            _exit_with_error(f"Config path is not a file: {config_file}")
         loader_cls = EXTENSION_MAP.get(config_file.suffix.lower())
         if loader_cls is None:
-            raise ValidationError(
-                f"Unsupported config file extension '{config_file.suffix}'. Supported: {', '.join(sorted(EXTENSION_MAP))}"
+            _exit_with_error(
+                f"Unsupported config file extension '{config_file.suffix}'.\nSupported: {', '.join(sorted(EXTENSION_MAP))}"
             )
-        log.debug("Using config file: %s", config_file)
-        loaders.append(loader_cls(path=config_file, must_exist=False))
+        else:
+            log.debug("Using config file: %s", config_file)
+            loaders.append(loader_cls(path=config_file, must_exist=True))
     else:
         loaders.extend(build_config_loaders(discover_config_files()))
         for loader in loaders:
