@@ -1,5 +1,45 @@
 # CHANGELOG
 
+## 0.4.0rc1
+
+> 📅 2026-05-30
+
+- 🆕 New:
+    - **Config file support**: TOML/YAML/JSON config files with auto-discovery from system/user/cwd directories
+    - **Default stdio mode**: Running `u2mcp` without subcommand now defaults to stdio transport
+    - **PyInstaller support**: Build standalone executables alongside existing Nuitka option
+
+- ⚙️ Changed:
+    - Lazy-import heavy dependencies (fastmcp, adbutils), reducing `--help` from ~2s to ~70ms
+    - Startup spinner with elapsed timer covers full init → lifespan ready
+    - Improved authentication messages (user token vs auto-generated vs disabled)
+    - Rename `--no-token` to `--no-auth` in http command
+    - Remove underscore prefix from internal helpers (`_load_mcp` → `initial_mcp`, etc.)
+    - Rich error panel for config file errors (missing, unreadable, unsupported extension)
+    - Collapse file validation into single `stat()` call
+
+- 🐛 Fixed:
+    - Handle Ctrl-C cleanly during anyio async server shutdown
+    - Fix wrong dependency group name in GitHub Actions workflow
+    - Fix anyio shutdown error when stdin closes
+
+- 🗑️ Removed:
+    - Dead `filtered` parameter and unreachable filter code in `print_tags`
+    - Dead `show_auth_info` parameter from `_lifespan`
+
+- 📚 Docs:
+    - Update README (EN/ZH) with config file section and PyInstaller/Nuitka build instructions
+    - Add example config files (TOML, YAML, JSON)
+
+- 🧪 Tests:
+    - Add unit tests for config file discovery and loader construction
+
+- 🐎 Chores:
+    - Update pre-commit hooks
+    - Clean up MANIFEST.in for proper sdist packaging
+    - Use frozen uv.lock in CI
+    - Remove MCP registry publish from CI
+
 ## 0.3.3
 
 > 📅 2026-02-23
