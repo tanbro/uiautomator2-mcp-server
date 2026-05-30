@@ -6,7 +6,6 @@
 
 - 🆕 New:
     - **Config file support**: TOML/YAML/JSON config files with auto-discovery from system/user/cwd directories
-    - **Default stdio mode**: Running `u2mcp` without subcommand now defaults to stdio transport
     - **PyInstaller support**: Build standalone executables alongside existing Nuitka option
 
 - ⚙️ Changed:
