@@ -14,6 +14,8 @@ classifiers = [
 ]
 dependencies = [
   "fastmcp>=3.0,<4.0",
+  "cyclopts[yaml]", # included in fastmcp
+  "platformdirs>=4.0",
   "uiautomator2>=3.5,<4.0",
   "typing_extensions>=4.12; python_version < '3.12'",
 ]

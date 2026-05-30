@@ -58,6 +58,7 @@ Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
 - 🧰 **70+ Tools** - Click, swipe, type, apps, screenshots — everything you need
 - 🧪 **Built-in Testing** - Includes AI-driven UI test framework out of the box
 - 🔄 **Two Modes** - STDIO for local, HTTP for remote
+- ⚙️ **Config Files** - TOML/YAML/JSON config with auto-discovery
 - 🔒 **Clean Code** - Type hints, linted, formatted — easy to extend
 
 ## 🎯 Use Cases
@@ -286,10 +287,10 @@ This mode communicates via standard input/output and is typically used by MCP cl
 
 ```bash
 # If installed
-u2mcp http -H 0.0.0.0 -p 8000 -n
+u2mcp http -H 0.0.0.0 -p 8000 --no-auth
 
 # Or run directly without installation
-uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -n
+uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 --no-auth
 
 # With authentication token (if installed)
 u2mcp http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
@@ -299,6 +300,95 @@ uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
 ```
 
 The server will listen on `http://localhost:8000/mcp` (or your specified host/port).
+
+### Configuration Files
+
+You can configure `u2mcp` using config files instead of (or in addition to) CLI flags. Supported formats: **TOML**, **YAML**, and **JSON**.
+
+#### Config File Locations
+
+The server automatically discovers config files in platform-specific directories:
+
+| Priority | Location | Platform Example |
+|----------|----------|-----------------|
+| 1 (lowest) | System config dir | `/etc/u2mcp/` (Linux), `C:\ProgramData\u2mcp\` (Windows) |
+| 2 | User config dir | `~/.config/u2mcp/` (Linux), `%APPDATA%\u2mcp\` (Windows) |
+| 3 (highest) | Current working directory | `./` |
+
+In each directory, the server looks for the first matching file: `u2mcp.toml`, `u2mcp.yaml`, `u2mcp.yml`, `u2mcp.json` (at most one file per directory).
+
+Priority order: **CLI args > Environment variables > Config file (cwd > user > system) > Defaults**.
+
+#### Using a Custom Config File
+
+```bash
+# Via CLI option
+u2mcp stdio --config-file my-config.toml
+
+# Via environment variable
+U2MCP_CONFIG_FILE=my-config.toml u2mcp stdio
+```
+
+#### Config File Structure
+
+Config files use command names as top-level keys:
+
+```toml
+# u2mcp.toml
+[stdio]
+log-level = "debug"
+check-adb = false
+include-tags = "device:*,action:touch"
+
+[http]
+host = "0.0.0.0"
+port = 8000
+auth = true
+json-response = true
+```
+
+```yaml
+# u2mcp.yaml
+stdio:
+  log-level: debug
+  check-adb: false
+
+http:
+  host: "0.0.0.0"
+  port: 8000
+  auth: false
+```
+
+```json
+{
+  "stdio": {
+    "log-level": "warning",
+    "print-tags": false
+  }
+}
+```
+
+#### Environment Variables
+
+CLI parameters can be set via environment variables with the `U2MCP_{COMMAND}_{PARAM}` format:
+
+```bash
+U2MCP_STDIO_LOG_LEVEL=debug u2mcp stdio
+U2MCP_HTTP_HOST=0.0.0.0 U2MCP_HTTP_PORT=9000 u2mcp http
+U2MCP_HTTP_AUTH=false u2mcp http
+```
+
+#### Example Config Files
+
+See the [`examples/`](examples/) directory for ready-to-use config files:
+
+| File | Description |
+|------|-------------|
+| [`config-minimal-stdio.toml`](examples/config-minimal-stdio.toml) | Minimal stdio config with quiet mode |
+| [`config-full.toml`](examples/config-full.toml) | Full config with stdio, http, and doctor sections |
+| [`config-filtered-tools.toml`](examples/config-filtered-tools.toml) | Tool filtering by tags |
+| [`config-http-server.yaml`](examples/config-http-server.yaml) | HTTP server config in YAML format |
+| [`config-quiet-mode.json`](examples/config-quiet-mode.json) | Quiet mode config in JSON format |
 
 ### CLI Utility Commands
 
@@ -400,7 +490,7 @@ All common options support short flags for convenience:
 - `-H` / `--host` - Set host address (HTTP mode)
 - `-p` / `--port` - Set port number (HTTP mode)
 - `-t` / `--token` - Set authentication token (HTTP mode)
-- `-n` / `--no-token` - Disable token verification (HTTP mode)
+- `-n` / `--no-auth` - Disable authentication (HTTP mode)
 
 **Wildcard Support:**
 
@@ -599,7 +689,7 @@ Arguments: stdio
 **Option C: HTTP Mode**
 First start the server:
 ```bash
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http --host 0.0.0.0 --port 8000 --no-auth
 ```
 
 Then in Cherry Studio, select HTTP mode and enter:
@@ -632,7 +722,7 @@ Arguments: stdio
 **HTTP Mode**
 First start the server:
 ```bash
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http --host 0.0.0.0 --port 8000 --no-auth
 ```
 
 Then in ChatMCP, select HTTP mode and enter:
@@ -681,7 +771,7 @@ Continue is an AI pair programmer extension for VS Code and JetBrains.
 For clients that support HTTP connections (or for remote access), start the server first:
 
 ```bash
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http --host 0.0.0.0 --port 8000 --no-auth
 ```
 
 Then configure your client to connect to `http://localhost:8000/mcp`.

@@ -1,0 +1,23 @@
+# Full config with both stdio and http
+# Usage: u2mcp stdio --config-file examples/config-full.toml
+#        u2mcp http --config-file examples/config-full.toml
+
+[stdio]
+check-adb = true
+log-level = "info"
+include-tags = "device:*,action:touch,element:*"
+xpath-timeout = 30.0
+print-tags = true
+show-fastmcp-banner = true
+
+[http]
+host = "0.0.0.0"
+port = 8000
+auth = true
+json-response = true
+check-adb = true
+log-level = "info"
+print-tags = true
+
+[doctor]
+verbose = true

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from fnmatch import fnmatch
 from typing import TYPE_CHECKING, Any
 
 from docstring_parser import parse
@@ -17,42 +18,22 @@ if TYPE_CHECKING:
 __all__ = ["print_tags", "print_tool_help"]
 
 
-async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = True):
+async def print_tags(instance: FastMCP, console: Console):
     """Print tags from an MCP instance.
+
+    Tag filtering is handled by the server's enable/disable methods,
+    so list_tools() already returns only the active tools.
 
     Args:
         instance: The MCP instance to get tools from
         console: The Rich console to print to
-        filtered: If True, only show tags that match include/exclude filters.
-                   If False, show all available tags. Defaults to True.
     """
     tags_map: dict[str, list[str]] = {}
-    # In v3, tag filters are applied via enable/disable, not stored as attributes
-    # We'll show all tools since filtering is handled by the server itself
-    include_tags = None
-    exclude_tags = None
 
-    # list_tools() returns list in v3, not dict
     for tool in await instance.list_tools():
-        # Skip tools with no tags
         if not tool.tags:
             continue
-
-        # Apply include filter
-        if include_tags is not None and not any(tag in include_tags for tag in tool.tags):
-            continue
-
-        # Apply exclude filter
-        if exclude_tags is not None and any(tag in exclude_tags for tag in tool.tags):
-            continue
-
         for tag in tool.tags:
-            # Only include tags that pass the filters
-            if include_tags is not None and tag not in include_tags:
-                continue
-            if exclude_tags is not None and tag in exclude_tags:
-                continue
-
             if tag not in tags_map:
                 tags_map[tag] = []
             tags_map[tag].append(tool.name)
@@ -94,9 +75,6 @@ async def print_tags(instance: FastMCP, console: Console, *, filtered: bool = Tr
 
     console.print(f"\n[bold]Total: {len(tags_map)} tags, {sum(len(v) for v in tags_map.values())} tool-tag assignments[/bold]")
 
-    # Note: In v3, filtering is handled by the server's enable/disable methods
-    # The tools returned by list_tools() are already filtered
-
 
 async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | None = None):
     """Print help information for MCP tools.
@@ -108,8 +86,6 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
                    Can be a tool name pattern or a tag pattern (e.g., device:*).
                    If None, list all available tools. Supports * and ? wildcards.
     """
-    import fnmatch
-
     # list_tools() returns list in v3, not dict
     tools_list = await instance.list_tools()
 
@@ -118,14 +94,14 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
         matched_tools: list = []
         for tool in tools_list:
             # Check if tool name matches pattern
-            if fnmatch.fnmatch(tool.name, tool_name):
+            if fnmatch(tool.name, tool_name):
                 matched_tools.append(tool)
                 continue
 
             # Check if any tag matches pattern
             if tool.tags:
                 for tag in tool.tags:
-                    if fnmatch.fnmatch(tag, tool_name):
+                    if fnmatch(tag, tool_name):
                         matched_tools.append(tool)
                         break
 
@@ -136,7 +112,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
             return
 
         for tool in sorted(matched_tools, key=lambda t: t.name):
-            _print_single_tool_help(console, tool.name, tool)
+            print_single_tool_help(console, tool.name, tool)
     else:
         # List all tools
         table = Table(show_header=True, header_style="bold magenta")
@@ -162,7 +138,7 @@ async def print_tool_help(instance: FastMCP, console: Console, tool_name: str | 
         console.print("[dim]Supports wildcards: 'u2mcp info device:*' (by tag) or 'u2mcp info *screenshot*' (by name)[/dim]")
 
 
-def _print_single_tool_help(console: Console, name: str, tool: Any):
+def print_single_tool_help(console: Console, name: str, tool: Any):
     """Print detailed help for a single tool.
 
     Parses doc-strings and formats Args/Returns with markdown.

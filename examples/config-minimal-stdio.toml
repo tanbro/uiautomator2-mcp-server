@@ -1,0 +1,8 @@
+# Minimal stdio config
+# Usage: u2mcp stdio --config-file examples/config-minimal-stdio.toml
+
+[stdio]
+check-adb = false
+log-level = "warning"
+print-tags = false
+show-fastmcp-banner = false

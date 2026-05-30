@@ -21,6 +21,7 @@ from fastmcp.server.auth import AccessToken, AuthProvider
 from pydantic import AnyHttpUrl
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.progress import Progress
 
 from .background import set_background_task_group
 from .helpers import print_tags as async_print_tags
@@ -93,12 +94,18 @@ async def _lifespan(
     instance: FastMCP,
     /,
     *,
+    console: Console,
+    progress: Progress | None = None,
     token: str | None = None,
+    user_provided_token: bool = False,
     print_tags: bool = True,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
 ):
-    console = Console(stderr=True)
+
+    # Stop the startup spinner
+    if progress is not None:
+        progress.stop()
 
     # Apply tag filters AFTER tools are registered (v3 API)
     if include_tags is not None or exclude_tags is not None:
@@ -122,18 +129,28 @@ async def _lifespan(
         console.print("")
 
     if token:
-        content = Markdown(
-            dedent(f"""
-            ------
+        if user_provided_token:
+            console.print(
+                dedent("""\
+                [cyan]Authentication enabled. Use your token in the Authorization header as: Bearer <your-token>[/cyan]
+                """)
+            )
+        else:
+            content = Markdown(
+                dedent(f"""
+                ------
 
-            Server configured with **authentication token**. Connect using this token in the Authorization header:
+                **A random authentication token has been generated.**
+                Include it in the `Authorization` header when connecting:
 
-            `Authorization: Bearer {token}`
+                `Authorization: Bearer {token}`
 
-            ------
-            """)
-        )
-        console.print(content)
+                - To use your own, restart with `--token YOUR_TOKEN`.
+                - To disable authentication, restart with `--no-auth`.
+                ------
+                """)
+            )
+            console.print(content)
 
     # Global task group for background tasks - keeps running until server shuts down
     async with create_task_group() as tg:
@@ -161,16 +178,18 @@ class _SimpleTokenAuthProvider(AuthProvider):
 
 def make_mcp(
     token: str | None = None,
+    user_provided_token: bool = False,
     include_tags: str | None = None,
     exclude_tags: str | None = None,
     print_tags: bool = False,
     fix_empty_responses: bool = False,
     xpath_timeout: float = 20.0,
+    progress: Progress | None = None,
+    console: Console | None = None,
 ) -> FastMCP:
     global mcp, _xpath_timeout
     _xpath_timeout = xpath_timeout
     params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
-    # Pass tag filter configs to lifespan for v3 API application
     lifespan_kwargs: dict[str, Any] = {
         "print_tags": print_tags,
         "include_tags": include_tags,
@@ -178,9 +197,14 @@ def make_mcp(
     }
     if token:
         lifespan_kwargs["token"] = token
-        params.update(lifespan=partial(_lifespan, **lifespan_kwargs), auth=_SimpleTokenAuthProvider(token=token))
-    else:
-        params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
+        lifespan_kwargs["user_provided_token"] = user_provided_token
+    if progress is not None:
+        lifespan_kwargs["progress"] = progress
+    if console is not None:
+        lifespan_kwargs["console"] = console
+    params.update(lifespan=partial(_lifespan, **lifespan_kwargs))
+    if token:
+        params["auth"] = _SimpleTokenAuthProvider(token=token)
     mcp = FastMCP(**params)
 
     # Add middleware to fix empty responses if enabled

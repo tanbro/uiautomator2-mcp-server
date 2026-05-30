@@ -1,0 +1,9 @@
+{
+  "stdio": {
+    "check-adb": false,
+    "log-level": "error",
+    "print-tags": false,
+    "show-fastmcp-banner": false,
+    "fix-empty-responses": true
+  }
+}

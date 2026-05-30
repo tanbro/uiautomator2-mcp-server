@@ -50,6 +50,7 @@ mcp-name: io.github.tanbro/uiautomator2-mcp-server
 - 🧰 **70+ 工具** - 点一点、滑一滑、输文字、管应用 — 全都有
 - 🧪 **自带测试** - 开箱即用的 AI 驱动 UI 测试框架
 - 🔄 **两种模式** - STDIO 本地用，HTTP 远程用
+- ⚙️ **配置文件** - 支持 TOML/YAML/JSON 配置文件，自动发现
 - 🔒 **代码干净** - 有类型、有检查、有格式 — 容易扩展
 
 ## 🎯 使用场景
@@ -341,10 +342,10 @@ uvx uiautomator2-mcp-server stdio
 
 ```bash
 # 如果已安装
-u2mcp http -H 0.0.0.0 -p 8000 -n
+u2mcp http -H 0.0.0.0 -p 8000 --no-auth
 
 # 或直接运行无需安装
-uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -n
+uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 --no-auth
 
 # 带认证令牌（如果已安装）
 u2mcp http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
@@ -354,6 +355,95 @@ uvx uiautomator2-mcp-server http -H 0.0.0.0 -p 8000 -t YOUR_SECRET_TOKEN
 ```
 
 服务器将监听 `http://localhost:8000/mcp`（或你指定的主机/端口）。
+
+### 配置文件
+
+你可以使用配置文件来代替（或补充）CLI 参数。支持 **TOML**、**YAML** 和 **JSON** 格式。
+
+#### 配置文件位置
+
+服务器会自动在以下平台相关目录中查找配置文件：
+
+| 优先级 | 位置 | 平台示例 |
+|--------|------|----------|
+| 1（最低） | 系统配置目录 | `/etc/u2mcp/`（Linux）、`C:\ProgramData\u2mcp\`（Windows） |
+| 2 | 用户配置目录 | `~/.config/u2mcp/`（Linux）、`%APPDATA%\u2mcp\`（Windows） |
+| 3（最高） | 当前工作目录 | `./` |
+
+在每个目录中，服务器按顺序查找第一个匹配的文件：`u2mcp.toml`、`u2mcp.yaml`、`u2mcp.yml`、`u2mcp.json`（每个目录最多匹配一个文件）。
+
+优先级顺序：**CLI 参数 > 环境变量 > 配置文件（当前目录 > 用户目录 > 系统目录） > 默认值**。
+
+#### 指定配置文件
+
+```bash
+# 通过 CLI 选项
+u2mcp stdio --config-file my-config.toml
+
+# 通过环境变量
+U2MCP_CONFIG_FILE=my-config.toml u2mcp stdio
+```
+
+#### 配置文件结构
+
+配置文件使用命令名作为顶级键：
+
+```toml
+# u2mcp.toml
+[stdio]
+log-level = "debug"
+check-adb = false
+include-tags = "device:*,action:touch"
+
+[http]
+host = "0.0.0.0"
+port = 8000
+auth = true
+json-response = true
+```
+
+```yaml
+# u2mcp.yaml
+stdio:
+  log-level: debug
+  check-adb: false
+
+http:
+  host: "0.0.0.0"
+  port: 8000
+  auth: false
+```
+
+```json
+{
+  "stdio": {
+    "log-level": "warning",
+    "print-tags": false
+  }
+}
+```
+
+#### 环境变量
+
+CLI 参数可以通过 `U2MCP_{命令}_{参数}` 格式的环境变量设置：
+
+```bash
+U2MCP_STDIO_LOG_LEVEL=debug u2mcp stdio
+U2MCP_HTTP_HOST=0.0.0.0 U2MCP_HTTP_PORT=9000 u2mcp http
+U2MCP_HTTP_AUTH=false u2mcp http
+```
+
+#### 示例配置文件
+
+参见 [`examples/`](examples/) 目录获取可直接使用的配置文件：
+
+| 文件 | 说明 |
+|------|------|
+| [`config-minimal-stdio.toml`](examples/config-minimal-stdio.toml) | 最小化 stdio 静默配置 |
+| [`config-full.toml`](examples/config-full.toml) | 完整配置，包含 stdio、http 和 doctor 部分 |
+| [`config-filtered-tools.toml`](examples/config-filtered-tools.toml) | 按标签过滤工具 |
+| [`config-http-server.yaml`](examples/config-http-server.yaml) | YAML 格式的 HTTP 服务器配置 |
+| [`config-quiet-mode.json`](examples/config-quiet-mode.json) | JSON 格式的静默模式配置 |
 
 ### CLI 实用命令
 
@@ -455,7 +545,7 @@ u2mcp tags
 - `-H` / `--host` - 设置主机地址（HTTP 模式）
 - `-p` / `--port` - 设置端口号（HTTP 模式）
 - `-t` / `--token` - 设置认证令牌（HTTP 模式）
-- `-n` / `--no-token` - 禁用令牌验证（HTTP 模式）
+- `-n` / `--no-auth` - 禁用认证（HTTP 模式）
 
 **通配符支持：**
 
@@ -654,7 +744,7 @@ Arguments: stdio
 **选项 C: HTTP 模式**
 首先启动服务器：
 ```bash
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http --host 0.0.0.0 --port 8000 --no-auth
 ```
 
 然后在 Cherry Studio 中，选择 HTTP 模式并输入：
@@ -687,7 +777,7 @@ Arguments: stdio
 **HTTP 模式**
 首先启动服务器：
 ```bash
-u2mcp http --host 0.0.0.0 --port 8000 --no-token
+u2mcp http --host 0.0.0.0 --port 8000 --no-auth
 ```
 
 然后在 ChatMCP 中，选择 HTTP 模式并输入：
@@ -736,7 +826,7 @@ Continue 是 VS Code 和 JetBrains 的 AI 结对程序员扩展。
 对于支持 HTTP 连接的客户端（或用于远程访问），首先启动服务器：
 
 ```bash
-u2mcp http -H 0.0.0.0 -p 8000 -n
+u2mcp http -H 0.0.0.0 -p 8000 --no-auth
 ```
 
 然后配置你的客户端连接到 `http://localhost:8000/mcp`。

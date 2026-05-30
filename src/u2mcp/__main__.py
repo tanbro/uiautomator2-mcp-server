@@ -7,18 +7,51 @@ import logging
 import re
 import secrets
 import sys
+from pathlib import Path
 from typing import Annotated, Any, Literal
 
 import anyio
 from cyclopts import App, Group, Parameter
+from cyclopts.config import Env
 from cyclopts.exceptions import ValidationError
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
+from rich.text import Text
 
-from .health import check_adb, run_doctor
+from .config import ENV_PREFIX, resolve_config
 from .helpers import print_tags as print_tags_from_mcp
 from .helpers import print_tool_help
-from .mcp import make_mcp
 from .version import __version__
+
+
+class CustomElapsedColumn(TimeElapsedColumn):
+    """Elapsed time with 0.1s precision."""
+
+    def render(self, task):
+        elapsed = task.elapsed
+        if elapsed is None:
+            return Text("-.---s")
+        return Text(f"{elapsed:.1f}s")
+
+
+def initial_mcp(console: Console, check_adb: bool = False, **kwargs):
+    """Load heavy deps, optionally check ADB, and build MCP server with a spinner."""
+    progress = Progress(SpinnerColumn(), CustomElapsedColumn(), console=console, transient=True)
+    progress.start()
+    progress.add_task("", total=None)
+
+    if check_adb:
+        # adbutils is heavy, so we only import it when needed
+        from .health import check_adb as _check_adb
+
+        if not _check_adb(console):
+            console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
+
+    from .mcp import make_mcp
+
+    mcp = make_mcp(console=console, progress=progress, **kwargs)
+    return mcp
+
 
 # Organize commands into groups
 server_group = Group("Server Commands")
@@ -34,7 +67,7 @@ app = App(
 )
 
 
-def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]):
+def setup_logging(log_level: Literal["debug", "info", "warning", "error", "critical"]):
     """Configure logging for the MCP server."""
     logging.basicConfig(
         level=log_level.upper(),
@@ -48,13 +81,7 @@ def _setup_logging(log_level: Literal["debug", "info", "warning", "error", "crit
     logging.getLogger("fakeredis").setLevel(logging.WARNING)
 
 
-def _check_adb(console: Console, check: bool):
-    """Check ADB availability if enabled."""
-    if check and not check_adb(console):
-        console.print("[yellow]Proceeding anyway. Use --no-check-adb to bypass this check.[/yellow]")
-
-
-def _validate_token(token: str) -> str:
+def validate_token(token: str) -> str:
     """Validate token format."""
     token = token.strip()
     if not re.match(r"^[a-zA-Z0-9\-_.~!$&'()*+,;=:@]{8,64}$", token):
@@ -88,17 +115,18 @@ def stdio(
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
-    _setup_logging(log_level)
-    _check_adb(Console(stderr=True), check_adb)
+    console = Console(stderr=True)
+    setup_logging(log_level)
 
-    mcp = make_mcp(
+    mcp = initial_mcp(
+        console,
+        check_adb=check_adb,
         print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
-    # v3: run() API - show_banner is now a parameter, transport is a string
     mcp.run(transport="stdio", show_banner=show_fastmcp_banner, log_level=log_level)
 
 
@@ -108,7 +136,7 @@ def http(
     host: Annotated[str | None, Parameter(name=["--host", "-H"])] = None,
     port: Annotated[int | None, Parameter(name=["--port", "-p"])] = None,
     token: Annotated[str | None, Parameter(name=["--token", "-t"])] = None,
-    no_token: Annotated[bool, Parameter(name=["--no-token", "-n"])] = False,
+    auth: bool = True,
     json_response: bool = True,
     check_adb: bool = True,
     log_level: Annotated[
@@ -127,7 +155,7 @@ def http(
         host: Host address to bind to.
         port: Port number to bind to.
         token: Explicit set authentication token.
-        no_token: Disable authentication bearer token verification. If not set, a token will be generated randomly.
+        auth: Enable authentication. If enabled and no token is set, a random one will be generated.
         json_response: Use JSON response format.
         check_adb: Check ADB availability at startup.
         log_level: Log level.
@@ -138,23 +166,26 @@ def http(
         fix_empty_responses: Convert null tool responses to empty string compatibility.
         show_fastmcp_banner: Show FastMCP banner on startup.
     """
-    _setup_logging(log_level)
-    _check_adb(Console(stderr=True), check_adb)
+    console = Console(stderr=True)
+    setup_logging(log_level)
 
+    user_provided = bool(token)
     if token:
-        token = _validate_token(token)
-    elif not no_token:
+        token = validate_token(token)
+    elif auth:
         token = secrets.token_urlsafe()
 
-    mcp = make_mcp(
-        token,
+    mcp = initial_mcp(
+        console,
+        check_adb=check_adb,
+        token=token,
+        user_provided_token=user_provided,
         print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
-    # v3: transport config as keyword parameters
     transport_kwargs: dict[str, Any] = {"log_level": log_level}
     if host is not None:
         transport_kwargs["host"] = host
@@ -169,8 +200,9 @@ def http(
 @app.command(group=info_group)
 def tools():
     """List all available MCP tools."""
+
     console = Console()
-    mcp = make_mcp()
+    mcp = initial_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, None))
 
 
@@ -187,7 +219,7 @@ def info(tool_name: str):
         tool_name: Tool name or pattern (supports * and ? wildcards).
     """
     console = Console()
-    mcp = make_mcp()
+    mcp = initial_mcp(console)
     anyio.run(lambda: print_tool_help(mcp, console, tool_name))
 
 
@@ -195,8 +227,8 @@ def info(tool_name: str):
 def tags():
     """List all available tool tags."""
     console = Console()
-    mcp = make_mcp()
-    anyio.run(lambda: print_tags_from_mcp(mcp, console, filtered=False))
+    mcp = initial_mcp(console)
+    anyio.run(lambda: print_tags_from_mcp(mcp, console))
 
 
 @app.command(group=doctor_group)
@@ -226,22 +258,51 @@ def doctor(
     Returns:
         Exit code: 0 (all passed), 1 (some failed), 2 (doctor error).
     """
+    # adbutils is heavy, so we don't want to import it unless we need it
+    from .health import run_doctor
+
     sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
+
+
+env_loader = Env(prefix=ENV_PREFIX)
+
+
+@app.meta.default
+def meta(
+    *tokens: Annotated[str, Parameter(show=False, allow_leading_hyphen=True)],
+    config_file: Annotated[Path | None, Parameter(name=["--config-file", "-c"])] = None,
+):
+    """Run the MCP server with configuration from files.
+
+    Args:
+        config_file: Path to config file (TOML, YAML, or JSON). Overrides auto-discovery.
+    """
+    app.config = [*resolve_config(config_file), env_loader]
+    app(tokens)
+
+
+# Env loader for meta-level params (e.g. U2MCP_CONFIG_FILE -> --config-file)
+app.meta.config = env_loader
 
 
 def main():
     """Entry point for the CLI."""
     try:
-        app()
+        app.meta()
     except KeyboardInterrupt:
         pass
     except asyncio.CancelledError:
         pass
     except BaseException as exc:
         # anyio cancel scopes may raise RuntimeError during cancellation
-        # when the scope chain is broken by Ctrl-C shutdown.
-        # Only suppress if the chain originates from CancelledError.
-        if not isinstance(exc.__context__, asyncio.CancelledError):
+        # when the scope chain is broken by Ctrl-C or stdin close during shutdown.
+        # Only suppress if the chain originates from CancelledError or if this is
+        # an anyio cancel-scope mismatch (harmless during teardown).
+        if isinstance(exc.__context__, asyncio.CancelledError):
+            pass
+        elif isinstance(exc, RuntimeError) and "cancel scope" in str(exc):
+            pass
+        else:
             raise exc from None
 
 

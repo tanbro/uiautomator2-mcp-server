@@ -1,0 +1,12 @@
+# YAML config example
+# Usage: u2mcp stdio --config-file examples/config-http-server.yaml
+
+http:
+  host: "0.0.0.0"
+  port: 9000
+  auth: false
+  json-response: true
+  check-adb: true
+  log-level: "info"
+  print-tags: false
+  show-fastmcp-banner: false
