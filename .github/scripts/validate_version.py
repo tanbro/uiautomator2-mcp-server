@@ -43,7 +43,7 @@ def write_github_output(key: str, value: str):
             with open(g, "a", encoding="utf-8") as fh:
                 fh.write(out_line)
             return
-        except Exception:
+        except Exception:  # noqa: BLE001, S110
             # Fallthrough to printing if file write fails
             pass
     # fallback: print to stdout so it's visible in logs

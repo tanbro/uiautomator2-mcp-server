@@ -170,6 +170,7 @@ async def screen_on(serial: str):
     """
     ...
 
+
 # Bad - redundant None
 async def screen_on(serial: str) -> None:
     """Turn screen on.

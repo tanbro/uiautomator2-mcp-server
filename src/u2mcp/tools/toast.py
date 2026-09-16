@@ -7,8 +7,8 @@ from .device import get_device
 
 __all__ = (
     "get_toast",
-    "show_toast",
     "reset_toast",
+    "show_toast",
 )
 
 

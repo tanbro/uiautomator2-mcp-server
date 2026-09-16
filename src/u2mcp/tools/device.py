@@ -18,19 +18,19 @@ from PIL.Image import Image
 from ..mcp import get_xpath_timeout, mcp
 
 __all__ = (
-    "device_list",
-    "shell_command",
-    "init",
+    "activity_wait_appear",
     "connect",
+    "device_list",
     "disconnect",
     "disconnect_all",
-    "window_size",
-    "screenshot",
-    "save_screenshot",
     "dump_hierarchy",
-    "save_dump_hierarchy",
     "info",
-    "activity_wait_appear",
+    "init",
+    "save_dump_hierarchy",
+    "save_screenshot",
+    "screenshot",
+    "shell_command",
+    "window_size",
 )
 
 
@@ -135,7 +135,6 @@ async def connect(serial: str = "") -> dict[str, Any]:
     Returns:
         dict[str,Any]: Device information
     """
-    global _devices
     device: u2.Device | None = None
 
     logger = get_logger(f"{__name__}.connect")
@@ -224,7 +223,7 @@ async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) ->
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
 
     if not isinstance(im, Image):
-        raise RuntimeError("Invalid image")
+        raise TypeError("Invalid image")
 
     with closing(im):
         with BytesIO() as fp:
@@ -256,7 +255,7 @@ async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
         if not isinstance(im, Image):
-            raise RuntimeError("Invalid image")
+            raise TypeError("Invalid image")
 
     with closing(im):
         # Convert path to Path object and resolve

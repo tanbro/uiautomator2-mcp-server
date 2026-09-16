@@ -12,22 +12,22 @@ from ..mcp import mcp
 from .device import get_device
 
 __all__ = (
-    "xpath_wait_appear",
-    "xpath_wait_gone",
-    "xpath_exists",
     "xpath_click",
     "xpath_click_nowait",
-    "xpath_long_press",
-    "xpath_screenshot",
-    "xpath_save_screenshot",
-    "xpath_get_text",
-    "xpath_set_text",
+    "xpath_exists",
+    "xpath_get_attrib",
     "xpath_get_bounds",
     "xpath_get_info",
-    "xpath_get_attrib",
-    "xpath_swipe",
+    "xpath_get_text",
+    "xpath_long_press",
+    "xpath_save_screenshot",
+    "xpath_screenshot",
     "xpath_scroll",
     "xpath_scroll_to",
+    "xpath_set_text",
+    "xpath_swipe",
+    "xpath_wait_appear",
+    "xpath_wait_gone",
 )
 
 
@@ -119,7 +119,7 @@ async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, i
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
     if not isinstance(im, Image):
-        raise RuntimeError("Invalid image")
+        raise TypeError("Invalid image")
 
     with closing(im):
         with BytesIO() as fp:
@@ -149,7 +149,7 @@ async def xpath_save_screenshot(serial: str, xpath: str, file: str) -> str:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
     if not isinstance(im, Image):
-        raise RuntimeError("Invalid image")
+        raise TypeError("Invalid image")
 
     with closing(im):
         file_path = Path(file)

@@ -7,7 +7,7 @@ from ..background import get_background_task_group
 from ..mcp import mcp
 from .device import get_device
 
-__all__ = ("screen_record_start", "screen_record_stop", "screen_record")
+__all__ = ("screen_record", "screen_record_start", "screen_record_stop")
 
 
 # Global tracking of recording status

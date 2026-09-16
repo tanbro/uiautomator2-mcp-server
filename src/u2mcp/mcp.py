@@ -32,7 +32,7 @@ if sys.version_info >= (3, 12):  # pragma: no cover
 else:  # pragma: no cover
     from typing_extensions import override
 
-__all__ = ["mcp", "make_mcp"]
+__all__ = ["make_mcp", "mcp"]
 
 
 # Global MCP instance.
@@ -163,10 +163,10 @@ class _SimpleTokenAuthProvider(AuthProvider):
     def __init__(
         self,
         base_url: AnyHttpUrl | str | None = None,
-        required_scopes: list[str] | None = ["mcp:tools"],
+        required_scopes: list[str] | None = None,
         token: str | None = None,
     ):
-        super().__init__(base_url, required_scopes)
+        super().__init__(base_url, required_scopes if required_scopes else ["mcp:tools"])
         self.token = token
 
     @override
@@ -189,7 +189,7 @@ def make_mcp(
 ) -> FastMCP:
     global mcp, _xpath_timeout
     _xpath_timeout = xpath_timeout
-    params: dict[str, Any] = dict(name="uiautomator2", instructions=__doc__)
+    params: dict[str, Any] = {"name": "uiautomator2", "instructions": __doc__}
     lifespan_kwargs: dict[str, Any] = {
         "print_tags": print_tags,
         "include_tags": include_tags,

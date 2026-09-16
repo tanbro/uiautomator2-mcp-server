@@ -298,9 +298,9 @@ def main():
         # when the scope chain is broken by Ctrl-C or stdin close during shutdown.
         # Only suppress if the chain originates from CancelledError or if this is
         # an anyio cancel-scope mismatch (harmless during teardown).
-        if isinstance(exc.__context__, asyncio.CancelledError):
-            pass
-        elif isinstance(exc, RuntimeError) and "cancel scope" in str(exc):
+        if isinstance(exc.__context__, asyncio.CancelledError) or (
+            isinstance(exc, RuntimeError) and "cancel scope" in str(exc)
+        ):
             pass
         else:
             raise exc from None
