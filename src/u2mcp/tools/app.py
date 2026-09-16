@@ -8,18 +8,18 @@ from ..mcp import mcp
 from .device import get_device
 
 __all__ = (
+    "app_auto_grant_permissions",
+    "app_clear",
+    "app_current",
+    "app_info",
     "app_install",
-    "app_uninstall",
-    "app_uninstall_all",
+    "app_list",
+    "app_list_running",
     "app_start",
     "app_stop",
     "app_stop_all",
-    "app_clear",
-    "app_info",
-    "app_current",
-    "app_list",
-    "app_list_running",
-    "app_auto_grant_permissions",
+    "app_uninstall",
+    "app_uninstall_all",
 )
 
 

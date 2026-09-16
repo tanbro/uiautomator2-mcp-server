@@ -7,14 +7,14 @@ from .device import get_device
 
 __all__ = (
     "click",
-    "long_click",
     "double_click",
+    "drag",
+    "long_click",
+    "press_key",
+    "screen_off",
+    "screen_on",
     "swipe",
     "swipe_points",
-    "drag",
-    "press_key",
-    "screen_on",
-    "screen_off",
 )
 
 

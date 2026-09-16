@@ -8,10 +8,10 @@ from ..mcp import mcp
 from .device import get_device
 
 __all__ = (
-    "set_orientation",
     "get_orientation",
     "open_notification",
     "open_quick_settings",
+    "set_orientation",
     "unlock",
 )
 

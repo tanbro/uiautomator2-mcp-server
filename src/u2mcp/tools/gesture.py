@@ -6,11 +6,11 @@ from ..mcp import mcp
 from .device import get_device
 
 __all__ = (
+    "swipe_down",
     "swipe_ext",
     "swipe_left",
     "swipe_right",
     "swipe_up",
-    "swipe_down",
 )
 
 

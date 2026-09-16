@@ -28,7 +28,7 @@ EXTENSION_MAP: Mapping[str, type[ConfigFromFile]] = OrderedDict(
     }
 )
 
-CONFIG_FILENAMES = tuple(f"{APP_NAME}{ext}" for ext in EXTENSION_MAP.keys())
+CONFIG_FILENAMES = tuple(f"{APP_NAME}{ext}" for ext in EXTENSION_MAP)
 
 ENV_PREFIX = f"{APP_NAME.upper()}_"
 

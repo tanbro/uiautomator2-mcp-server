@@ -13,7 +13,7 @@ import anyio
 from anyio import to_thread
 from rich.console import Console
 
-__all__ = ["check_adb", "CheckStatus", "CheckResult", "run_doctor"]
+__all__ = ["CheckResult", "CheckStatus", "check_adb", "run_doctor"]
 
 
 class CheckStatus:
@@ -72,7 +72,7 @@ def check_adb_doctor(verbose: bool = False) -> CheckResult:
             details=details,
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return CheckResult(
             category="adb",
             status=CheckStatus.FAILED,
@@ -99,7 +99,7 @@ def check_adb(console: Console | None = None) -> bool:
         console.print(f"[green]✓ ADB device list:    {adb_device_list}[/green]")
         return True
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         console.print(f"[yellow]⚠ Cannot connect to ADB: {e}[/yellow]")
         console.print()
 
@@ -220,7 +220,7 @@ async def check_devices_async(verbose: bool = False) -> CheckResult:
             details={"count": len(devices), "devices": device_info if verbose else [d["serial"] for d in device_info]},
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return CheckResult(
             category="devices",
             status=CheckStatus.WARNING,
@@ -275,7 +275,7 @@ async def check_u2_init_async(verbose: bool = False) -> CheckResult:
                 # Try to get session info to verify initialization
                 _ = device.session
                 initialized.append(device_adb.serial)
-            except Exception:
+            except Exception:  # noqa: BLE001
                 not_initialized.append(device_adb.serial)
 
         if not_initialized:
@@ -297,7 +297,7 @@ async def check_u2_init_async(verbose: bool = False) -> CheckResult:
             details={"devices": initialized if verbose else len(initialized)},
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return CheckResult(
             category="u2_init",
             status=CheckStatus.WARNING,
@@ -359,7 +359,7 @@ def check_mcp_tools(verbose: bool = False) -> CheckResult:
             details={"count": tool_count},
         )
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         return CheckResult(
             category="mcp_tools",
             status=CheckStatus.FAILED,
@@ -500,21 +500,20 @@ def run_doctor(
             _print_check_result(console, result, verbose)
 
             # Attempt auto-fix if requested
-            if fix and result.status == CheckStatus.FAILED:
-                if cat == "u2_init" and result.details.get("not_initialized"):
-                    console.print("[cyan]Attempting to initialize uiautomator2...[/cyan]")
-                    try:
-                        import uiautomator2 as u2
+            if fix and result.status == CheckStatus.FAILED and cat == "u2_init" and result.details.get("not_initialized"):
+                console.print("[cyan]Attempting to initialize uiautomator2...[/cyan]")
+                try:
+                    import uiautomator2 as u2
 
-                        for serial in result.details["not_initialized"]:
-                            device = u2.connect(serial)
-                            console.print(f"  Initializing {serial}...")
-                            device.shell("pm list packages")  # Simple test
-                            console.print(f"  [green]✓ {serial} initialized[/green]")
-                    except Exception as e:
-                        console.print(f"  [red]✗ Auto-fix failed: {e}[/red]")
+                    for serial in result.details["not_initialized"]:
+                        device = u2.connect(serial)
+                        console.print(f"  Initializing {serial}...")
+                        device.shell("pm list packages")  # Simple test
+                        console.print(f"  [green]✓ {serial} initialized[/green]")
+                except Exception as e:  # noqa: BLE001
+                    console.print(f"  [red]✗ Auto-fix failed: {e}[/red]")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             console.print(f"[red]✗ Error running {cat} check: {e}[/red]")
             results.append(
                 CheckResult(

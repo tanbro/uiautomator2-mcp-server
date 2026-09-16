@@ -6,10 +6,10 @@ from ..mcp import mcp
 from .device import get_device
 
 __all__ = (
-    "send_text",
-    "set_focused_text",
     "clear_text",
     "hide_keyboard",
+    "send_text",
+    "set_focused_text",
 )
 
 

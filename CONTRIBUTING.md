@@ -98,6 +98,7 @@ When adding new features, please include appropriate tests:
    ```python
    from unittest.mock import AsyncMock, MagicMock, patch
 
+
    @pytest.mark.unit
    async def test_my_tool(mock_u2_device: MagicMock):
        # Arrange
@@ -182,6 +183,7 @@ To add a new MCP tool:
    from u2mcp.mcp import mcp
    from u2mcp.device import get_device
    from anyio import to_thread
+
 
    @mcp.tool("my_tool")
    async def my_tool(serial: str, param: str) -> dict[str, Any]:
