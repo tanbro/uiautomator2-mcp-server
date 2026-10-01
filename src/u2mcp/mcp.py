@@ -211,7 +211,10 @@ def make_mcp(
     if fix_empty_responses:
         mcp.add_middleware(EmptyResponseMiddleware())
 
-    # Import tools to register them with the MCP
-    from . import tools as _  # noqa: F401
+    # Register tools explicitly: importing the tool modules runs their
+    # @mcp.tool decorators against the global instance created above.
+    from .tools import register_tools
+
+    register_tools()
 
     return mcp

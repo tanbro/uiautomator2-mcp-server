@@ -1,15 +1,9 @@
 from __future__ import annotations
 
-from base64 import b64encode
-from contextlib import closing
-from io import BytesIO
-from pathlib import Path
-
 from anyio import to_thread
-from PIL.Image import Image
 
 from ..mcp import mcp
-from .device import get_device
+from .device import encode_image, ensure_image, get_device, save_image
 
 __all__ = (
     "xpath_click",
@@ -118,19 +112,7 @@ async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, i
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
-    if not isinstance(im, Image):
-        raise TypeError("Invalid image")
-
-    with closing(im):
-        with BytesIO() as fp:
-            im.save(fp, format)
-            im_data = fp.getvalue()
-
-        return (
-            f"data:image/{format};base64," + b64encode(im_data).decode(),
-            im.height,
-            im.width,
-        )
+    return encode_image(ensure_image(im), format)
 
 
 @mcp.tool("xpath_save_screenshot", tags={"xpath:capture"})
@@ -148,15 +130,7 @@ async def xpath_save_screenshot(serial: str, xpath: str, file: str) -> str:
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
-    if not isinstance(im, Image):
-        raise TypeError("Invalid image")
-
-    with closing(im):
-        file_path = Path(file)
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        im.save(file_path)
-
-    return file_path.resolve().as_posix()
+    return save_image(ensure_image(im), file)
 
 
 @mcp.tool("xpath_get_text", tags={"xpath:query"})

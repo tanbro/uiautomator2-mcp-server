@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from anyio.abc import TaskGroup
 
-# Global task group for background tasks (set by lifespan)
-_task_group: TaskGroup
+# Global task group for background tasks (set by lifespan, None before that)
+_task_group: TaskGroup | None = None
 
 
-def get_background_task_group() -> TaskGroup:
-    """Get the global background task group."""
+def get_background_task_group() -> TaskGroup | None:
+    """Get the global background task group, or None if the server has not started."""
     return _task_group
 
 

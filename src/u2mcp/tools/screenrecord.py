@@ -27,6 +27,8 @@ async def screen_record_start(serial: str, file: str, duration: float) -> str:
         str: Output file path.
     """
     task_group = get_background_task_group()
+    if task_group is None:
+        raise RuntimeError("Background task group not initialized - server not started?")
 
     async def run_recording(task_status: TaskStatus):
         _recording_active[serial] = True

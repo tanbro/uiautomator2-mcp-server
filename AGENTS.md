@@ -93,6 +93,13 @@ pytest --cov=src/u2mcp --cov-report=html
 - `slow` - Slow running tests
 - `device` - Tests that require actual Android device
 
+## Testing Rules (Mandatory)
+
+- **Use pytest exclusively. Never import stdlib `unittest` anywhere in the project — this includes `unittest.mock`** (`MagicMock`, `patch`, `TestCase`, etc.).
+- Patch with pytest's built-in `monkeypatch` fixture (`monkeypatch.setattr`) for simple attribute/module patching.
+- For mock objects and `patch`-style auto-restore patching, use the `pytest-mock` plugin's `mocker` fixture (`mocker.MagicMock()`, `mocker.patch(...)`).
+- Assert with plain `assert` statements; never use `unittest`'s `assertEqual`-style methods.
+
 ## Code Style
 
 - Python >= 3.11

@@ -62,7 +62,11 @@ issues = "https://github.com/tanbro/uiautomator2-mcp-server/issues"
 repository = "https://github.com/tanbro/uiautomator2-mcp-server.git"
 
 [dependency-groups]
-dev = [{include-group = "typing"}, {include-group = "test"}]
+dev = [
+    {include-group = "typing"},
+    {include-group = "test"},
+    "pytest-mock>=3.15.1",
+]
 nuitka = ["nuitka", "importlib-metadata"]
 pyinstaller = ["PyInstaller"]
 test = ["pytest", "pytest-asyncio", "pytest-cov", "pytest-mock"]
