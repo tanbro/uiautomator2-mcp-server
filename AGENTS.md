@@ -256,14 +256,14 @@ Do NOT include usage examples in tool function docstrings unless absolutely crit
 ## Adding New Tools
 
 1. Create tool function in appropriate `tools/*.py` module
-2. Decorate with `@mcp.tool("tool_name", tags={"category:subcategory"})`
+2. Decorate with `@mcp.tool("tool_name", tags={"category", "category:subcategory"})`
 3. Use `get_device(serial)` context manager for device access
 4. Run CPU-bound operations in `to_thread.run_sync()`
 5. Use FastMCP context for user feedback: `get_context().info()`
 6. Write docstrings in **Google style format** for proper parsing by `info` command:
 
 ```python
-@mcp.tool("my_tool", tags={"device:info"})
+@mcp.tool("my_tool", tags={"device", "device:info"})
 async def my_tool(serial: str, param: str) -> dict[str, Any]:
     """Brief one-line description.
 
@@ -283,22 +283,24 @@ async def my_tool(serial: str, param: str) -> dict[str, Any]:
 
 ### Tool Tags
 
-All tools should be tagged using the `category:subcategory` format for selective filtering:
+All tools carry two tags: a bare category and a `category:subcategory` tag, so a bare category tag selects the whole category:
 
 | Category | Subcategories |
 |----------|---------------|
 | `device` | `manage`, `info`, `capture`, `shell` |
 | `action` | `touch`, `gesture`, `key`, `screen` |
 | `app` | `manage`, `lifecycle`, `info`, `config` |
-| `element` | `wait`, `interact`, `query`, `modify`, `gesture`, `capture` |
-| `input` | `text`, `keyboard` |
+| `xpath` | `wait`, `interact`, `query`, `gesture`, `capture` |
+| `gesture` | `edge` |
+| `input` | `text` |
 | `clipboard` | `read`, `write` |
-| `screen` | `mirror`, `capture` |
-| `util` | `delay` |
+| `screen` | `mirror`, `record`, `capture` |
+| `system` | `orientation`, `ui`, `toast` |
+| `util` | (bare tag only, for `delay`) |
 
 Example:
 ```python
-@mcp.tool("my_tool", tags={"device:info"})
+@mcp.tool("my_tool", tags={"device", "device:info"})
 async def my_tool(serial: str, param: str) -> dict[str, Any]:
     async with get_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.some_method(param))
@@ -336,9 +338,10 @@ u2mcp doctor             # Run comprehensive diagnostics
 u2mcp doctor -v          # Run diagnostics with verbose output
 u2mcp doctor -c device   # Run only device-related checks
 
-# Tool filtering - only expose specific tools (short options available)
-u2mcp stdio -i device:manage,action:touch
-u2mcp stdio -e screen:mirror,device:shell
+# Tool filtering - repeatable flags or lists in the config file
+u2mcp stdio -i device:manage -i action:touch
+u2mcp stdio -e screen:mirror -e device:shell
+u2mcp stdio --include-tools click --exclude-tools shell_command
 
 # Lint
 ruff check src/
@@ -355,8 +358,10 @@ mypy src/
 | Short | Long | Description |
 |-------|------|-------------|
 | `-l` | `--log-level` | Set log level |
-| `-i` | `--include-tags` | Include tools by tags |
-| `-e` | `--exclude-tags` | Exclude tools by tags |
+| `-i` | `--include-tags` | Include tools by tags (repeatable) |
+| `-e` | `--exclude-tags` | Exclude tools by tags (repeatable) |
+| (none) | `--include-tools` | Include tools by tool name (repeatable) |
+| (none) | `--exclude-tools` | Exclude tools by tool name (repeatable) |
 | `-H` | `--host` | Set host address (HTTP mode) |
 | `-p` | `--port` | Set port number (HTTP mode) |
 | `-t` | `--token` | Set authentication token (HTTP mode) |

@@ -8,7 +8,6 @@ Most tools require a device serial number to identify the target device.
 
 from __future__ import annotations
 
-import fnmatch
 import sys
 from contextlib import asynccontextmanager
 from functools import partial
@@ -50,43 +49,33 @@ def get_xpath_timeout() -> float:
     return _xpath_timeout
 
 
-def _parse_tags(tags: str | None) -> set[str] | None:
-    """Parse comma-separated tags string into a set."""
-    if not tags:
+def _normalize_filter(values: list[str] | None) -> set[str] | None:
+    """Normalize a filter list into a set, returning None when empty."""
+    if not values:
         return None
-    return {tag.strip() for tag in tags.split(",") if tag.strip()}
+    normalized = {v.strip() for v in values if v.strip()}
+    return normalized or None
 
 
-def _expand_wildcards(tags: set[str] | None, all_available_tags: set[str] | None) -> set[str] | None:
-    """Expand wildcard patterns in tags.
+async def _resolve_tool_names(
+    instance: FastMCP,
+    tags: list[str] | None,
+    tools: list[str] | None,
+) -> set[str]:
+    """Combine tag and tool filters into the set of tool names they select.
 
-    Supports:
-    - *  matches any characters
-    - ?  matches exactly one character
-    - device:*  matches all device:* tags
-    - *:shell  matches all shell tags (device:shell, etc.)
-
-    Examples:
-        device:* -> device:manage, device:info, device:capture, device:shell
-        *:shell -> device:shell
-        action:to* -> action:touch, action:tool (if exists)
+    Tags are matched against the tags of registered tools, so tag and
+    tool entries union together.
     """
-    if not tags or not all_available_tags:
-        return None
-
-    expanded = set()
-
-    for tag in tags:
-        if "*" in tag or "?" in tag:
-            # Use fnmatch for wildcard matching
-            for existing_tag in all_available_tags:
-                if fnmatch.fnmatch(existing_tag, tag):
-                    expanded.add(existing_tag)
-        else:
-            # No wildcard, add as-is
-            expanded.add(tag)
-
-    return expanded if expanded else None
+    tag_set = _normalize_filter(tags)
+    tool_set = _normalize_filter(tools)
+    if not tag_set:
+        return tool_set or set()
+    names = set(tool_set) if tool_set else set()
+    for tool in await instance.list_tools():
+        if (tool.tags or set()) & tag_set:
+            names.add(tool.name)
+    return names
 
 
 @asynccontextmanager
@@ -99,28 +88,27 @@ async def _lifespan(
     token: str | None = None,
     user_provided_token: bool = False,
     print_tags: bool = True,
-    include_tags: str | None = None,
-    exclude_tags: str | None = None,
+    include_tags: list[str] | None = None,
+    exclude_tags: list[str] | None = None,
+    include_tools: list[str] | None = None,
+    exclude_tools: list[str] | None = None,
 ):
 
     # Stop the startup spinner
     if progress is not None:
         progress.stop()
 
-    # Apply tag filters AFTER tools are registered (v3 API)
-    if include_tags is not None or exclude_tags is not None:
-        all_tools = await instance.list_tools()
-        all_tag_set: set[str] = set()
-        for tool in all_tools:
-            all_tag_set.update(tool.tags or [])
-
-        parsed_include_tags = _expand_wildcards(_parse_tags(include_tags), all_tag_set)
-        parsed_exclude_tags = _expand_wildcards(_parse_tags(exclude_tags), all_tag_set)
-
-        if parsed_include_tags is not None:
-            instance.enable(tags=parsed_include_tags, only=True)
-        if parsed_exclude_tags is not None:
-            instance.disable(tags=parsed_exclude_tags)
+    # Apply filters AFTER tools are registered via the native FastMCP
+    # enable/disable API: include acts as an allowlist (only=True) and
+    # exclude removes from it afterwards, taking precedence. Tags are
+    # resolved to tool names first so that tag and tool filters combine
+    # as a union (the native API intersects multiple criteria).
+    include_names = await _resolve_tool_names(instance, include_tags, include_tools)
+    if include_names:
+        instance.enable(names=include_names, only=True)
+    exclude_names = await _resolve_tool_names(instance, exclude_tags, exclude_tools)
+    if exclude_names:
+        instance.disable(names=exclude_names)
 
     # Show enabled tags and tools if requested
     if print_tags:
@@ -179,8 +167,10 @@ class _SimpleTokenAuthProvider(AuthProvider):
 def make_mcp(
     token: str | None = None,
     user_provided_token: bool = False,
-    include_tags: str | None = None,
-    exclude_tags: str | None = None,
+    include_tags: list[str] | None = None,
+    exclude_tags: list[str] | None = None,
+    include_tools: list[str] | None = None,
+    exclude_tools: list[str] | None = None,
     print_tags: bool = False,
     fix_empty_responses: bool = False,
     xpath_timeout: float = 20.0,
@@ -194,6 +184,8 @@ def make_mcp(
         "print_tags": print_tags,
         "include_tags": include_tags,
         "exclude_tags": exclude_tags,
+        "include_tools": include_tools,
+        "exclude_tools": exclude_tools,
     }
     if token:
         lifespan_kwargs["token"] = token

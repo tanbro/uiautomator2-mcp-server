@@ -12,7 +12,7 @@ __all__ = (
 )
 
 
-@mcp.tool("get_toast", tags={"toast:query"})
+@mcp.tool("get_toast", tags={"system", "system:toast"})
 async def get_toast(serial: str, wait_timeout: float = 10) -> str | None:
     """Get the most recent Android Toast message from the device.
 
@@ -34,7 +34,7 @@ async def get_toast(serial: str, wait_timeout: float = 10) -> str | None:
         )
 
 
-@mcp.tool("show_toast", tags={"toast:action"})
+@mcp.tool("show_toast", tags={"system", "system:toast"})
 async def show_toast(serial: str, text: str, duration: float = 1.0):
     """Display a Toast message on the Android device.
 
@@ -47,7 +47,7 @@ async def show_toast(serial: str, text: str, duration: float = 1.0):
         await to_thread.run_sync(lambda: device.toast.show(text, duration))
 
 
-@mcp.tool("reset_toast", tags={"toast:action"})
+@mcp.tool("reset_toast", tags={"system", "system:toast"})
 async def reset_toast(serial: str):
     """Clear the cached Toast message on the device.
 

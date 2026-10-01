@@ -14,7 +14,7 @@ __all__ = ("screen_record", "screen_record_start", "screen_record_stop")
 _recording_active: dict[str, bool] = {}
 
 
-@mcp.tool("screen_record_start", tags={"screen:record"})
+@mcp.tool("screen_record_start", tags={"screen", "screen:record"})
 async def screen_record_start(serial: str, file: str, duration: float) -> str:
     """Start screen recording to file. Runs in background, use screen_record_stop to stop.
 
@@ -45,7 +45,7 @@ async def screen_record_start(serial: str, file: str, duration: float) -> str:
     return file
 
 
-@mcp.tool("screen_record_stop", tags={"screen:record"})
+@mcp.tool("screen_record_stop", tags={"screen", "screen:record"})
 async def screen_record_stop(serial: str):
     """Stop screen recording for the device. Stops any active background recording task.
 
@@ -55,7 +55,7 @@ async def screen_record_stop(serial: str):
     _recording_active.pop(serial, None)
 
 
-@mcp.tool("screen_record", tags={"screen:record"})
+@mcp.tool("screen_record", tags={"screen", "screen:record"})
 async def screen_record(serial: str, filename: str, fps: int = 20):
     """Record screen to file with blocking wait. For non-blocking recording use screen_record_start.
 

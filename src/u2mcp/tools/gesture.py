@@ -20,7 +20,7 @@ async def _swipe_ext_impl(serial: str, direction: str, scale: float):
         await to_thread.run_sync(device.swipe_ext, direction, scale)
 
 
-@mcp.tool("swipe_ext", tags={"gesture:edge"})
+@mcp.tool("swipe_ext", tags={"gesture", "gesture:edge"})
 async def swipe_ext(serial: str, direction: str, scale: float):
     """Swipe from screen edge.
 
@@ -32,7 +32,7 @@ async def swipe_ext(serial: str, direction: str, scale: float):
     await _swipe_ext_impl(serial, direction, scale)
 
 
-@mcp.tool("swipe_left", tags={"gesture:edge"})
+@mcp.tool("swipe_left", tags={"gesture", "gesture:edge"})
 async def swipe_left(serial: str, scale: float):
     """Swipe from right edge to left.
 
@@ -43,7 +43,7 @@ async def swipe_left(serial: str, scale: float):
     await _swipe_ext_impl(serial, "left", scale)
 
 
-@mcp.tool("swipe_right", tags={"gesture:edge"})
+@mcp.tool("swipe_right", tags={"gesture", "gesture:edge"})
 async def swipe_right(serial: str, scale: float):
     """Swipe from left edge to right.
 
@@ -54,7 +54,7 @@ async def swipe_right(serial: str, scale: float):
     await _swipe_ext_impl(serial, "right", scale)
 
 
-@mcp.tool("swipe_up", tags={"gesture:edge"})
+@mcp.tool("swipe_up", tags={"gesture", "gesture:edge"})
 async def swipe_up(serial: str, scale: float):
     """Swipe from bottom edge to top.
 
@@ -65,7 +65,7 @@ async def swipe_up(serial: str, scale: float):
     await _swipe_ext_impl(serial, "up", scale)
 
 
-@mcp.tool("swipe_down", tags={"gesture:edge"})
+@mcp.tool("swipe_down", tags={"gesture", "gesture:edge"})
 async def swipe_down(serial: str, scale: float):
     """Swipe from top edge to bottom.
 

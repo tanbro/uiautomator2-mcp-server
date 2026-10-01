@@ -393,7 +393,8 @@ U2MCP_CONFIG_FILE=my-config.toml u2mcp stdio
 [stdio]
 log-level = "debug"
 check-adb = false
-include-tags = "device:*,action:touch"
+include-tags = ["device:info", "action:touch"]
+exclude-tools = ["shell_command"]
 
 [http]
 host = "0.0.0.0"
@@ -486,34 +487,28 @@ u2mcp stdio -i device:manage
 uvx uiautomator2-mcp-server stdio -i device:manage
 
 # 只暴露触摸和手势操作
-u2mcp stdio -i action:touch,action:gesture
+u2mcp stdio -i action:touch -i action:gesture
 
 # 排除屏幕镜像工具
 u2mcp stdio -e screen:mirror
 
 # 只暴露应用生命周期和元素交互工具
-u2mcp stdio -i app:lifecycle,element:interact
+u2mcp stdio -i app:lifecycle -i xpath:interact
 
 # 排除 shell 命令工具（出于安全考虑）
 u2mcp stdio -e device:shell
 
 # 只暴露输入相关工具
-u2mcp stdio -i input:text,input:keyboard
+u2mcp stdio -i input:text
 
 # 组合使用 include 和 exclude
-u2mcp stdio -i device:info,action:touch -e screen:capture
+u2mcp stdio -i device:info -i action:touch -e screen:capture
 
-# 通配符模式 - 包含所有设备工具
-u2mcp stdio -i "device:*"
+# 裸分类标签暴露整个分类
+u2mcp stdio -i device
 
-# 通配符模式 - 包含所有触摸和手势工具
-u2mcp stdio -i "action:to*"
-
-# 通配符模式 - 排除所有屏幕工具
-u2mcp stdio -e "screen:*"
-
-# 通配符模式 - 排除所有镜像工具（screen:mirror 等）
-u2mcp stdio -e "*:mirror"
+# 按工具名过滤（而非标签）
+u2mcp stdio --include-tools click --include-tools screenshot
 
 # 列出所有可用标签
 u2mcp tags
@@ -547,44 +542,63 @@ u2mcp tags
 - `-t` / `--token` - 设置认证令牌（HTTP 模式）
 - `-n` / `--no-auth` - 禁用认证（HTTP 模式）
 
-**通配符支持：**
+**过滤选项：**
 
-`--include-tags` 和 `--exclude-tags` 选项支持通配符模式：
-- `*` 匹配任意字符
-- `?` 匹配恰好一个字符
-- `device:*` 匹配所有 device:* 标签
-- `*:mirror` 匹配所有镜像标签（screen:mirror 等）
-- `action:to*` 匹配 action:touch、action:tool（如果存在）
+`--include-tags`/`--exclude-tags` 和 `--include-tools`/`--exclude-tools` 通过重复 flag 或配置文件列表传值：
+
+```bash
+# 白名单：只暴露触摸操作和 screenshot 工具
+u2mcp stdio --include-tags action:touch --include-tools screenshot
+
+# 黑名单：暴露全部，但排除 shell 和镜像
+u2mcp stdio --exclude-tags device:shell --exclude-tags screen:mirror
+```
+
+include 过滤是白名单（只暴露匹配的工具）；exclude 过滤在其之后从中扣除，优先级更高。同一方向内，tag 与工具名过滤取并集。
+
+每个工具有两个标签：裸分类（如 `device`）和子分类（如 `device:capture`）。选择裸分类即暴露整个分类下的全部工具。
 
 **可用标签：**
 
 | 标签               | 描述                       |
 | ------------------ | -------------------------- |
+| `device`           | 全部设备工具               |
 | `device:manage`    | 设备连接、初始化和管理     |
 | `device:info`      | 设备信息和状态             |
 | `device:capture`   | 截图和 UI 层级             |
 | `device:shell`     | Shell 命令执行             |
+| `action`           | 全部触摸/手势/按键/屏幕工具 |
 | `action:touch`     | 点击和触摸操作             |
 | `action:gesture`   | 滑动和拖动手势             |
 | `action:key`       | 物理按键操作               |
 | `action:screen`    | 屏幕控制（开/关）          |
+| `app`              | 全部应用管理工具           |
 | `app:manage`       | 安装和卸载应用             |
 | `app:lifecycle`    | 启动和停止应用             |
 | `app:info`         | 应用信息和列表             |
 | `app:config`       | 应用配置（清除数据、权限） |
-| `element:wait`     | 等待元素/活动              |
-| `element:interact` | 点击和交互元素             |
-| `element:query`    | 获取元素信息（文本、边界） |
-| `element:modify`   | 修改元素（设置文本）       |
-| `element:gesture`  | 元素特定手势（滑动、滚动） |
-| `element:capture`  | 元素截图                   |
-| `input:text`       | 文本输入和清除             |
-| `input:keyboard`   | 键盘控制                   |
+| `xpath`            | 全部 XPath 元素工具        |
+| `xpath:wait`       | 等待元素出现/消失          |
+| `xpath:interact`   | 点击和交互元素             |
+| `xpath:query`      | 获取元素信息（文本、边界） |
+| `xpath:gesture`    | 元素特定手势（滑动、滚动） |
+| `xpath:capture`    | 元素截图                   |
+| `gesture`          | 边缘滑动手势               |
+| `gesture:edge`     | 定向边缘滑动               |
+| `input`            | 全部文本输入工具           |
+| `input:text`       | 文本输入、聚焦、清除、键盘 |
+| `clipboard`        | 全部剪贴板工具             |
 | `clipboard:read`   | 读取剪贴板                 |
 | `clipboard:write`  | 写入剪贴板                 |
+| `screen`           | 全部屏幕工具               |
 | `screen:mirror`    | 屏幕镜像（scrcpy）         |
+| `screen:record`    | 屏幕录制                   |
 | `screen:capture`   | 屏幕截图                   |
-| `util:delay`       | 延迟/休眠实用工具          |
+| `system`           | 全部系统控制工具           |
+| `system:orientation` | 设备方向控制             |
+| `system:ui`        | 通知、快捷设置、解锁       |
+| `system:toast`     | Toast 消息工具             |
+| `util`             | 实用工具（延迟/休眠）      |
 
 ## 测试和调试
 

@@ -106,7 +106,7 @@ def filter_hierarchy_xml(xml_str: str, xpath: str) -> str:
     return "\n===\n".join(etree.tostring(node, encoding="unicode") for node in nodes)
 
 
-@mcp.tool("init", tags={"device:manage"})
+@mcp.tool("init", tags={"device", "device:manage"})
 async def init(serial: str = ""):
     """Install essential resources (minicap, minitouch, uiautomator ...) to device.
 
@@ -126,7 +126,7 @@ async def init(serial: str = ""):
     return await to_thread.run_sync(cmd_init, args)
 
 
-@mcp.tool("purge", tags={"device:manage"})
+@mcp.tool("purge", tags={"device", "device:manage"})
 async def purge(serial: str = ""):
     """Purge all resources (minicap, minitouch, uiautomator ...) from device.
 
@@ -142,7 +142,7 @@ async def purge(serial: str = ""):
     return await to_thread.run_sync(cmd_purge, args)
 
 
-@mcp.tool("shell_command", tags={"device:shell"})
+@mcp.tool("shell_command", tags={"device", "device:shell"})
 async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple[int, str]:
     """Run a shell command on an Android device
 
@@ -159,7 +159,7 @@ async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple
         return return_value.returncode, return_value.output
 
 
-@mcp.tool("device_list", tags={"device:info"})
+@mcp.tool("device_list", tags={"device", "device:info"})
 async def device_list() -> list[dict[str, Any]]:
     """List of Adb Device with state:device
 
@@ -170,7 +170,7 @@ async def device_list() -> list[dict[str, Any]]:
     return [d.info for d in device_list]
 
 
-@mcp.tool("connect", tags={"device:manage"})
+@mcp.tool("connect", tags={"device", "device:manage"})
 async def connect(serial: str = "") -> dict[str, Any]:
     """Connect to an Android device
 
@@ -220,7 +220,7 @@ async def connect(serial: str = "") -> dict[str, Any]:
         return result
 
 
-@mcp.tool("disconnect", tags={"device:manage"})
+@mcp.tool("disconnect", tags={"device", "device:manage"})
 async def disconnect(serial: str):
     """Disconnect from an Android device
 
@@ -233,14 +233,14 @@ async def disconnect(serial: str):
         _devices.pop(serial, None)
 
 
-@mcp.tool("disconnect_all", tags={"device:manage"})
+@mcp.tool("disconnect_all", tags={"device", "device:manage"})
 async def disconnect_all():
     """Disconnect from all Android devices"""
     async with _global_device_connection_lock:
         _devices.clear()
 
 
-@mcp.tool("window_size", tags={"device:info"})
+@mcp.tool("window_size", tags={"device", "device:info"})
 async def window_size(serial: str) -> dict[str, int]:
     """Get window size of an Android device
 
@@ -257,7 +257,7 @@ async def window_size(serial: str) -> dict[str, int]:
         return {"width": width, "height": height}
 
 
-@mcp.tool("screenshot", tags={"device:capture", "screen:capture"})
+@mcp.tool("screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
 async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
@@ -281,7 +281,7 @@ async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) ->
     return {"image": data_url, "height": height, "width": width}
 
 
-@mcp.tool("save_screenshot", tags={"device:capture", "screen:capture"})
+@mcp.tool("save_screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
 async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
     """
     Save screenshot of device to file
@@ -302,7 +302,7 @@ async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
     return save_image(ensure_image(im), file)
 
 
-@mcp.tool("dump_hierarchy", tags={"device:capture"})
+@mcp.tool("dump_hierarchy", tags={"device", "device:capture"})
 async def dump_hierarchy(
     serial: str,
     compressed: bool = False,
@@ -335,7 +335,7 @@ async def dump_hierarchy(
     return filter_hierarchy_xml(xml_str, xpath)
 
 
-@mcp.tool("save_dump_hierarchy", tags={"device:capture"})
+@mcp.tool("save_dump_hierarchy", tags={"device", "device:capture"})
 async def save_dump_hierarchy(
     serial: str,
     file: str,
@@ -377,7 +377,7 @@ async def save_dump_hierarchy(
     return file_path.resolve().as_posix()
 
 
-@mcp.tool("info", tags={"device:info"})
+@mcp.tool("info", tags={"device", "device:info"})
 async def info(serial: str) -> dict[str, Any]:
     """
     Get device info
@@ -393,7 +393,7 @@ async def info(serial: str) -> dict[str, Any]:
         return await to_thread.run_sync(lambda: device.info)
 
 
-@mcp.tool("activity_wait_appear", tags={"device:wait"})
+@mcp.tool("activity_wait_appear", tags={"app", "app:lifecycle"})
 async def activity_wait_appear(serial: str, activity: str, timeout: float) -> bool:
     """Wait for an activity to appear.
 
