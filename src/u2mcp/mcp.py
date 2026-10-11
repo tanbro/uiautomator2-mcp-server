@@ -59,18 +59,16 @@ def _normalize_filter(values: list[str] | None) -> set[str] | None:
 
 async def _resolve_tool_names(
     instance: FastMCP,
-    tags: list[str] | None,
-    tools: list[str] | None,
+    tag_set: set[str] | None,
+    tool_set: set[str] | None,
 ) -> set[str]:
     """Combine tag and tool filters into the set of tool names they select.
 
     Tags are matched against the tags of registered tools, so tag and
     tool entries union together.
     """
-    tag_set = _normalize_filter(tags)
-    tool_set = _normalize_filter(tools)
     if not tag_set:
-        return tool_set or set()
+        return set(tool_set) if tool_set else set()
     names = set(tool_set) if tool_set else set()
     for tool in await instance.list_tools():
         if (tool.tags or set()) & tag_set:
@@ -102,12 +100,18 @@ async def _lifespan(
     # enable/disable API: include acts as an allowlist (only=True) and
     # exclude removes from it afterwards, taking precedence. Tags are
     # resolved to tool names first so that tag and tool filters combine
-    # as a union (the native API intersects multiple criteria).
-    include_names = await _resolve_tool_names(instance, include_tags, include_tools)
-    if include_names:
+    # as a union (the native API intersects multiple criteria). A non-empty
+    # include filter that matches nothing must expose nothing, so enable()
+    # runs even when the resolved set is empty.
+    include_tag_set = _normalize_filter(include_tags)
+    include_tool_set = _normalize_filter(include_tools)
+    if include_tag_set or include_tool_set:
+        include_names = await _resolve_tool_names(instance, include_tag_set, include_tool_set)
         instance.enable(names=include_names, only=True)
-    exclude_names = await _resolve_tool_names(instance, exclude_tags, exclude_tools)
-    if exclude_names:
+    exclude_tag_set = _normalize_filter(exclude_tags)
+    exclude_tool_set = _normalize_filter(exclude_tools)
+    if exclude_tag_set or exclude_tool_set:
+        exclude_names = await _resolve_tool_names(instance, exclude_tag_set, exclude_tool_set)
         instance.disable(names=exclude_names)
 
     # Show enabled tags and tools if requested

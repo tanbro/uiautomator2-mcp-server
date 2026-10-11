@@ -5,12 +5,13 @@ from __future__ import annotations
 import io
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 from rich.console import Console
 
 from u2mcp.__main__ import meta
-from u2mcp.mcp import _lifespan, _normalize_filter, make_mcp
+from u2mcp.mcp import FastMCP, _lifespan, _normalize_filter, make_mcp
 
 
 def make_console() -> Console:
@@ -35,10 +36,10 @@ class TestNormalizeFilter:
         assert _normalize_filter(["", "   "]) is None
 
 
-async def enabled_names(mcp, **filters) -> set[str]:
+async def enabled_names(instance: FastMCP, **filters: Any) -> set[str]:
     """Enter the lifespan with filters applied and collect enabled tool names."""
-    async with _lifespan(mcp, console=make_console(), print_tags=False, **filters):
-        tools = await mcp.list_tools()
+    async with _lifespan(instance, console=make_console(), print_tags=False, **filters):
+        tools = await instance.list_tools()
     return {t.name for t in tools}
 
 
@@ -52,6 +53,22 @@ class TestLifespanFiltering:
     async def test_include_tags_allowlist(self):
         names = await enabled_names(make_mcp(), include_tags=["action:touch"])
         assert names == {"click", "long_click", "double_click"}
+
+    async def test_include_tags_matching_nothing_exposes_nothing(self):
+        names = await enabled_names(make_mcp(), include_tags=["nonexistent:tag"])
+        assert names == set()
+
+    async def test_include_tools_matching_nothing_exposes_nothing(self):
+        names = await enabled_names(make_mcp(), include_tools=["no_such_tool"])
+        assert names == set()
+
+    async def test_include_unmatched_tag_with_matched_tool_unions(self):
+        names = await enabled_names(
+            make_mcp(),
+            include_tags=["nonexistent:tag"],
+            include_tools=["click"],
+        )
+        assert names == {"click"}
 
     async def test_include_bare_category_selects_whole_category(self):
         names = await enabled_names(make_mcp(), include_tags=["clipboard"])
@@ -109,7 +126,11 @@ def cli_server_mock(mocker):
     return mocker.patch("u2mcp.__main__.initial_mcp")
 
 
-def run_cli(cli_server_mock, *tokens, config_file: Path | None = None):
+def run_cli(
+    cli_server_mock: Any,
+    *tokens: str,
+    config_file: Path | None = None,
+) -> dict[str, Any]:
     """Dispatch CLI tokens through the meta command without running a server."""
     try:
         meta(*tokens, config_file=config_file)
