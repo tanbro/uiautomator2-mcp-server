@@ -1,14 +1,19 @@
-#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["packaging"]
+# ///
 
-"""Validate a tag in GITHUB_REF against PEP 440 and write `version=...` to GITHUB_OUTPUT.
+"""Decide whether the ref in GITHUB_REF qualifies as a release tag.
 
-This script is intentionally small and dependency-free except for `packaging`, which the
-workflow installs before calling this script.
+This script is intentionally small and dependency-free except for `packaging`,
+declared in the PEP-723 metadata above, which `uv run` resolves automatically.
 
 Behavior:
 - If GITHUB_REF is a tag (refs/tags/...): extract tag, strip a single leading 'v' if present.
-- Use packaging.Version to validate PEP 440. If valid, write `version=<tag>` to GITHUB_OUTPUT.
-- If invalid or no tag, write `version=` (empty) so downstream jobs can gate on it.
+- Use packaging.Version to check PEP 440. If valid (a PyPI-publishable version),
+  write `version=<tag>` to GITHUB_OUTPUT.
+- If invalid or no tag, write `version=` (empty) so downstream jobs treat this
+  ref as a non-release and skip build/publish.
 """
 
 from __future__ import annotations
@@ -16,11 +21,7 @@ from __future__ import annotations
 import os
 import sys
 
-try:
-    from packaging.version import InvalidVersion, Version
-except Exception:  # pragma: no cover - packaging may be missing if not installed
-    print("ERROR: packaging module is required to validate versions. Install packaging in CI.", file=sys.stderr)
-    raise
+from packaging.version import InvalidVersion, Version
 
 
 def get_candidate_from_ref(ref: str) -> str:
