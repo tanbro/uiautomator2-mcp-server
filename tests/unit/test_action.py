@@ -4,8 +4,6 @@ Unit tests for action tools (click, swipe, drag, etc.).
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
-
 import pytest
 
 from u2mcp.tools.action import (
@@ -27,7 +25,7 @@ from u2mcp.tools.input import (
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_click(mock_u2_device: MagicMock) -> None:
+async def test_click(mock_u2_device) -> None:
     """Test click executes without error."""
     await click("emulator-5554", 500, 1000)
     # If we get here without exception, the test passes
@@ -35,69 +33,69 @@ async def test_click(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_long_click(mock_u2_device: MagicMock) -> None:
+async def test_long_click(mock_u2_device) -> None:
     """Test long_click executes without error."""
     await long_click("emulator-5554", 500, 1000)
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_double_click(mock_u2_device: MagicMock) -> None:
+async def test_double_click(mock_u2_device) -> None:
     """Test double_click executes without error."""
     await double_click("emulator-5554", 500, 1000)
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_swipe(mock_u2_device: MagicMock) -> None:
+async def test_swipe(mock_u2_device) -> None:
     """Test swipe executes without error."""
     await swipe("emulator-5554", 100, 200, 300, 400)
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_drag(mock_u2_device: MagicMock) -> None:
+async def test_drag(mock_u2_device) -> None:
     """Test drag executes without error."""
     await drag("emulator-5554", 100, 200, 300, 400)
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_press_key(mock_u2_device: MagicMock) -> None:
+async def test_press_key(mock_u2_device) -> None:
     """Test press_key executes without error."""
     await press_key("emulator-5554", "home")
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_send_text(mock_u2_device: MagicMock) -> None:
+async def test_send_text(mock_u2_device) -> None:
     """Test send_text executes without error."""
     await send_text("emulator-5554", "Hello World")
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_clear_text(mock_u2_device: MagicMock) -> None:
+async def test_clear_text(mock_u2_device) -> None:
     """Test clear_text executes without error."""
     await clear_text("emulator-5554")
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_screen_on(mock_u2_device: MagicMock) -> None:
+async def test_screen_on(mock_u2_device) -> None:
     """Test screen_on executes without error."""
     await screen_on("emulator-5554")
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_screen_off(mock_u2_device: MagicMock) -> None:
+async def test_screen_off(mock_u2_device) -> None:
     """Test screen_off executes without error."""
     await screen_off("emulator-5554")
 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_hide_keyboard(mock_u2_device: MagicMock) -> None:
+async def test_hide_keyboard(mock_u2_device) -> None:
     """Test hide_keyboard executes without error."""
     await hide_keyboard("emulator-5554")

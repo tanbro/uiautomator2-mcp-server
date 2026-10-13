@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## Unreleased
+
+> ⚠️ **Breaking**: filtering values are no longer comma-separated strings and no longer support wildcards
+
+- 🆕 New:
+    - **Tool-level filtering**: `--include-tools` / `--exclude-tools` expose or hide tools by name via the FastMCP 4 native `enable`/`disable(names=...)` API
+    - **List-valued filters**: `--include-tags`/`--exclude-tags`/`--include-tools`/`--exclude-tools` are repeatable flags, and config files accept real lists (e.g. `include-tags = ["device", "action:touch"]` under the `[stdio]`/`[http]` section)
+    - **Dual tags**: every tool carries a bare category tag (e.g. `device`) alongside its subcategory (e.g. `device:capture`); selecting a bare tag exposes the whole category
+
+- ⚙️ Changed:
+    - Subcategory tag consolidation: `toast:*` → `system:toast`, `device:wait` → `app:lifecycle`, `xpath:modify` → `xpath:interact`, `input:keyboard` → `input:text`, `util:delay` → `util`
+    - Filtering is applied directly with FastMCP 4 native `enable(only=True)`/`disable` by resolved tool names; include is an allowlist, exclude removes afterwards and takes precedence; tag and tool filters union within a direction
+    - Filter config file keys are command-scoped (e.g. `[stdio] include-tags = [...]`); top-level keys were never applied and are now documented correctly
+
+- 🗑️ Removed:
+    - Comma-separated filter values (`-i "a,b"` → use `-i a -i b`)
+    - Wildcard patterns (`*`, `?`) in `--include-tags`/`--exclude-tags` (the `u2mcp info` display-pattern wildcards are unaffected)
+    - Hidden silent failure in `register_tools()`: a second `make_mcp()` call now correctly registers tools on the new instance
+
 ## 0.4.0rc1
 
 > 📅 2026-05-30

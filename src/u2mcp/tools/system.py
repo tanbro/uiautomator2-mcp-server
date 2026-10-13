@@ -19,7 +19,7 @@ __all__ = (
 OrientationType = Literal["natural", "left", "right", "upsidedown"]
 
 
-@mcp.tool("set_orientation", tags={"system:orientation"})
+@mcp.tool("set_orientation", tags={"system", "system:orientation"})
 async def set_orientation(serial: str, orientation: OrientationType):
     """Set device screen orientation.
 
@@ -31,7 +31,7 @@ async def set_orientation(serial: str, orientation: OrientationType):
         await to_thread.run_sync(device.set_orientation, orientation)
 
 
-@mcp.tool("get_orientation", tags={"system:orientation"})
+@mcp.tool("get_orientation", tags={"system", "system:orientation"})
 async def get_orientation(serial: str) -> str:
     """Get current device screen orientation.
 
@@ -46,7 +46,7 @@ async def get_orientation(serial: str) -> str:
         return info.get("orientation", "unknown")
 
 
-@mcp.tool("open_notification", tags={"system:ui"})
+@mcp.tool("open_notification", tags={"system", "system:ui"})
 async def open_notification(serial: str):
     """Open the notification panel.
 
@@ -57,7 +57,7 @@ async def open_notification(serial: str):
         await to_thread.run_sync(device.open_notification)
 
 
-@mcp.tool("open_quick_settings", tags={"system:ui"})
+@mcp.tool("open_quick_settings", tags={"system", "system:ui"})
 async def open_quick_settings(serial: str):
     """Open the quick settings panel.
 
@@ -68,7 +68,7 @@ async def open_quick_settings(serial: str):
         await to_thread.run_sync(device.open_quick_settings)
 
 
-@mcp.tool("unlock", tags={"system:ui"})
+@mcp.tool("unlock", tags={"system", "system:ui"})
 async def unlock(serial: str):
     """Unlock the device screen. Simulates swipe up from the bottom.
 

@@ -8,6 +8,7 @@ import sys
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import NoReturn
 
 from cyclopts.config import ConfigFromFile, Json, Toml, Yaml
 from platformdirs import site_config_dir, user_config_dir
@@ -76,7 +77,7 @@ def build_config_loaders(files: Sequence[Path]) -> Sequence[ConfigFromFile]:
     return loaders
 
 
-def _exit_with_error(message: str, *, exit_code: int = 1) -> None:
+def _exit_with_error(message: str, *, exit_code: int = 1) -> NoReturn:
     """Print a formatted error panel and exit."""
     Console(stderr=True).print(Panel(message, title="Error", border_style="red"))
     sys.exit(exit_code)

@@ -5,9 +5,9 @@ Unit tests for device management tools.
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
+from pytest_mock import MockerFixture
 
 from u2mcp.tools.device import (
     connect,
@@ -24,10 +24,10 @@ from u2mcp.tools.device import (
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_device_list(mock_adb: MagicMock) -> None:
+async def test_device_list(mock_adb, mocker: MockerFixture) -> None:
     """Test device_list returns expected device information."""
     # Setup mock device
-    mock_device = MagicMock()
+    mock_device = mocker.MagicMock()
     mock_device.info = {"serial": "emulator-5554", "model": "test_device"}
     mock_adb.device_list.return_value = [mock_device]
 
@@ -43,7 +43,7 @@ async def test_device_list(mock_adb: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_device_list_empty(mock_adb: MagicMock) -> None:
+async def test_device_list_empty(mock_adb, mocker: MockerFixture) -> None:
     """Test device_list returns empty list when no devices connected."""
     mock_adb.device_list.return_value = []
 
@@ -55,7 +55,7 @@ async def test_device_list_empty(mock_adb: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_window_size(mock_u2_device: MagicMock) -> None:
+async def test_window_size(mock_u2_device, mocker: MockerFixture) -> None:
     """Test window_size returns device screen dimensions."""
     # mock_u2_device is provided by autouse fixture
     result = await window_size("emulator-5554")
@@ -65,7 +65,7 @@ async def test_window_size(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_info(mock_u2_device: MagicMock) -> None:
+async def test_info(mock_u2_device, mocker: MockerFixture) -> None:
     """Test info returns device information."""
     # mock_u2_device.info is already set to a dict in the fixture
     expected_info = mock_u2_device.info
@@ -77,7 +77,7 @@ async def test_info(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_connect_success(mock_u2_device: MagicMock) -> None:
+async def test_connect_success(mock_u2_device, mocker: MockerFixture) -> None:
     """Test connect returns device information."""
     # connect function may return merged device_info and info
     result = await connect("emulator-5554")
@@ -91,7 +91,7 @@ async def test_connect_success(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_disconnect(mock_u2_device: MagicMock) -> None:
+async def test_disconnect(mock_u2_device, mocker: MockerFixture) -> None:
     """Test disconnect executes without error."""
     # disconnect may return None or a message
     result = await disconnect("emulator-5554")
@@ -101,7 +101,7 @@ async def test_disconnect(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_disconnect_all(mock_u2_device: MagicMock) -> None:
+async def test_disconnect_all(mock_u2_device, mocker: MockerFixture) -> None:
     """Test disconnect_all executes without error."""
     result = await disconnect_all()
     # Just ensure no exception raised
@@ -110,16 +110,16 @@ async def test_disconnect_all(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_screenshot_png(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_screenshot_png(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_screenshot saves PNG file."""
     from PIL.Image import Image
 
     # Create a mock image
-    mock_image = MagicMock(spec=Image)
-    mock_image.save = MagicMock()
+    mock_image = mocker.MagicMock(spec=Image)
+    mock_image.save = mocker.MagicMock()
 
     # Setup mock device to return our mock image
-    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+    mock_u2_device.screenshot = mocker.MagicMock(return_value=mock_image)
 
     # Create a temporary file path
     output_path = tmp_path / "screenshot.png"
@@ -135,13 +135,13 @@ async def test_save_screenshot_png(mock_u2_device: MagicMock, tmp_path: Path) ->
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_screenshot_jpeg(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_screenshot_jpeg(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_screenshot saves JPEG file."""
     from PIL.Image import Image
 
-    mock_image = MagicMock(spec=Image)
-    mock_image.save = MagicMock()
-    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+    mock_image = mocker.MagicMock(spec=Image)
+    mock_image.save = mocker.MagicMock()
+    mock_u2_device.screenshot = mocker.MagicMock(return_value=mock_image)
 
     output_path = tmp_path / "screenshot.jpg"
     result = await save_screenshot("emulator-5554", str(output_path))
@@ -153,13 +153,13 @@ async def test_save_screenshot_jpeg(mock_u2_device: MagicMock, tmp_path: Path) -
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_screenshot_creates_directory(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_screenshot_creates_directory(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_screenshot creates parent directory if it doesn't exist."""
     from PIL.Image import Image
 
-    mock_image = MagicMock(spec=Image)
-    mock_image.save = MagicMock()
-    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+    mock_image = mocker.MagicMock(spec=Image)
+    mock_image.save = mocker.MagicMock()
+    mock_u2_device.screenshot = mocker.MagicMock(return_value=mock_image)
 
     # Create a path with non-existent subdirectories
     output_path = tmp_path / "subdir1" / "subdir2" / "screenshot.png"
@@ -173,13 +173,13 @@ async def test_save_screenshot_creates_directory(mock_u2_device: MagicMock, tmp_
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_screenshot_with_display_id(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_screenshot_with_display_id(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_screenshot with specific display_id."""
     from PIL.Image import Image
 
-    mock_image = MagicMock(spec=Image)
-    mock_image.save = MagicMock()
-    mock_u2_device.screenshot = MagicMock(return_value=mock_image)
+    mock_image = mocker.MagicMock(spec=Image)
+    mock_image.save = mocker.MagicMock()
+    mock_u2_device.screenshot = mocker.MagicMock(return_value=mock_image)
 
     output_path = tmp_path / "screenshot.png"
     result = await save_screenshot("emulator-5554", str(output_path), display_id=1)
@@ -191,14 +191,14 @@ async def test_save_screenshot_with_display_id(mock_u2_device: MagicMock, tmp_pa
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_full(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_full(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy returns full XML when no xpath provided."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Click Me" clickable="true"/>
     <node resource-id="button2" text="Don't Click" clickable="false"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     result = await dump_hierarchy("emulator-5554")
 
@@ -208,14 +208,14 @@ async def test_dump_hierarchy_full(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_with_xpath_single_match(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_with_xpath_single_match(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy filters by xpath when single match."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Click Me" clickable="true"/>
     <node resource-id="button2" text="Don't Click" clickable="false"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     result = await dump_hierarchy("emulator-5554", xpath="//*[@clickable='true']")
 
@@ -229,7 +229,7 @@ async def test_dump_hierarchy_with_xpath_single_match(mock_u2_device: MagicMock)
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy returns XML separated by === when xpath matches multiple nodes."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
@@ -237,7 +237,7 @@ async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device: MagicM
     <node resource-id="button2" text="Button 2" clickable="true"/>
     <node resource-id="text" text="Label" clickable="false"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     result = await dump_hierarchy("emulator-5554", xpath="//*[@clickable='true']")
 
@@ -253,13 +253,13 @@ async def test_dump_hierarchy_with_xpath_multiple_matches(mock_u2_device: MagicM
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_with_xpath_no_match(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_with_xpath_no_match(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy returns empty string when xpath matches nothing."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Click Me" clickable="true"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     result = await dump_hierarchy("emulator-5554", xpath="//*[@nonexistent='true']")
 
@@ -268,10 +268,10 @@ async def test_dump_hierarchy_with_xpath_no_match(mock_u2_device: MagicMock) -> 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_with_compressed_and_pretty(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_with_compressed_and_pretty(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy passes compressed and pretty parameters."""
     sample_xml = "<hierarchy><node/></hierarchy>"
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     await dump_hierarchy("emulator-5554", compressed=True, pretty=True)
 
@@ -280,10 +280,10 @@ async def test_dump_hierarchy_with_compressed_and_pretty(mock_u2_device: MagicMo
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_with_max_depth(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_with_max_depth(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy passes max_depth parameter."""
     sample_xml = "<hierarchy><node/></hierarchy>"
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     await dump_hierarchy("emulator-5554", max_depth=5)
 
@@ -292,10 +292,10 @@ async def test_dump_hierarchy_with_max_depth(mock_u2_device: MagicMock) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_dump_hierarchy_max_depth_negative_uses_none(mock_u2_device: MagicMock) -> None:
+async def test_dump_hierarchy_max_depth_negative_uses_none(mock_u2_device, mocker: MockerFixture) -> None:
     """Test dump_hierarchy converts negative max_depth to None."""
     sample_xml = "<hierarchy><node/></hierarchy>"
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     await dump_hierarchy("emulator-5554", max_depth=-1)
 
@@ -304,13 +304,13 @@ async def test_dump_hierarchy_max_depth_negative_uses_none(mock_u2_device: Magic
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_dump_hierarchy_full(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_dump_hierarchy_full(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_dump_hierarchy saves full XML when no xpath provided."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Click Me"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
     result = await save_dump_hierarchy("emulator-5554", str(output_path))
@@ -324,14 +324,14 @@ async def test_save_dump_hierarchy_full(mock_u2_device: MagicMock, tmp_path: Pat
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_dump_hierarchy_with_xpath_filter(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_dump_hierarchy_with_xpath_filter(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_dump_hierarchy saves filtered XML when xpath provided."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Click Me" clickable="true"/>
     <node resource-id="button2" text="Don't Click" clickable="false"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
     result = await save_dump_hierarchy("emulator-5554", str(output_path), xpath="//*[@clickable='true']")
@@ -345,10 +345,10 @@ async def test_save_dump_hierarchy_with_xpath_filter(mock_u2_device: MagicMock, 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_dump_hierarchy_creates_directory(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_dump_hierarchy_creates_directory(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_dump_hierarchy creates parent directory if it doesn't exist."""
     sample_xml = "<hierarchy><node/></hierarchy>"
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "subdir1" / "subdir2" / "hierarchy.xml"
     result = await save_dump_hierarchy("emulator-5554", str(output_path))
@@ -361,13 +361,13 @@ async def test_save_dump_hierarchy_creates_directory(mock_u2_device: MagicMock, 
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_dump_hierarchy_xpath_no_match_saves_empty(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_dump_hierarchy_xpath_no_match_saves_empty(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_dump_hierarchy saves empty file when xpath matches nothing."""
     sample_xml = """<?xml version='1.0' encoding='UTF-8'?>
 <hierarchy>
     <node resource-id="button1" text="Click Me"/>
 </hierarchy>"""
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
     result = await save_dump_hierarchy("emulator-5554", str(output_path), xpath="//*[@nonexistent='true']")
@@ -380,10 +380,10 @@ async def test_save_dump_hierarchy_xpath_no_match_saves_empty(mock_u2_device: Ma
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_dump_hierarchy_returns_absolute_path(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_dump_hierarchy_returns_absolute_path(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_dump_hierarchy returns absolute path."""
     sample_xml = "<hierarchy><node/></hierarchy>"
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
     result = await save_dump_hierarchy("emulator-5554", str(output_path))
@@ -395,13 +395,43 @@ async def test_save_dump_hierarchy_returns_absolute_path(mock_u2_device: MagicMo
 
 @pytest.mark.asyncio
 @pytest.mark.unit
-async def test_save_dump_hierarchy_default_pretty_true(mock_u2_device: MagicMock, tmp_path: Path) -> None:
+async def test_save_dump_hierarchy_default_pretty_true(mock_u2_device, mocker: MockerFixture, tmp_path: Path) -> None:
     """Test save_dump_hierarchy defaults pretty to True for file output."""
     sample_xml = "<hierarchy><node/></hierarchy>"
-    mock_u2_device.dump_hierarchy = MagicMock(return_value=sample_xml)
+    mock_u2_device.dump_hierarchy = mocker.MagicMock(return_value=sample_xml)
 
     output_path = tmp_path / "hierarchy.xml"
     await save_dump_hierarchy("emulator-5554", str(output_path))
 
     # Verify pretty=True was passed
     mock_u2_device.dump_hierarchy.assert_called_once_with(compressed=False, pretty=True, max_depth=None)
+
+
+@pytest.mark.asyncio
+@pytest.mark.unit
+async def test_connect_stale_entry_removed_and_error_raised() -> None:
+    """When a cached device no longer responds, connect drops the stale entry
+    (under the global lock, with an identity check) and re-raises ConnectError."""
+    import uiautomator2 as u2
+    from anyio import Lock
+
+    from u2mcp.tools import device as device_mod
+    from u2mcp.tools.device import connect
+
+    class DeadDevice(u2.Device):
+        """A Device-shaped fake whose info RPC fails with ConnectError."""
+
+        def __init__(self) -> None:  # skip real connection setup
+            pass
+
+        @property
+        def device_info(self) -> dict:
+            raise u2.ConnectError("device is dead")
+
+    dead = DeadDevice()
+    device_mod._devices["stale-serial"] = (Lock(), dead)
+
+    with pytest.raises(u2.ConnectError):
+        await connect("stale-serial")
+
+    assert "stale-serial" not in device_mod._devices

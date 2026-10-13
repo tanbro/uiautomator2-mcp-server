@@ -24,9 +24,13 @@ __all__ = (
     "disconnect",
     "disconnect_all",
     "dump_hierarchy",
+    "encode_image",
+    "ensure_image",
+    "filter_hierarchy_xml",
     "info",
     "init",
     "save_dump_hierarchy",
+    "save_image",
     "save_screenshot",
     "screenshot",
     "shell_command",
@@ -47,8 +51,6 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
 
             def _connect():
                 _d = u2.connect(serial)
-                # Apply global XPath timeout setting
-                _d.settings["wait_timeout"] = get_xpath_timeout()
                 # Fire a RPC call to make sure the device is ready
                 _ = _d.info
                 return _d
@@ -58,10 +60,53 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
             _devices[serial] = lock, device
 
     async with lock:
+        # Re-apply on every acquisition so runtime changes to the global
+        # XPath timeout take effect on already-connected devices.
+        device.settings["wait_timeout"] = get_xpath_timeout()
         yield device
 
 
-@mcp.tool("init", tags={"device:manage"})
+def ensure_image(im: Image | None) -> Image:
+    """Validate that a screenshot call returned an image, or raise TypeError."""
+    if not isinstance(im, Image):
+        raise TypeError("Invalid image")
+    return im
+
+
+def encode_image(im: Image, format: str) -> tuple[str, int, int]:
+    """Encode a PIL image as a base64 data URL, returning (data_url, height, width)."""
+    with closing(im):
+        with BytesIO() as fp:
+            im.save(fp, format)
+            im_data = fp.getvalue()
+        return (
+            f"data:image/{format};base64," + b64encode(im_data).decode(),
+            im.height,
+            im.width,
+        )
+
+
+def save_image(im: Image, file: str) -> str:
+    """Save a PIL image to file, creating parent directories. Returns the absolute path."""
+    file_path = Path(file)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    with closing(im):
+        im.save(file_path)
+    return file_path.resolve().as_posix()
+
+
+def filter_hierarchy_xml(xml_str: str, xpath: str) -> str:
+    """Filter a hierarchy XML by an XPath expression.
+
+    Returns matching elements as XML strings separated by "===",
+    or an empty string when nothing matches.
+    """
+    root = etree.fromstring(xml_str.encode("utf-8"))
+    nodes = root.xpath(xpath)
+    return "\n===\n".join(etree.tostring(node, encoding="unicode") for node in nodes)
+
+
+@mcp.tool("init", tags={"device", "device:manage"})
 async def init(serial: str = ""):
     """Install essential resources (minicap, minitouch, uiautomator ...) to device.
 
@@ -81,7 +126,7 @@ async def init(serial: str = ""):
     return await to_thread.run_sync(cmd_init, args)
 
 
-@mcp.tool("purge", tags={"device:manage"})
+@mcp.tool("purge", tags={"device", "device:manage"})
 async def purge(serial: str = ""):
     """Purge all resources (minicap, minitouch, uiautomator ...) from device.
 
@@ -97,7 +142,7 @@ async def purge(serial: str = ""):
     return await to_thread.run_sync(cmd_purge, args)
 
 
-@mcp.tool("shell_command", tags={"device:shell"})
+@mcp.tool("shell_command", tags={"device", "device:shell"})
 async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple[int, str]:
     """Run a shell command on an Android device
 
@@ -114,7 +159,7 @@ async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple
         return return_value.returncode, return_value.output
 
 
-@mcp.tool("device_list", tags={"device:info"})
+@mcp.tool("device_list", tags={"device", "device:info"})
 async def device_list() -> list[dict[str, Any]]:
     """List of Adb Device with state:device
 
@@ -125,7 +170,7 @@ async def device_list() -> list[dict[str, Any]]:
     return [d.info for d in device_list]
 
 
-@mcp.tool("connect", tags={"device:manage"})
+@mcp.tool("connect", tags={"device", "device:manage"})
 async def connect(serial: str = "") -> dict[str, Any]:
     """Connect to an Android device
 
@@ -140,19 +185,29 @@ async def connect(serial: str = "") -> dict[str, Any]:
     logger = get_logger(f"{__name__}.connect")
 
     if serial := serial.strip():
+        # (dead device, error to re-raise) when the cached connection is stale
+        stale: tuple[u2.Device, u2.ConnectError] | None = None
         try:
             async with get_device(serial) as device_1:
                 # Found, then check if it's still connected
                 try:
                     return await to_thread.run_sync(lambda: device_1.device_info | device_1.info)
                 except u2.ConnectError as e:
-                    # Found, but not connected, delete it
+                    # Found, but not connected, mark it for removal
                     logger.warning("Device %s is no longer connected, delete it!", serial)
-                    del _devices[serial]
-                    raise e from None
+                    stale = (device_1, e)
         except KeyError:
             # Not found, need a new connection!
             logger.info("Cannot find device with serial %s, connecting...")
+
+        if stale is not None:
+            # Drop the stale entry outside of the per-device lock. The
+            # identity check keeps us from deleting a fresh entry another
+            # task may have connected in the meantime.
+            async with _global_device_connection_lock:
+                if _devices.get(serial, (None, None))[1] is stale[0]:
+                    del _devices[serial]
+            raise stale[1] from None
 
     # make new connection here!
     async with _global_device_connection_lock:
@@ -165,7 +220,7 @@ async def connect(serial: str = "") -> dict[str, Any]:
         return result
 
 
-@mcp.tool("disconnect", tags={"device:manage"})
+@mcp.tool("disconnect", tags={"device", "device:manage"})
 async def disconnect(serial: str):
     """Disconnect from an Android device
 
@@ -178,14 +233,14 @@ async def disconnect(serial: str):
         _devices.pop(serial, None)
 
 
-@mcp.tool("disconnect_all", tags={"device:manage"})
+@mcp.tool("disconnect_all", tags={"device", "device:manage"})
 async def disconnect_all():
     """Disconnect from all Android devices"""
     async with _global_device_connection_lock:
         _devices.clear()
 
 
-@mcp.tool("window_size", tags={"device:info"})
+@mcp.tool("window_size", tags={"device", "device:info"})
 async def window_size(serial: str) -> dict[str, int]:
     """Get window size of an Android device
 
@@ -202,7 +257,7 @@ async def window_size(serial: str) -> dict[str, int]:
         return {"width": width, "height": height}
 
 
-@mcp.tool("screenshot", tags={"device:capture", "screen:capture"})
+@mcp.tool("screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
 async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
@@ -222,22 +277,11 @@ async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) ->
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
 
-    if not isinstance(im, Image):
-        raise TypeError("Invalid image")
-
-    with closing(im):
-        with BytesIO() as fp:
-            im.save(fp, format)
-            im_data = fp.getvalue()
-
-        return {
-            "image": f"data:image/{format};base64," + b64encode(im_data).decode(),
-            "height": im.height,
-            "width": im.width,
-        }
+    data_url, height, width = encode_image(ensure_image(im), format)
+    return {"image": data_url, "height": height, "width": width}
 
 
-@mcp.tool("save_screenshot", tags={"device:capture", "screen:capture"})
+@mcp.tool("save_screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
 async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
     """
     Save screenshot of device to file
@@ -254,21 +298,11 @@ async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
 
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
-        if not isinstance(im, Image):
-            raise TypeError("Invalid image")
 
-    with closing(im):
-        # Convert path to Path object and resolve
-        file_path = Path(file)
-        # Create parent directory if it doesn't exist
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        # Save the image
-        im.save(file_path)
-
-    return file_path.resolve().as_posix()
+    return save_image(ensure_image(im), file)
 
 
-@mcp.tool("dump_hierarchy", tags={"device:capture"})
+@mcp.tool("dump_hierarchy", tags={"device", "device:capture"})
 async def dump_hierarchy(
     serial: str,
     compressed: bool = False,
@@ -298,23 +332,10 @@ async def dump_hierarchy(
 
     if not xpath:
         return xml_str
-
-    # Parse and filter by xpath
-    root = etree.fromstring(xml_str.encode("utf-8"))
-    nodes = root.xpath(xpath)
-
-    if not nodes:
-        return ""
-
-    # Return xml of matching nodes, separated by ===
-    result_parts: list[str] = []
-    for node in nodes:
-        result_parts.append(etree.tostring(node, encoding="unicode"))
-
-    return "\n===\n".join(result_parts)
+    return filter_hierarchy_xml(xml_str, xpath)
 
 
-@mcp.tool("save_dump_hierarchy", tags={"device:capture"})
+@mcp.tool("save_dump_hierarchy", tags={"device", "device:capture"})
 async def save_dump_hierarchy(
     serial: str,
     file: str,
@@ -344,17 +365,7 @@ async def save_dump_hierarchy(
         )
 
     if xpath:
-        # Parse and filter by xpath
-        root = etree.fromstring(xml_str.encode("utf-8"))
-        nodes = root.xpath(xpath)
-
-        if nodes:
-            result_parts: list[str] = []
-            for node in nodes:
-                result_parts.append(etree.tostring(node, encoding="unicode"))
-            xml_str = "\n===\n".join(result_parts)
-        else:
-            xml_str = ""
+        xml_str = filter_hierarchy_xml(xml_str, xpath)
 
     # Convert path to Path object and resolve
     file_path = Path(file)
@@ -366,7 +377,7 @@ async def save_dump_hierarchy(
     return file_path.resolve().as_posix()
 
 
-@mcp.tool("info", tags={"device:info"})
+@mcp.tool("info", tags={"device", "device:info"})
 async def info(serial: str) -> dict[str, Any]:
     """
     Get device info
@@ -382,7 +393,7 @@ async def info(serial: str) -> dict[str, Any]:
         return await to_thread.run_sync(lambda: device.info)
 
 
-@mcp.tool("activity_wait_appear", tags={"device:wait"})
+@mcp.tool("activity_wait_appear", tags={"app", "app:lifecycle"})
 async def activity_wait_appear(serial: str, activity: str, timeout: float) -> bool:
     """Wait for an activity to appear.
 

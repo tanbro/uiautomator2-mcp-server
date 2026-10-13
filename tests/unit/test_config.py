@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from cyclopts.config import Json, Toml, Yaml
@@ -35,20 +34,16 @@ class TestConfigDirs:
 class TestDiscoverConfigFiles:
     def test_no_config_files_found(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.chdir(tmp_path)
-        with (
-            patch("u2mcp.config.get_system_config_dir", return_value=tmp_path / "sys"),
-            patch("u2mcp.config.get_user_config_dir", return_value=tmp_path / "user"),
-        ):
-            assert discover_config_files() == []
+        monkeypatch.setattr("u2mcp.config.get_system_config_dir", lambda: tmp_path / "sys")
+        monkeypatch.setattr("u2mcp.config.get_user_config_dir", lambda: tmp_path / "user")
+        assert discover_config_files() == []
 
     def test_finds_config_in_cwd(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.chdir(tmp_path)
         (tmp_path / f"{APP_NAME}.toml").write_text("check-adb = false\n")
-        with (
-            patch("u2mcp.config.get_system_config_dir", return_value=tmp_path / "sys"),
-            patch("u2mcp.config.get_user_config_dir", return_value=tmp_path / "user"),
-        ):
-            files = discover_config_files()
+        monkeypatch.setattr("u2mcp.config.get_system_config_dir", lambda: tmp_path / "sys")
+        monkeypatch.setattr("u2mcp.config.get_user_config_dir", lambda: tmp_path / "user")
+        files = discover_config_files()
         assert len(files) == 1
         assert files[0].suffix == ".toml"
 
@@ -61,11 +56,9 @@ class TestDiscoverConfigFiles:
         (sys_dir / f"{APP_NAME}.toml").write_text('log-level = "error"\n')
         (user_dir / f"{APP_NAME}.yaml").write_text("log-level: warning\n")
         (tmp_path / f"{APP_NAME}.json").write_text('{"log-level": "debug"}')
-        with (
-            patch("u2mcp.config.get_system_config_dir", return_value=sys_dir),
-            patch("u2mcp.config.get_user_config_dir", return_value=user_dir),
-        ):
-            files = discover_config_files()
+        monkeypatch.setattr("u2mcp.config.get_system_config_dir", lambda: sys_dir)
+        monkeypatch.setattr("u2mcp.config.get_user_config_dir", lambda: user_dir)
+        files = discover_config_files()
         assert len(files) == 3
         # system < user < cwd
         assert files[0].parent == sys_dir
@@ -139,10 +132,8 @@ class TestResolveConfig:
         monkeypatch.chdir(tmp_path)
         (tmp_path / f"{APP_NAME}.toml").write_text("check-adb = false\n")
         monkeypatch.delenv(f"{APP_NAME.upper()}_CONFIG_FILE", raising=False)
-        with (
-            patch("u2mcp.config.get_system_config_dir", return_value=tmp_path / "sys"),
-            patch("u2mcp.config.get_user_config_dir", return_value=tmp_path / "user"),
-        ):
-            loaders = resolve_config(None)
+        monkeypatch.setattr("u2mcp.config.get_system_config_dir", lambda: tmp_path / "sys")
+        monkeypatch.setattr("u2mcp.config.get_user_config_dir", lambda: tmp_path / "user")
+        loaders = resolve_config(None)
         assert len(loaders) == 1
         assert isinstance(loaders[0], Toml)

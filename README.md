@@ -338,7 +338,8 @@ Config files use command names as top-level keys:
 [stdio]
 log-level = "debug"
 check-adb = false
-include-tags = "device:*,action:touch"
+include-tags = ["device:info", "action:touch"]
+exclude-tools = ["shell_command"]
 
 [http]
 host = "0.0.0.0"
@@ -431,34 +432,28 @@ u2mcp stdio -i device:manage
 uvx uiautomator2-mcp-server stdio -i device:manage
 
 # Only expose touch and gesture operations
-u2mcp stdio -i action:touch,action:gesture
+u2mcp stdio -i action:touch -i action:gesture
 
 # Exclude screen mirroring tools
 u2mcp stdio -e screen:mirror
 
 # Only expose app lifecycle and element interaction tools
-u2mcp stdio -i app:lifecycle,element:interact
+u2mcp stdio -i app:lifecycle -i xpath:interact
 
 # Exclude shell command tools (for security)
 u2mcp stdio -e device:shell
 
 # Only expose input-related tools
-u2mcp stdio -i input:text,input:keyboard
+u2mcp stdio -i input:text
 
 # Combine include and exclude
-u2mcp stdio -i device:info,action:touch -e screen:capture
+u2mcp stdio -i device:info -i action:touch -e screen:capture
 
-# Wildcard patterns - include all device tools
-u2mcp stdio -i "device:*"
+# Bare category tags expose a whole category
+u2mcp stdio -i device
 
-# Wildcard patterns - include all touch and gesture tools
-u2mcp stdio -i "action:to*"
-
-# Wildcard patterns - exclude all screen tools
-u2mcp stdio -e "screen:*"
-
-# Wildcard patterns - exclude all mirror tools (screen:mirror, etc.)
-u2mcp stdio -e "*:mirror"
+# Filter by tool name instead of tags
+u2mcp stdio --include-tools click --include-tools screenshot
 
 # List all available tags
 u2mcp tags
@@ -492,44 +487,63 @@ All common options support short flags for convenience:
 - `-t` / `--token` - Set authentication token (HTTP mode)
 - `-n` / `--no-auth` - Disable authentication (HTTP mode)
 
-**Wildcard Support:**
+**Filtering Options:**
 
-The `--include-tags` and `--exclude-tags` options support wildcard patterns:
-- `*` matches any characters
-- `?` matches exactly one character
-- `device:*` matches all device:* tags
-- `*:mirror` matches all mirror tags (screen:mirror, etc.)
-- `action:to*` matches action:touch, action:tool (if exists)
+`--include-tags`/`--exclude-tags` and `--include-tools`/`--exclude-tools` take values as repeatable flags or lists in the config file:
+
+```bash
+# Allowlist: only expose touch actions and the screenshot tool
+u2mcp stdio --include-tags action:touch --include-tools screenshot
+
+# Denylist: expose everything except shell and mirroring
+u2mcp stdio --exclude-tags device:shell --exclude-tags screen:mirror
+```
+
+Include filters act as an allowlist (only matching tools are exposed); exclude filters remove from that set afterwards and take precedence. Within a direction, tag and tool filters combine as a union.
+
+Each tool carries two tags: a bare category (e.g. `device`) and a subcategory (e.g. `device:capture`). Selecting a bare tag exposes the whole category.
 
 **Available Tags:**
 
 | Tag                | Description                                       |
 | ------------------ | ------------------------------------------------- |
+| `device`           | All device tools                                  |
 | `device:manage`    | Device connection, initialization, and management |
 | `device:info`      | Device information and status                     |
 | `device:capture`   | Screenshots and UI hierarchy                      |
 | `device:shell`     | Shell command execution                           |
+| `action`           | All touch/gesture/key/screen tools                |
 | `action:touch`     | Click and tap actions                             |
 | `action:gesture`   | Swipe and drag gestures                           |
 | `action:key`       | Physical key presses                              |
 | `action:screen`    | Screen control (on/off)                           |
+| `app`              | All app management tools                          |
 | `app:manage`       | Install and uninstall apps                        |
 | `app:lifecycle`    | Start and stop apps                               |
 | `app:info`         | App information and listing                       |
 | `app:config`       | App configuration (clear data, permissions)       |
-| `element:wait`     | Wait for elements/activities                      |
-| `element:interact` | Click and interact with elements                  |
-| `element:query`    | Get element info (text, bounds)                   |
-| `element:modify`   | Modify element (set text)                         |
-| `element:gesture`  | Element-specific gestures (swipe, scroll)         |
-| `element:capture`  | Element screenshots                               |
-| `input:text`       | Text input and clearing                           |
-| `input:keyboard`   | Keyboard control                                  |
+| `xpath`            | All XPath-based element tools                     |
+| `xpath:wait`       | Wait for elements to appear/disappear             |
+| `xpath:interact`   | Click and interact with elements                  |
+| `xpath:query`      | Get element info (text, bounds)                   |
+| `xpath:gesture`    | Element-specific gestures (swipe, scroll)         |
+| `xpath:capture`    | Element screenshots                               |
+| `gesture`          | Edge swipe gestures                               |
+| `gesture:edge`     | Directional edge swipes                           |
+| `input`            | All text input tools                              |
+| `input:text`       | Text input, focusing, clearing, keyboard          |
+| `clipboard`        | All clipboard tools                               |
 | `clipboard:read`   | Read clipboard                                    |
 | `clipboard:write`  | Write clipboard                                   |
+| `screen`           | All screen tools                                  |
 | `screen:mirror`    | Screen mirroring (scrcpy)                         |
+| `screen:record`    | Screen recording                                  |
 | `screen:capture`   | Screen screenshots                                |
-| `util:delay`       | Delay/sleep utility                               |
+| `system`           | All system control tools                          |
+| `system:orientation` | Device orientation control                      |
+| `system:ui`        | Notifications, quick settings, unlock             |
+| `system:toast`     | Toast message utilities                           |
+| `util`             | Utilities (delay/sleep)                           |
 
 ## Testing and Debugging
 

@@ -7,7 +7,7 @@ from ..mcp import mcp
 __all__ = ("delay",)
 
 
-@mcp.tool("delay", tags={"util:delay"})
+@mcp.tool("delay", tags={"util"})
 async def delay(seconds: float):
     """Delay for a specific amount of time.
 

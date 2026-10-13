@@ -13,7 +13,7 @@ __all__ = (
 )
 
 
-@mcp.tool("send_text", tags={"input:text"})
+@mcp.tool("send_text", tags={"input", "input:text"})
 async def send_text(serial: str, text: str, clear: bool = False):
     """Send text to the current input field
 
@@ -26,7 +26,7 @@ async def send_text(serial: str, text: str, clear: bool = False):
         await to_thread.run_sync(device.send_keys, text, clear)
 
 
-@mcp.tool("set_focused_text", tags={"input:text"})
+@mcp.tool("set_focused_text", tags={"input", "input:text"})
 async def set_focused_text(serial: str, text: str) -> bool:
     """Set text to the currently focused input element.
 
@@ -48,7 +48,7 @@ async def set_focused_text(serial: str, text: str) -> bool:
         return await to_thread.run_sync(lambda: device(focused=True).set_text(text))
 
 
-@mcp.tool("clear_text", tags={"input:text"})
+@mcp.tool("clear_text", tags={"input", "input:text"})
 async def clear_text(serial: str):
     """Clear text in the current input field
 
@@ -59,7 +59,7 @@ async def clear_text(serial: str):
         await to_thread.run_sync(device.clear_text)
 
 
-@mcp.tool("hide_keyboard", tags={"input:keyboard"})
+@mcp.tool("hide_keyboard", tags={"input", "input:text"})
 async def hide_keyboard(serial: str):
     """Hide keyboard
 

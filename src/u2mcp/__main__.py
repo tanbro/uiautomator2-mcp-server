@@ -96,8 +96,10 @@ def stdio(
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], Parameter(name=["--log-level", "-l"])
     ] = "info",
-    include_tags: Annotated[str | None, Parameter(name=["--include-tags", "-i"])] = None,
-    exclude_tags: Annotated[str | None, Parameter(name=["--exclude-tags", "-e"])] = None,
+    include_tags: Annotated[list[str] | None, Parameter(name=["--include-tags", "-i"])] = None,
+    exclude_tags: Annotated[list[str] | None, Parameter(name=["--exclude-tags", "-e"])] = None,
+    include_tools: Annotated[list[str] | None, Parameter(name=["--include-tools"])] = None,
+    exclude_tools: Annotated[list[str] | None, Parameter(name=["--exclude-tools"])] = None,
     xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
@@ -108,8 +110,10 @@ def stdio(
     Args:
         check_adb: Check ADB availability at startup.
         log_level: Log level.
-        include_tags: Only expose tools with these tags (comma-separated, supports * and ? wildcards, e.g., device:*,*:shell).
-        exclude_tags: Exclude tools with these tags (comma-separated, supports * and ? wildcards, e.g., screen:*,*:mirror).
+        include_tags: Only expose tools with these tags (repeatable or a list in the config file, e.g., --include-tags device --include-tags action:touch).
+        exclude_tags: Exclude tools with these tags (repeatable or a list in the config file, e.g., --exclude-tags device:shell).
+        include_tools: Only expose tools with these names (repeatable or a list in the config file, e.g., --include-tools click --include-tools screenshot).
+        exclude_tools: Exclude tools with these names (repeatable or a list in the config file, e.g., --exclude-tools shell_command).
         xpath_timeout: Default timeout in seconds for XPath element lookup (default: 20.0).
         print_tags: Show enabled tags and tools at startup.
         fix_empty_responses: Convert null tool responses to empty string compatibility.
@@ -124,6 +128,8 @@ def stdio(
         print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
+        include_tools=include_tools,
+        exclude_tools=exclude_tools,
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )
@@ -142,8 +148,10 @@ def http(
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], Parameter(name=["--log-level", "-l"])
     ] = "info",
-    include_tags: Annotated[str | None, Parameter(name=["--include-tags", "-i"])] = None,
-    exclude_tags: Annotated[str | None, Parameter(name=["--exclude-tags", "-e"])] = None,
+    include_tags: Annotated[list[str] | None, Parameter(name=["--include-tags", "-i"])] = None,
+    exclude_tags: Annotated[list[str] | None, Parameter(name=["--exclude-tags", "-e"])] = None,
+    include_tools: Annotated[list[str] | None, Parameter(name=["--include-tools"])] = None,
+    exclude_tools: Annotated[list[str] | None, Parameter(name=["--exclude-tools"])] = None,
     xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
@@ -159,8 +167,10 @@ def http(
         json_response: Use JSON response format.
         check_adb: Check ADB availability at startup.
         log_level: Log level.
-        include_tags: Only expose tools with these tags (comma-separated, supports * and ? wildcards, e.g., device:*,*:shell).
-        exclude_tags: Exclude tools with these tags (comma-separated, supports * and ? wildcards, e.g., screen:*,*:mirror).
+        include_tags: Only expose tools with these tags (repeatable or a list in the config file, e.g., --include-tags device --include-tags action:touch).
+        exclude_tags: Exclude tools with these tags (repeatable or a list in the config file, e.g., --exclude-tags device:shell).
+        include_tools: Only expose tools with these names (repeatable or a list in the config file, e.g., --include-tools click --include-tools screenshot).
+        exclude_tools: Exclude tools with these names (repeatable or a list in the config file, e.g., --exclude-tools shell_command).
         xpath_timeout: Default timeout in seconds for XPath element lookup (default: 20.0).
         print_tags: Show enabled tags and tools at startup.
         fix_empty_responses: Convert null tool responses to empty string compatibility.
@@ -183,6 +193,8 @@ def http(
         print_tags=print_tags,
         include_tags=include_tags,
         exclude_tags=exclude_tags,
+        include_tools=include_tools,
+        exclude_tools=exclude_tools,
         fix_empty_responses=fix_empty_responses,
         xpath_timeout=xpath_timeout,
     )

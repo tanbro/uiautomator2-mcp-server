@@ -1,15 +1,9 @@
 from __future__ import annotations
 
-from base64 import b64encode
-from contextlib import closing
-from io import BytesIO
-from pathlib import Path
-
 from anyio import to_thread
-from PIL.Image import Image
 
 from ..mcp import mcp
-from .device import get_device
+from .device import encode_image, ensure_image, get_device, save_image
 
 __all__ = (
     "xpath_click",
@@ -31,7 +25,7 @@ __all__ = (
 )
 
 
-@mcp.tool("xpath_wait_appear", tags={"xpath:wait"})
+@mcp.tool("xpath_wait_appear", tags={"xpath", "xpath:wait"})
 async def xpath_wait_appear(serial: str, xpath: str, timeout: float) -> bool:
     """Wait until element is found using XPath.
 
@@ -47,7 +41,7 @@ async def xpath_wait_appear(serial: str, xpath: str, timeout: float) -> bool:
         return await to_thread.run_sync(lambda: device.xpath(xpath).wait(timeout))
 
 
-@mcp.tool("xpath_wait_gone", tags={"xpath:wait"})
+@mcp.tool("xpath_wait_gone", tags={"xpath", "xpath:wait"})
 async def xpath_wait_gone(serial: str, xpath: str, timeout: float) -> bool:
     """Wait until element disappears using XPath.
 
@@ -63,7 +57,7 @@ async def xpath_wait_gone(serial: str, xpath: str, timeout: float) -> bool:
         return await to_thread.run_sync(lambda: device.xpath(xpath).wait_gone(timeout))
 
 
-@mcp.tool("xpath_click", tags={"xpath:interact"})
+@mcp.tool("xpath_click", tags={"xpath", "xpath:interact"})
 async def xpath_click(serial: str, xpath: str, timeout: float) -> bool:
     """Find element by XPath and perform click.
 
@@ -79,7 +73,7 @@ async def xpath_click(serial: str, xpath: str, timeout: float) -> bool:
         return await to_thread.run_sync(lambda: device.xpath(xpath).click_exists(timeout))
 
 
-@mcp.tool("xpath_click_nowait", tags={"xpath:interact"})
+@mcp.tool("xpath_click_nowait", tags={"xpath", "xpath:interact"})
 async def xpath_click_nowait(serial: str, xpath: str):
     """Find element by XPath and click immediately without waiting.
 
@@ -91,7 +85,7 @@ async def xpath_click_nowait(serial: str, xpath: str):
         await to_thread.run_sync(lambda: device.xpath(xpath).click_nowait())
 
 
-@mcp.tool("xpath_long_press", tags={"xpath:interact"})
+@mcp.tool("xpath_long_press", tags={"xpath", "xpath:interact"})
 async def xpath_long_press(serial: str, xpath: str):
     """Find element by XPath and perform long press.
 
@@ -103,7 +97,7 @@ async def xpath_long_press(serial: str, xpath: str):
         await to_thread.run_sync(lambda: device.xpath(xpath).long_click())
 
 
-@mcp.tool("xpath_screenshot", tags={"xpath:capture"})
+@mcp.tool("xpath_screenshot", tags={"xpath", "xpath:capture"})
 async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, int, int]:
     """Find element by XPath and take screenshot.
 
@@ -118,22 +112,10 @@ async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, i
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
-    if not isinstance(im, Image):
-        raise TypeError("Invalid image")
-
-    with closing(im):
-        with BytesIO() as fp:
-            im.save(fp, format)
-            im_data = fp.getvalue()
-
-        return (
-            f"data:image/{format};base64," + b64encode(im_data).decode(),
-            im.height,
-            im.width,
-        )
+    return encode_image(ensure_image(im), format)
 
 
-@mcp.tool("xpath_save_screenshot", tags={"xpath:capture"})
+@mcp.tool("xpath_save_screenshot", tags={"xpath", "xpath:capture"})
 async def xpath_save_screenshot(serial: str, xpath: str, file: str) -> str:
     """Find element by XPath and save screenshot to file.
 
@@ -148,18 +130,10 @@ async def xpath_save_screenshot(serial: str, xpath: str, file: str) -> str:
     async with get_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
-    if not isinstance(im, Image):
-        raise TypeError("Invalid image")
-
-    with closing(im):
-        file_path = Path(file)
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        im.save(file_path)
-
-    return file_path.resolve().as_posix()
+    return save_image(ensure_image(im), file)
 
 
-@mcp.tool("xpath_get_text", tags={"xpath:query"})
+@mcp.tool("xpath_get_text", tags={"xpath", "xpath:query"})
 async def xpath_get_text(serial: str, xpath: str) -> str:
     """Find element by XPath and get its text content.
 
@@ -175,7 +149,7 @@ async def xpath_get_text(serial: str, xpath: str) -> str:
         return result if result else ""
 
 
-@mcp.tool("xpath_set_text", tags={"xpath:modify"})
+@mcp.tool("xpath_set_text", tags={"xpath", "xpath:interact"})
 async def xpath_set_text(serial: str, xpath: str, text: str):
     """Find element by XPath and set its text content.
 
@@ -188,7 +162,7 @@ async def xpath_set_text(serial: str, xpath: str, text: str):
         await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
 
 
-@mcp.tool("xpath_get_bounds", tags={"xpath:query"})
+@mcp.tool("xpath_get_bounds", tags={"xpath", "xpath:query"})
 async def xpath_get_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]:
     """Find element by XPath and get its bounding box.
 
@@ -203,7 +177,7 @@ async def xpath_get_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]
         return await to_thread.run_sync(lambda: device.xpath(xpath).bounds)
 
 
-@mcp.tool("xpath_exists", tags={"xpath:query"})
+@mcp.tool("xpath_exists", tags={"xpath", "xpath:query"})
 async def xpath_exists(serial: str, xpath: str) -> bool:
     """Check if element exists by XPath without waiting.
 
@@ -218,7 +192,7 @@ async def xpath_exists(serial: str, xpath: str) -> bool:
         return await to_thread.run_sync(lambda: device.xpath(xpath).exists)
 
 
-@mcp.tool("xpath_get_info", tags={"xpath:query"})
+@mcp.tool("xpath_get_info", tags={"xpath", "xpath:query"})
 async def xpath_get_info(serial: str, xpath: str) -> dict[str, object]:
     """Find element by XPath and get its complete information.
 
@@ -234,7 +208,7 @@ async def xpath_get_info(serial: str, xpath: str) -> dict[str, object]:
         return element.info
 
 
-@mcp.tool("xpath_get_attrib", tags={"xpath:query"})
+@mcp.tool("xpath_get_attrib", tags={"xpath", "xpath:query"})
 async def xpath_get_attrib(serial: str, xpath: str, key: str) -> str:
     """Find element by XPath and get a specific attribute value.
 
@@ -251,7 +225,7 @@ async def xpath_get_attrib(serial: str, xpath: str, key: str) -> str:
         return element.attrib.get(key, "")
 
 
-@mcp.tool("xpath_swipe", tags={"xpath:gesture"})
+@mcp.tool("xpath_swipe", tags={"xpath", "xpath:gesture"})
 async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.6):
     """Find element by XPath and swipe within it.
 
@@ -265,7 +239,7 @@ async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.
         await to_thread.run_sync(lambda: device.xpath(xpath).swipe(direction, scale))
 
 
-@mcp.tool("xpath_scroll", tags={"xpath:gesture"})
+@mcp.tool("xpath_scroll", tags={"xpath", "xpath:gesture"})
 async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
     """Find element by XPath and scroll within it.
 
@@ -281,7 +255,7 @@ async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
         return await to_thread.run_sync(lambda: device.xpath(xpath).scroll(direction))
 
 
-@mcp.tool("xpath_scroll_to", tags={"xpath:gesture"})
+@mcp.tool("xpath_scroll_to", tags={"xpath", "xpath:gesture"})
 async def xpath_scroll_to(serial: str, xpath: str, direction: str, max_swipes: int) -> bool:
     """Scroll the entire screen to find an element by XPath.
 
