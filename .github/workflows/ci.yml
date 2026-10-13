@@ -26,37 +26,52 @@ permissions:
   id-token: write # Required for PyPI trusted publishing (OIDC)
 
 jobs:
-  lint-check:
-    name: Code style check
+  # Deploy jobs - only run on valid version tags
+  check-release-tag:
+    name: check-release-tag
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check-release-tag.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Run check
-        run: |
-          uvx ruff format --check .
-          uvx ruff check .
-
-  type-check:
-    name: Type Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           enable-cache: true
-          cache-dependency-glob: "uv.lock"
 
-      - name: Install dependencies
-        run: uv sync --frozen --group typing
+      - name: Validate PEP-440 tag (extract & check) and set output
+        id: check-release-tag
+        # The script derives the candidate from GITHUB_REF and writes version=... to GITHUB_OUTPUT
+        run: |
+          set -euo pipefail
+          uv run --no-project .github/scripts/check-release-tag.py
 
-      - name: Run mypy
-        run: uv run mypy
+  pre-commit:
+    runs-on: ubuntu-latest
+    env:
+      LUALS_VERSION: 3.19.1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Sync project environment (for mypy)
+        run: uv sync --all-extras --dev
+
+      - name: Run pre-commit on all files
+        run: uvx pre-commit run --all-files
 
   test:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
@@ -66,13 +81,13 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
@@ -90,36 +105,17 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: tanbro/uiautomator2-mcp-server
 
-  # Deploy jobs - only run on valid version tags
-  validate-tag:
-    name: Validate Tag
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.check.outputs.version }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Check tag format (PEP 440)
-        id: check
-        run: |
-          python3 -m pip install --disable-pip-version-check packaging
-          python3 .github/scripts/validate_version.py
-        env:
-          GITHUB_REF: ${{ github.ref }}
-
   build:
     name: Build Distribution
     runs-on: ubuntu-latest
-    needs: [test, validate-tag]
-    if: needs.validate-tag.outputs.version != ''
+    needs: [test, check-release-tag]
+    if: needs.check-release-tag.outputs.version != ''
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v10.1.0
         with:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
@@ -127,10 +123,10 @@ jobs:
       - name: Build package
         run: uv build
         env:
-          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.validate-tag.outputs.version }}
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.check-release-tag.outputs.version }}
 
       - name: Store the distribution packages
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: python-package-distributions
           path: dist/
@@ -138,15 +134,15 @@ jobs:
   publish:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: [validate-tag, build]
-    if: needs.validate-tag.outputs.version != ''
+    needs: [check-release-tag, build]
+    if: needs.check-release-tag.outputs.version != ''
     environment:
       name: pypi
       url: https://pypi.org/p/uiautomator2-mcp-server
 
     steps:
       - name: Download distribution packages
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: python-package-distributions
           path: dist/
@@ -160,16 +156,16 @@ jobs:
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [validate-tag, build]
-    if: needs.validate-tag.outputs.version != ''
+    needs: [check-release-tag, build]
+    if: needs.check-release-tag.outputs.version != ''
     permissions:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download distribution packages
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: python-package-distributions
           path: dist/
@@ -177,7 +173,7 @@ jobs:
       - name: Generate release notes from CHANGELOG
         id: release_notes
         run: |
-          VERSION="${{ needs.validate-tag.outputs.version }}"
+          VERSION="${{ needs.check-release-tag.outputs.version }}"
           awk -v version="$VERSION" '
             /^##[[:space:]]*$version/ { in_release=1; next }
             in_release && /^##[[:space:]]/ { exit }
@@ -193,7 +189,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
-          name: v${{ needs.validate-tag.outputs.version }}
+          name: v${{ needs.check-release-tag.outputs.version }}
           body: ${{ steps.release_notes.outputs.notes }}
           files: dist/*
           generate_release_notes: false
