@@ -6,12 +6,16 @@ import os
 import platform
 import shutil
 import sys
-from typing import Any
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, Any
 
 import adbutils
 import anyio
 from anyio import to_thread
 from rich.console import Console
+
+if TYPE_CHECKING:
+    from .typing import HealthCheckCategorieT
 
 __all__ = ["CheckResult", "CheckStatus", "check_adb", "run_doctor"]
 
@@ -447,8 +451,8 @@ def _print_check_result(console: Console, result: CheckResult, verbose: bool = F
 def run_doctor(
     verbose: bool = False,
     fix: bool = False,
-    category: str | None = None,
-    exclude: str | None = None,
+    includes: Sequence[HealthCheckCategorieT] | None = None,
+    excludes: Sequence[HealthCheckCategorieT] | None = None,
 ) -> int:
     """Run comprehensive diagnostics.
 
@@ -463,15 +467,6 @@ def run_doctor(
     """
     console = Console()
 
-    # Parse category filters
-    include_categories = None
-    if category:
-        include_categories = [c.strip().lower() for c in category.split(",")]
-
-    exclude_categories = None
-    if exclude:
-        exclude_categories = [c.strip().lower() for c in exclude.split(",")]
-
     # Define all checks
     all_checks = [
         ("environment", lambda: check_environment(verbose)),
@@ -485,9 +480,9 @@ def run_doctor(
     # Filter checks
     checks_to_run = []
     for cat, check_func in all_checks:
-        if include_categories and cat not in include_categories:
+        if includes and cat not in includes:
             continue
-        if exclude_categories and cat in exclude_categories:
+        if excludes and cat in excludes:
             continue
         checks_to_run.append((cat, check_func))
 
