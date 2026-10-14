@@ -151,7 +151,6 @@ async def _lifespan(
 
 
 class _SimpleTokenAuthProvider(AuthProvider):
-    @override
     def __init__(
         self,
         base_url: AnyHttpUrl | str | None = None,
