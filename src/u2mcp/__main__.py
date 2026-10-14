@@ -21,6 +21,7 @@ from rich.text import Text
 from .config import ENV_PREFIX, resolve_config
 from .helpers import print_tags as print_tags_from_mcp
 from .helpers import print_tool_help
+from .typing import HealthCheckCategorieT
 from .version import __version__
 
 
@@ -96,10 +97,10 @@ def stdio(
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], Parameter(name=["--log-level", "-l"])
     ] = "info",
-    include_tags: Annotated[list[str] | None, Parameter(name=["--include-tags", "-i"])] = None,
-    exclude_tags: Annotated[list[str] | None, Parameter(name=["--exclude-tags", "-e"])] = None,
-    include_tools: Annotated[list[str] | None, Parameter(name=["--include-tools"])] = None,
-    exclude_tools: Annotated[list[str] | None, Parameter(name=["--exclude-tools"])] = None,
+    include_tags: Annotated[list[str] | None, Parameter(name=["--include-tags"])] = None,
+    exclude_tags: Annotated[list[str] | None, Parameter(name=["--exclude-tags"])] = None,
+    include_tools: Annotated[list[str] | None, Parameter(name=["--include-tools", "-i"])] = None,
+    exclude_tools: Annotated[list[str] | None, Parameter(name=["--exclude-tools", "-e"])] = None,
     xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
@@ -148,10 +149,10 @@ def http(
     log_level: Annotated[
         Literal["debug", "info", "warning", "error", "critical"], Parameter(name=["--log-level", "-l"])
     ] = "info",
-    include_tags: Annotated[list[str] | None, Parameter(name=["--include-tags", "-i"])] = None,
-    exclude_tags: Annotated[list[str] | None, Parameter(name=["--exclude-tags", "-e"])] = None,
-    include_tools: Annotated[list[str] | None, Parameter(name=["--include-tools"])] = None,
-    exclude_tools: Annotated[list[str] | None, Parameter(name=["--exclude-tools"])] = None,
+    include_tags: Annotated[list[str] | None, Parameter(name=["--include-tags"])] = None,
+    exclude_tags: Annotated[list[str] | None, Parameter(name=["--exclude-tags"])] = None,
+    include_tools: Annotated[list[str] | None, Parameter(name=["--include-tools", "-i"])] = None,
+    exclude_tools: Annotated[list[str] | None, Parameter(name=["--exclude-tools", "-e"])] = None,
     xpath_timeout: Annotated[float, Parameter(name=["--xpath-timeout"])] = 20.0,
     print_tags: bool = True,
     fix_empty_responses: bool = False,
@@ -248,8 +249,8 @@ def doctor(
     *,
     verbose: Annotated[bool, Parameter(name=["--verbose", "-v"])] = False,
     fix: bool = False,
-    category: Annotated[str | None, Parameter(name=["--category", "-c"])] = None,
-    exclude: Annotated[str | None, Parameter(name=["--exclude"])] = None,
+    includes: Annotated[list[HealthCheckCategorieT] | None, Parameter(name=["--includes", "-i"], consume_multiple=True)] = None,
+    excludes: Annotated[list[HealthCheckCategorieT] | None, Parameter(name=["--excludes", "-e"], consume_multiple=True)] = None,
 ):
     """Run comprehensive diagnostics on the uiautomator2-mcp-server setup.
 
@@ -264,8 +265,8 @@ def doctor(
     Args:
         verbose: Show detailed diagnostic output.
         fix: Attempt automatic fixes for issues.
-        category: Only check specific categories (comma-separated).
-        exclude: Exclude specific categories (comma-separated).
+        includes: Only check specific categories (comma-separated).
+        excludes: Exclude specific categories (comma-separated).
 
     Returns:
         Exit code: 0 (all passed), 1 (some failed), 2 (doctor error).
@@ -273,7 +274,7 @@ def doctor(
     # adbutils is heavy, so we don't want to import it unless we need it
     from .health import run_doctor
 
-    sys.exit(run_doctor(verbose=verbose, fix=fix, category=category, exclude=exclude))
+    sys.exit(run_doctor(verbose=verbose, fix=fix, includes=includes, excludes=excludes))
 
 
 env_loader = Env(prefix=ENV_PREFIX)

@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from fnmatch import fnmatch
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from docstring_parser import parse
+from fastmcp import FastMCP
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
-
-if TYPE_CHECKING:
-    from .mcp import FastMCP
-
 
 __all__ = ["print_tags", "print_tool_help"]
 
