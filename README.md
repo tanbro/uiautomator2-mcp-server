@@ -44,7 +44,7 @@ An [MCP](https://modelcontextprotocol.io/) server that provides tools for contro
 
 **Control Android devices with natural language, no coding required**
 
-Detailed example: [.skills/douyin-search](.skills/douyin-search/SKILL.md)
+Detailed example: [skills/douyin-search](skills/douyin-search/SKILL.md)
 
 ---
 
@@ -807,7 +807,7 @@ Refer to your client's documentation for specific configuration details.
 
 > **Prerequisite:** To use AI-driven UI testing, you must first configure an MCP client (such as Claude Desktop, Cursor, or Cherry Studio) to connect to this server. See the [MCP Client Configuration](#mcp-client-configuration) section above for setup instructions.
 
-This project includes an AI-driven UI testing framework using the `.skills/` system. The `android-ui-test` skill serves a dual purpose:
+This project includes an AI-driven UI testing framework using the `skills/` system. The `android-ui-test` skill serves a dual purpose:
 
 1. **Educational Example**: Demonstrates best practices for MCP skill development
 2. **Production Testing**: Acts as the project's automated UI test suite for CI/CD
@@ -815,7 +815,7 @@ This project includes an AI-driven UI testing framework using the `.skills/` sys
 ### Skill Structure
 
 ```
-.skills/android-ui-test/
+skills/android-ui-test/
 ├── SKILL.md                     # Core skill definition (YAML metadata + lightweight description)
 ├── README.md                    # Architecture overview and quick start
 ├── examples/                    # Learning materials
@@ -872,7 +872,7 @@ Total: 7 passed, 1 skipped, 0 failed
 
 ### Creating Custom Skills
 
-See [`.skills/android-ui-test/`](.skills/android-ui-test/) for a complete reference implementation.
+See [`skills/android-ui-test/`](skills/android-ui-test/) for a complete reference implementation.
 
 Each skill directory contains:
 - `SKILL.md` - YAML frontmatter with metadata and lightweight description
