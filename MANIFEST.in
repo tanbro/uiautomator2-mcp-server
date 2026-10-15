@@ -14,7 +14,7 @@ exclude .ruff.toml
 
 prune .claude
 prune .github
-prune .skills
+prune skills
 prune assets
 prune htmlcov
 

@@ -38,7 +38,7 @@ src/u2mcp/
     ├── toast.py         # Toast message utilities
     └── xpath.py         # XPath-based element tools (primary)
 
-.skills/                  # AI-driven testing skills
+skills/                  # AI-driven testing skills
 ├── android-ui-test/
 │   ├── SKILL.md         # Skill definition
 │   ├── README.md        # Skill documentation
@@ -376,12 +376,12 @@ mypy src/
 
 ## AI-Driven UI Testing
 
-This project includes an AI-driven UI testing framework using the `.skills/` system. Skills allow AI to execute comprehensive automated tests using natural language specifications.
+This project includes an AI-driven UI testing framework using the `skills/` system. Skills allow AI to execute comprehensive automated tests using natural language specifications.
 
 ### Skill Structure
 
 ```
-.skills/android-ui-test/
+skills/android-ui-test/
 ├── SKILL.md                     # Core skill definition (YAML metadata + dual-purpose documentation)
 ├── README.md                    # Architecture overview and quick start
 ├── examples/                    # Learning materials
@@ -426,7 +426,7 @@ The AI will:
 
 ### Creating Custom Skills
 
-See [`.skills/android-ui-test/`](.skills/android-ui-test/) for a complete reference implementation.
+See [`skills/android-ui-test/`](skills/android-ui-test/) for a complete reference implementation.
 
 Key components:
 - `SKILL.md` - YAML frontmatter with metadata and lightweight description

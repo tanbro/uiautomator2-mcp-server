@@ -36,7 +36,7 @@ mcp-name: io.github.tanbro/uiautomator2-mcp-server
 
 **无需编写代码，通过自然语言即可控制 Android 设备**
 
-详细示例：[.skills/douyin-search](.skills/douyin-search/SKILL.md)
+详细示例：[skills/douyin-search](skills/douyin-search/SKILL.md)
 
 ---
 
@@ -862,7 +862,7 @@ u2mcp http -H 0.0.0.0 -p 8000 --no-auth
 
 > **前置条件：** 要使用 AI 驱动的 UI 测试，你必须先配置 MCP 客户端（如 Claude Desktop、Cursor 或 Cherry Studio）来连接到此服务器。设置说明请参阅上方的 [MCP 客户端配置](#mcp-客户端配置) 部分。
 
-本项目包含一个使用 `.skills/` 系统的 AI 驱动 UI 测试框架。`android-ui-test` 技能具有双重用途：
+本项目包含一个使用 `skills/` 系统的 AI 驱动 UI 测试框架。`android-ui-test` 技能具有双重用途：
 
 1. **教育示例**：演示 MCP 技能开发的最佳实践
 2. **生产测试**：作为项目的自动化 UI 测试套件，用于 CI/CD
@@ -870,7 +870,7 @@ u2mcp http -H 0.0.0.0 -p 8000 --no-auth
 ### 技能结构
 
 ```
-.skills/android-ui-test/
+skills/android-ui-test/
 ├── SKILL.md                     # 核心技能定义（YAML 元数据 + 简要描述）
 ├── README.md                    # 架构概览和快速入门
 ├── examples/                    # 学习资料
@@ -927,7 +927,7 @@ Android UI 测试总结
 
 ### 创建自定义技能
 
-参考 [`.skills/android-ui-test/`](.skills/android-ui-test/) 获取完整参考实现。
+参考 [`skills/android-ui-test/`](skills/android-ui-test/) 获取完整参考实现。
 
 每个技能目录包含：
 - `SKILL.md` - YAML 前置元数据和轻量级描述
