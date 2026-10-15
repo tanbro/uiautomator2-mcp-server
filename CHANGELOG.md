@@ -1,12 +1,16 @@
 # CHANGELOG
 
-## Unreleased
+## 0.4.0
+
+> 📅 2026-10-15
 
 > ⚠️ Breaking:
 
 - filtering values are no longer comma-separated strings and no longer support wildcards
 
 - 🆕 New:
+  - **Config file support**: TOML/YAML/JSON config files with auto-discovery from system/user/cwd directories
+  - **PyInstaller support**: Build standalone executables alongside existing Nuitka option
   - **Tool-level filtering**: `--include-tools` / `--exclude-tools` expose or hide tools by name via the FastMCP 4 native `enable`/`disable(names=...)` API
   - **List-valued filters**: `--include-tags`/`--exclude-tags`/`--include-tools`/`--exclude-tools` are repeatable flags, and config files accept real lists (e.g. `include-tags = ["device", "action:touch"]` under the `[stdio]`/`[http]` section)
   - **Dual tags**: every tool carries a bare category tag (e.g. `device`) alongside its subcategory (e.g. `device:capture`); selecting a bare tag exposes the whole category
@@ -14,23 +18,6 @@
 - ⚙️ Changed:
   - **Upgrade to FastMCP v4.0**: Major framework update from FastMCP v3.x to v4.x
   - Subcategory tag consolidation: `toast:*` → `system:toast`, `device:wait` → `app:lifecycle`, `xpath:modify` → `xpath:interact`, `input:keyboard` → `input:text`, `util:delay` → `util`
-  - Filtering is applied directly with FastMCP 4 native `enable(only=True)`/`disable` by resolved tool names; include is an allowlist, exclude removes afterwards and takes precedence; tag and tool filters union within a direction
-  - Filter config file keys are command-scoped (e.g. `[stdio] include-tags = [...]`); top-level keys were never applied and are now documented correctly
-
-- 🗑️ Removed:
-  - Comma-separated filter values (`-i "a,b"` → use `-i a -i b`) in `--include-tags`/`--exclude-tags`
-  - Wildcard patterns (`*`, `?`) in `--include-tags`/`--exclude-tags` (the `u2mcp info` display-pattern wildcards are unaffected)
-  - Hidden silent failure in `register_tools()`: a second `make_mcp()` call now correctly registers tools on the new instance
-
-## 0.4.0rc1
-
-> 📅 2026-05-30
-
-- 🆕 New:
-  - **Config file support**: TOML/YAML/JSON config files with auto-discovery from system/user/cwd directories
-  - **PyInstaller support**: Build standalone executables alongside existing Nuitka option
-
-- ⚙️ Changed:
   - Lazy-import heavy dependencies (fastmcp, adbutils), reducing `--help` from ~2s to ~70ms
   - Startup spinner with elapsed timer covers full init → lifespan ready
   - Improved authentication messages (user token vs auto-generated vs disabled)
@@ -38,15 +25,20 @@
   - Remove underscore prefix from internal helpers (`_load_mcp` → `initial_mcp`, etc.)
   - Rich error panel for config file errors (missing, unreadable, unsupported extension)
   - Collapse file validation into single `stat()` call
+  - Filtering is applied directly with FastMCP 4 native `enable(only=True)`/`disable` by resolved tool names; include is an allowlist, exclude removes afterwards and takes precedence; tag and tool filters union within a direction
+  - Filter config file keys are command-scoped (e.g. `[stdio] include-tags = [...]`); top-level keys were never applied and are now documented correctly
+
+- 🗑️ Removed:
+  - Comma-separated filter values (`-i "a,b"` → use `-i a -i b`) in `--include-tags`/`--exclude-tags`
+  - Wildcard patterns (`*`, `?`) in `--include-tags`/`--exclude-tags` (the `u2mcp info` display-pattern wildcards are unaffected)
+  - Dead `filtered` parameter and unreachable filter code in `print_tags`
+  - Dead `show_auth_info` parameter from `_lifespan`
+  - Hidden silent failure in `register_tools()`: a second `make_mcp()` call now correctly registers tools on the new instance
 
 - 🐛 Fixed:
   - Handle Ctrl-C cleanly during anyio async server shutdown
   - Fix wrong dependency group name in GitHub Actions workflow
   - Fix anyio shutdown error when stdin closes
-
-- 🗑️ Removed:
-  - Dead `filtered` parameter and unreachable filter code in `print_tags`
-  - Dead `show_auth_info` parameter from `_lifespan`
 
 - 📚 Docs:
   - Update README (EN/ZH) with config file section and PyInstaller/Nuitka build instructions
