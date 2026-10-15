@@ -8,10 +8,11 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastmcp import FastMCP
 from rich.console import Console
 
 from u2mcp.__main__ import meta
-from u2mcp.mcp import FastMCP, _lifespan, _normalize_filter, make_mcp
+from u2mcp.mcp import _lifespan, _normalize_filter, make_mcp
 
 
 def make_console() -> Console:
@@ -147,7 +148,7 @@ class TestCliFilterParsing:
         assert kwargs["include_tags"] == ["device", "action:touch"]
 
     def test_short_flags(self, cli_server_mock):
-        kwargs = run_cli(cli_server_mock, "http", "-i", "device", "-e", "screen:mirror")
+        kwargs = run_cli(cli_server_mock, "http", "--include-tags", "device", "--exclude-tags", "screen:mirror")
         assert kwargs["include_tags"] == ["device"]
         assert kwargs["exclude_tags"] == ["screen:mirror"]
 
