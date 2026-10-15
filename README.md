@@ -176,34 +176,56 @@ The following are two optional enhanced package managers. You can choose to inst
 
 ## Installation
 
-**Preferred: Run directly without installation** using `uvx` (recommended) or `pipx run` from PyPI:
+- Install pre‑compiled binary (recommended)：
 
-```bash
-# Run directly with uvx (recommended)
-uvx uiautomator2-mcp-server stdio
+  - macOS / Linux
 
-# Or run directly with pipx
-pipx run uiautomator2-mcp-server stdio
-```
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/scripts/install.sh | bash
+    ```
 
-**If you need global installation for long-term use**, you can also choose to install:
+  - Windows
 
-```bash
-# Install using uv (tool method)
-uv tool install uiautomator2-mcp-server
+    ```powershell
+    irm https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/scripts/install.ps1 | iex
+    ```
 
-# Or install with pipx
-pipx install uiautomator2-mcp-server
+  After installation, the short alias `u2mcp` is available:
 
-# Or install with pip
-python -m pip install uiautomator2-mcp-server
-```
+  ```bash
+  u2mcp --version
+  ```
 
-After installation, the short alias `u2mcp` is available:
+- Run directly without installation
 
-```bash
-u2mcp stdio
-```
+  Using `uvx` (recommended) or `pipx run` from PyPI:
+
+  ```bash
+  # Run directly with uvx (recommended)
+  uvx uiautomator2-mcp-server stdio
+
+  # Or run directly with pipx
+  pipx run uiautomator2-mcp-server stdio
+  ```
+
+  **If you need global installation for long-term use**, you can also choose to install:
+
+  ```bash
+  # Install using uv (tool method)
+  uv tool install uiautomator2-mcp-server
+
+  # Or install with pipx
+  pipx install uiautomator2-mcp-server
+
+  # Or install with pip
+  python -m pip install uiautomator2-mcp-server
+  ```
+
+  After installation, the short alias `u2mcp` is available:
+
+  ```bash
+  u2mcp --version
+  ```
 
 ----
 
