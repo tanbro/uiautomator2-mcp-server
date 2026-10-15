@@ -178,16 +178,16 @@ The following are two optional enhanced package managers. You can choose to inst
 
 - Install pre‑compiled binary (recommended)：
 
-  - Linux / macOS
+  - macOS / Linux
 
     ```bash
-    curl -fsSL https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/scripts/install.sh | bash
     ```
 
   - Windows
 
     ```powershell
-    irm https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/scripts/install.ps1 | iex
     ```
 
   After installation, the short alias `u2mcp` is available:
