@@ -7,6 +7,7 @@ a = Analysis(
     datas=copy_metadata("uiautomator2-mcp-server", recursive=True) + collect_data_files("u2mcp"),
     hiddenimports=collect_submodules("u2mcp.tools"),
     excludes=["mypy", "mypyc"],
+    icon=None,
 )
 pyz = PYZ(a.pure)
 exe = EXE(pyz, a.scripts, exclude_binaries=True, name="u2mcp")
