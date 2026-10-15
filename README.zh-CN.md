@@ -243,25 +243,58 @@ PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
 
 ## 安装
 
-**首选：免安装直接运行**，使用 `uvx`（推荐）或 `pipx run` 从 PyPI 直接运行包：
+- 下载安装预编译的执行文件(推荐，但国内网络可能无法访问)：
 
-```bash
-# 使用 uvx（推荐）直接运行
-uvx uiautomator2-mcp-server stdio
+  - macOS / Linux
 
-# 或使用 pipx 直接运行
-pipx run uiautomator2-mcp-server stdio
-```
+    ```bash
+    curl -fsSL https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/scripts/install.sh | bash
+    ```
 
-**如果需要全局安装命令或长期使用**，你也可以选择安装：
+  - Windows
 
-```bash
-# 使用 uv（tool 方式安装）
-uv tool install uiautomator2-mcp-server
+    ```powershell
+    irm https://raw.githubusercontent.com/tanbro/uiautomator2-mcp-server/main/scripts/install.ps1 | iex
+    ```
 
-# 或使用 pipx 安装
-pipx install uiautomator2-mcp-server
-```
+  安装后, 命令 `u2mcp` 可用:
+
+  ```bash
+  u2mcp --version
+  ```
+
+- 免安装直接执行
+
+  使用 `uvx` (推荐) 或 `pipx run` 直接一键从 PyPI 下载运行:
+
+  ```bash
+  uvx uiautomator2-mcp-server stdio
+  ```
+
+  或
+
+  ```bash
+  pipx run uiautomator2-mcp-server stdio
+  ```
+
+  **如需全局安装长期使用**, 可以这样安装:
+
+  ```bash
+  # 用 uv (工具模式) 安装
+  uv tool install uiautomator2-mcp-server
+
+  # 或用 pipx 安装
+  pipx install uiautomator2-mcp-server
+
+  # 或者用 pip 安装
+  python -m pip install uiautomator2-mcp-server
+  ```
+
+  安装后, 命令 `u2mcp` 可用:
+
+  ```bash
+  u2mcp --version
+  ```
 
 ----
 
