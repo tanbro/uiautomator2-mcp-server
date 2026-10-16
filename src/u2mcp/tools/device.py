@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import uiautomator2 as u2
-from adbutils import adb
+from adbutils import AdbError, adb
 from anyio import Lock, to_thread
 from fastmcp.utilities.logging import get_logger
 from lxml import etree
@@ -186,13 +186,13 @@ async def connect(serial: str = "") -> dict[str, Any]:
 
     if serial := serial.strip():
         # (dead device, error to re-raise) when the cached connection is stale
-        stale: tuple[u2.Device, u2.ConnectError] | None = None
+        stale: tuple[u2.Device, Exception] | None = None
         try:
             async with get_device(serial) as device_1:
                 # Found, then check if it's still connected
                 try:
                     return await to_thread.run_sync(lambda: device_1.device_info | device_1.info)
-                except u2.ConnectError as e:
+                except (AdbError, u2.ConnectError) as e:
                     # Found, but not connected, mark it for removal
                     logger.warning("Device %s is no longer connected, delete it!", serial)
                     stale = (device_1, e)
