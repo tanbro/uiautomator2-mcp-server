@@ -138,8 +138,9 @@ def mock_u2_module(mock_u2_device, mocker: MockerFixture):
     mock_u2 = mocker.MagicMock()
     mock_u2.connect = mocker.MagicMock(return_value=mock_u2_device)
     mock_u2.Device = mocker.MagicMock(return_value=mock_u2_device)
-    # Exception classes must be real so `except u2.ConnectError` works in device.py
+    # Exception classes must be real so `except u2.DeviceError` works in device.py
     mock_u2.ConnectError = uiautomator2.ConnectError
+    mock_u2.DeviceError = uiautomator2.DeviceError
     return mock_u2
 
 

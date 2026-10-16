@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from fastmcp.exceptions import ToolError
 from pytest_mock import MockerFixture
 
 from u2mcp.tools.device import (
@@ -92,11 +93,19 @@ async def test_connect_success(mock_u2_device, mocker: MockerFixture) -> None:
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_disconnect(mock_u2_device, mocker: MockerFixture) -> None:
-    """Test disconnect executes without error."""
-    # disconnect may return None or a message
+    """disconnect removes a connected entry; unknown serial raises ToolError."""
+    from anyio import Lock
+
+    from u2mcp.tools import device as device_mod
+
+    device_mod._devices["emulator-5554"] = device_mod.DeviceEntry(lock=Lock(), device=mock_u2_device)
     result = await disconnect("emulator-5554")
     # Just ensure no exception raised
     assert result is None or isinstance(result, str)
+    assert "emulator-5554" not in device_mod._devices
+
+    with pytest.raises(ToolError, match="not connected"):
+        await disconnect("emulator-5554")
 
 
 @pytest.mark.asyncio
@@ -410,8 +419,9 @@ async def test_save_dump_hierarchy_default_pretty_true(mock_u2_device, mocker: M
 @pytest.mark.asyncio
 @pytest.mark.unit
 async def test_connect_stale_entry_removed_and_error_raised() -> None:
-    """When a cached device no longer responds, connect drops the stale entry
-    (under the global lock, with an identity check) and re-raises ConnectError."""
+    """When a cached device no longer responds, connect re-raises the
+    ConnectError, and get_device evicts the stale entry when its reference
+    count drops to zero."""
     import uiautomator2 as u2
     from anyio import Lock
 
@@ -429,7 +439,7 @@ async def test_connect_stale_entry_removed_and_error_raised() -> None:
             raise u2.ConnectError("device is dead")
 
     dead = DeadDevice()
-    device_mod._devices["stale-serial"] = (Lock(), dead)
+    device_mod._devices["stale-serial"] = device_mod.DeviceEntry(lock=Lock(), device=dead)
 
     with pytest.raises(u2.ConnectError):
         await connect("stale-serial")

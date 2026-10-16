@@ -4,6 +4,7 @@ import argparse
 from base64 import b64encode
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager, closing
+from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ from typing import Any
 import uiautomator2 as u2
 from adbutils import AdbError, adb
 from anyio import Lock, to_thread
+from fastmcp.exceptions import ToolError
 from fastmcp.utilities.logging import get_logger
 from lxml import etree
 from PIL.Image import Image
@@ -38,32 +40,56 @@ __all__ = (
 )
 
 
-_devices: dict[str, tuple[Lock, u2.Device]] = {}
+@dataclass
+class DeviceEntry:
+    lock: Lock
+    device: u2.Device
+    counter: int = 0
+
+
+_devices: dict[str, DeviceEntry] = {}
 _global_device_connection_lock = Lock()
+_logger = get_logger(__name__)
 
 
 @asynccontextmanager
 async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
+    connect_failed = False
+
+    def _try_connect():
+        device = u2.connect(serial)
+        # Fire a RPC call to make sure the device is ready
+        _ = device.info
+        return device
+
     async with _global_device_connection_lock:
-        try:
-            lock, device = _devices[serial]
-        except KeyError:
+        # Only try-connect when create a new device entry
+        if (entry := _devices.get(serial)) is None:
+            try:
+                device = await to_thread.run_sync(_try_connect)
+            except (u2.DeviceError, AdbError) as e:
+                raise ToolError(
+                    f"Failed to connect to device {serial!r}: {e}. "
+                    "Check the serial with the device_list tool, verify USB debugging is enabled and the device is authorized, then retry."
+                ) from e
+            entry = DeviceEntry(lock=Lock(), device=device)
+            _devices[serial] = entry
+        entry.counter += 1
 
-            def _connect():
-                _d = u2.connect(serial)
-                # Fire a RPC call to make sure the device is ready
-                _ = _d.info
-                return _d
-
-            device = await to_thread.run_sync(_connect)
-            lock = Lock()
-            _devices[serial] = lock, device
-
-    async with lock:
-        # Re-apply on every acquisition so runtime changes to the global
-        # XPath timeout take effect on already-connected devices.
-        device.settings["wait_timeout"] = get_xpath_timeout()
-        yield device
+    try:
+        async with entry.lock:
+            entry.device.settings["wait_timeout"] = get_xpath_timeout()
+            yield entry.device
+    except (u2.DeviceError, AdbError):
+        connect_failed = True
+        raise
+    finally:
+        async with _global_device_connection_lock:
+            entry.counter -= 1
+            if entry.counter < 0:
+                raise RuntimeError(f"Device {serial!r} reference counter is negative ({entry.counter})")
+            if entry.counter == 0 and connect_failed and _devices.get(serial) is entry:
+                del _devices[serial]
 
 
 def ensure_image(im: Image | None) -> Image:
@@ -180,44 +206,9 @@ async def connect(serial: str = "") -> dict[str, Any]:
     Returns:
         dict[str,Any]: Device information
     """
-    device: u2.Device | None = None
-
-    logger = get_logger(f"{__name__}.connect")
-
-    if serial := serial.strip():
-        # (dead device, error to re-raise) when the cached connection is stale
-        stale: tuple[u2.Device, Exception] | None = None
-        try:
-            async with get_device(serial) as device_1:
-                # Found, then check if it's still connected
-                try:
-                    return await to_thread.run_sync(lambda: device_1.device_info | device_1.info)
-                except (AdbError, u2.ConnectError) as e:
-                    # Found, but not connected, mark it for removal
-                    logger.warning("Device %s is no longer connected, delete it!", serial)
-                    stale = (device_1, e)
-        except KeyError:
-            # Not found, need a new connection!
-            logger.info("Cannot find device with serial %s, connecting...")
-
-        if stale is not None:
-            # Drop the stale entry outside of the per-device lock. The
-            # identity check keeps us from deleting a fresh entry another
-            # task may have connected in the meantime.
-            async with _global_device_connection_lock:
-                if _devices.get(serial, (None, None))[1] is stale[0]:
-                    del _devices[serial]
-            raise stale[1] from None
-
-    # make new connection here!
-    async with _global_device_connection_lock:
-        device = await to_thread.run_sync(u2.connect, serial)
-        if device is None:
-            raise RuntimeError("Cannot connect to device")
-        logger.info("Connected to device %s", device.serial)
+    async with get_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.device_info | device.info)
-        _devices[device.serial] = Lock(), device
-        return result
+    return result
 
 
 @mcp.tool("disconnect", tags={"device", "device:manage"})
@@ -227,10 +218,9 @@ async def disconnect(serial: str):
     Args:
         serial (str): Android device serialno
     """
-    if not (serial := serial.strip()):
-        raise ValueError("serial cannot be empty")
     async with _global_device_connection_lock:
-        _devices.pop(serial, None)
+        if _devices.pop(serial, None) is None:
+            raise ToolError(f"Device {serial!r} is not connected")
 
 
 @mcp.tool("disconnect_all", tags={"device", "device:manage"})
