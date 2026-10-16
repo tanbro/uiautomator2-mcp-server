@@ -217,7 +217,7 @@ Do NOT include usage examples in tool function docstrings unless absolutely crit
 
 ### Device Connection Pool
 - `_devices` dict caches device connections with per-device locks
-- `get_device()` async context manager provides thread-safe device access
+- `use_device()` async context manager provides thread-safe device access
 - Global `_global_device_connection_lock` protects connection cache
 
 ### Background Tasks
@@ -257,7 +257,7 @@ Do NOT include usage examples in tool function docstrings unless absolutely crit
 
 1. Create tool function in appropriate `tools/*.py` module
 2. Decorate with `@mcp.tool("tool_name", tags={"category", "category:subcategory"})`
-3. Use `get_device(serial)` context manager for device access
+3. Use `use_device(serial)` context manager for device access
 4. Run CPU-bound operations in `to_thread.run_sync()`
 5. Use FastMCP context for user feedback: `get_context().info()`
 6. Write docstrings in **Google style format** for proper parsing by `info` command:
@@ -276,7 +276,7 @@ async def my_tool(serial: str, param: str) -> dict[str, Any]:
     Returns:
         dict[str, Any]: Description of return value structure.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.some_method(param))
     return {"result": result}
 ```
@@ -302,7 +302,7 @@ Example:
 ```python
 @mcp.tool("my_tool", tags={"device", "device:info"})
 async def my_tool(serial: str, param: str) -> dict[str, Any]:
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.some_method(param))
     return {"result": result}
 ```

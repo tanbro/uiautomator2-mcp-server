@@ -3,7 +3,7 @@ from __future__ import annotations
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import encode_image, ensure_image, get_device, save_image
+from .device import encode_image, ensure_image, save_image, use_device
 
 __all__ = (
     "xpath_click",
@@ -37,7 +37,7 @@ async def xpath_wait_appear(serial: str, xpath: str, timeout: float) -> bool:
     Returns:
         bool: True if element found, False if timeout.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).wait(timeout))
 
 
@@ -53,7 +53,7 @@ async def xpath_wait_gone(serial: str, xpath: str, timeout: float) -> bool:
     Returns:
         bool: True if element gone, False if still present after timeout.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).wait_gone(timeout))
 
 
@@ -69,7 +69,7 @@ async def xpath_click(serial: str, xpath: str, timeout: float) -> bool:
     Returns:
         bool: True if click successful, False otherwise.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).click_exists(timeout))
 
 
@@ -81,7 +81,7 @@ async def xpath_click_nowait(serial: str, xpath: str):
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.xpath(xpath).click_nowait())
 
 
@@ -93,7 +93,7 @@ async def xpath_long_press(serial: str, xpath: str):
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.xpath(xpath).long_click())
 
 
@@ -109,7 +109,7 @@ async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, i
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
     return encode_image(ensure_image(im), format)
@@ -127,7 +127,7 @@ async def xpath_save_screenshot(serial: str, xpath: str, file: str) -> str:
     Returns:
         str: Absolute path to the saved screenshot file.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.xpath(xpath).screenshot())
 
     return save_image(ensure_image(im), file)
@@ -144,7 +144,7 @@ async def xpath_get_text(serial: str, xpath: str) -> str:
     Returns:
         str: Element text content, empty string if element has no text.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.xpath(xpath).get_text())
         return result if result else ""
 
@@ -158,7 +158,7 @@ async def xpath_set_text(serial: str, xpath: str, text: str):
         xpath (str): Element XPath expression.
         text (str): Text content to set.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.xpath(xpath).set_text(text))
 
 
@@ -173,7 +173,7 @@ async def xpath_get_bounds(serial: str, xpath: str) -> tuple[int, int, int, int]
     Returns:
         tuple[int, int, int, int]: Element bounds as (left, top, right, bottom).
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).bounds)
 
 
@@ -188,7 +188,7 @@ async def xpath_exists(serial: str, xpath: str) -> bool:
     Returns:
         bool: True if element exists, False otherwise.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).exists)
 
 
@@ -203,7 +203,7 @@ async def xpath_get_info(serial: str, xpath: str) -> dict[str, object]:
     Returns:
         dict[str, object]: Element information including text, bounds, className, clickable, etc.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         element = await to_thread.run_sync(lambda: device.xpath(xpath).get())
         return element.info
 
@@ -220,7 +220,7 @@ async def xpath_get_attrib(serial: str, xpath: str, key: str) -> str:
     Returns:
         str: Attribute value, empty string if attribute not found.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         element = await to_thread.run_sync(lambda: device.xpath(xpath).get())
         return element.attrib.get(key, "")
 
@@ -235,7 +235,7 @@ async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.
         direction (str): Swipe direction, one of left, right, up, down.
         scale (float): Percentage of swipe distance, range (0, 1.0).
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.xpath(xpath).swipe(direction, scale))
 
 
@@ -251,7 +251,7 @@ async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
     Returns:
         bool: True if can scroll further, False otherwise.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.xpath(xpath).scroll(direction))
 
 
@@ -268,6 +268,6 @@ async def xpath_scroll_to(serial: str, xpath: str, direction: str, max_swipes: i
     Returns:
         bool: True if element found, False otherwise.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.xpath.scroll_to(xpath, direction, max_swipes))
         return result is not None

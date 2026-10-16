@@ -181,7 +181,7 @@ To add a new MCP tool:
    from typing import Any
 
    from u2mcp.mcp import mcp
-   from u2mcp.device import get_device
+   from u2mcp.device import use_device
    from anyio import to_thread
 
 
@@ -197,7 +197,7 @@ To add a new MCP tool:
        Returns:
            Dictionary with result information
        """
-       async with get_device(serial) as device:
+       async with use_device(serial) as device:
            result = await to_thread.run_sync(lambda: device.some_method(param))
        return {"result": result}
    ```
@@ -307,6 +307,6 @@ By contributing to this project, you agree that your contributions will be licen
 
 - Use `async/await` for all I/O operations
 - Use `to_thread.run_sync()` for CPU-bound operations
-- Use `get_device()` context manager for device access
+- Use `use_device()` context manager for device access
 
 Thank you for contributing to uiautomator2-mcp-server!

@@ -5,7 +5,7 @@ from typing import Any
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = (
     "app_auto_grant_permissions",
@@ -31,7 +31,7 @@ async def app_install(serial: str, data: str):
         serial (str): Android device serialno
         data (str): APK file path or url
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.app_install, data)
 
 
@@ -46,7 +46,7 @@ async def app_uninstall(serial: str, package_name: str) -> bool:
     Returns:
         bool: success
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_uninstall, package_name)
 
 
@@ -61,7 +61,7 @@ async def app_uninstall_all(serial: str, excludes: list[str] | None = None) -> l
     Returns:
         list[str]: list of uninstalled apps
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_uninstall_all, excludes or [])
 
 
@@ -82,7 +82,7 @@ async def app_start(
         stop (bool): Stop app before starting the activity. (require activity)
         wait (bool): wait until app started. default False
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.app_start, package_name, activity, wait, stop)
 
 
@@ -96,7 +96,7 @@ async def app_wait(serial: str, package_name: str, timeout: float = 20.0, front=
         timeout (float): maximum wait time seconds
         front (bool): wait until app is current app
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         if not await to_thread.run_sync(device.app_wait, package_name, timeout, front):
             raise RuntimeError(f"Failed to wait App {package_name} to launch")
 
@@ -109,7 +109,7 @@ async def app_stop(serial: str, package_name: str):
         serial (str): Android device serialno
         package_name (str): package name
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.app_stop, package_name)
 
 
@@ -123,7 +123,7 @@ async def app_stop_all(serial: str, excludes: list[str] | None = None) -> list[s
     Returns:
         list[str]: a list of killed apps
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_stop_all, excludes or [])
 
 
@@ -138,7 +138,7 @@ async def app_clear(serial: str, package_name: str):
     Returns:
         bool: success
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.app_clear, package_name)
 
 
@@ -157,7 +157,7 @@ async def app_info(serial: str, package_name: str) -> dict[str, Any]:
         Example:
             {"versionName": "1.1.7", "versionCode": 1001007}
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_info, package_name)
 
 
@@ -172,7 +172,7 @@ async def app_current(serial: str) -> dict[str, Any]:
     Returns:
         dict[str,Any]: running app info
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_current)
 
 
@@ -188,7 +188,7 @@ async def app_list(serial: str, filter: str = "") -> list[str]:
     Returns:
         list[str]: list of apps by filter
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_list, filter.strip())
 
 
@@ -203,7 +203,7 @@ async def app_list_running(serial: str) -> list[str]:
     Returns:
         list[str]: list of running apps
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.app_list_running)
 
 
@@ -228,5 +228,5 @@ async def app_auto_grant_permissions(serial: str, package_name: str):
         On devices running Android 5.1 (API level 22) and lower,
             must be an optional permission defined by the app.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.app_auto_grant_permissions, package_name)

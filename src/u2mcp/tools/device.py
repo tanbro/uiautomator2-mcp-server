@@ -13,7 +13,6 @@ import uiautomator2 as u2
 from adbutils import AdbError, adb
 from anyio import Lock, to_thread
 from fastmcp.exceptions import ToolError
-from fastmcp.utilities.logging import get_logger
 from lxml import etree
 from PIL.Image import Image
 
@@ -48,12 +47,11 @@ class DeviceEntry:
 
 
 _devices: dict[str, DeviceEntry] = {}
-_global_device_connection_lock = Lock()
-_logger = get_logger(__name__)
+_devices_lock = Lock()
 
 
 @asynccontextmanager
-async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
+async def use_device(serial: str) -> AsyncGenerator[u2.Device]:
     connect_failed = False
 
     def _try_connect():
@@ -62,7 +60,7 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
         _ = device.info
         return device
 
-    async with _global_device_connection_lock:
+    async with _devices_lock:
         # Only try-connect when create a new device entry
         if (entry := _devices.get(serial)) is None:
             try:
@@ -84,7 +82,7 @@ async def get_device(serial: str) -> AsyncGenerator[u2.Device]:
         connect_failed = True
         raise
     finally:
-        async with _global_device_connection_lock:
+        async with _devices_lock:
             entry.counter -= 1
             if entry.counter < 0:
                 raise RuntimeError(f"Device {serial!r} reference counter is negative ({entry.counter})")
@@ -180,7 +178,7 @@ async def shell_command(serial: str, command: str, timeout: float = 60) -> tuple
     Returns:
         tuple[int,str]: Return code and output of the command
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return_value = await to_thread.run_sync(device.adb_device.shell2, command, timeout)
         return return_value.returncode, return_value.output
 
@@ -206,7 +204,7 @@ async def connect(serial: str = "") -> dict[str, Any]:
     Returns:
         dict[str,Any]: Device information
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         result = await to_thread.run_sync(lambda: device.device_info | device.info)
     return result
 
@@ -218,7 +216,7 @@ async def disconnect(serial: str):
     Args:
         serial (str): Android device serialno
     """
-    async with _global_device_connection_lock:
+    async with _devices_lock:
         if _devices.pop(serial, None) is None:
             raise ToolError(f"Device {serial!r} is not connected")
 
@@ -226,7 +224,7 @@ async def disconnect(serial: str):
 @mcp.tool("disconnect_all", tags={"device", "device:manage"})
 async def disconnect_all():
     """Disconnect from all Android devices"""
-    async with _global_device_connection_lock:
+    async with _devices_lock:
         _devices.clear()
 
 
@@ -242,7 +240,7 @@ async def window_size(serial: str) -> dict[str, int]:
             - "width" (int): Window width
             - "height" (int): Window height
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         width, height = await to_thread.run_sync(device.window_size)
         return {"width": width, "height": height}
 
@@ -264,7 +262,7 @@ async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) ->
             - width (int): Image width
     """
     display_id = int(display_id)
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
 
     data_url, height, width = encode_image(ensure_image(im), format)
@@ -286,7 +284,7 @@ async def save_screenshot(serial: str, file: str, display_id: int = -1) -> str:
     """
     display_id = int(display_id)
 
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         im = await to_thread.run_sync(lambda: device.screenshot(display_id=display_id if display_id >= 0 else None))
 
     return save_image(ensure_image(im), file)
@@ -315,7 +313,7 @@ async def dump_hierarchy(
         str: xml string of the hierarchy tree.
             If xpath is provided, returns matching elements separated by "===".
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         xml_str = await to_thread.run_sync(
             lambda: device.dump_hierarchy(compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None)
         )
@@ -349,7 +347,7 @@ async def save_dump_hierarchy(
     Returns:
         str: absolute path to the saved file.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         xml_str = await to_thread.run_sync(
             lambda: device.dump_hierarchy(compressed=compressed, pretty=pretty, max_depth=max_depth if max_depth > 0 else None)
         )
@@ -379,7 +377,7 @@ async def info(serial: str) -> dict[str, Any]:
         dict[str,Any]: Device info
     """
 
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.info)
 
 
@@ -395,5 +393,5 @@ async def activity_wait_appear(serial: str, activity: str, timeout: float) -> bo
     Returns:
         bool: True if activity appeared, False if timeout.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(device.wait_activity, activity, timeout)  # type: ignore[arg-type]

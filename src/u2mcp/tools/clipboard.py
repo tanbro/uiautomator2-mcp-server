@@ -3,7 +3,7 @@ from __future__ import annotations
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = ("read_clipboard", "write_clipboard")
 
@@ -18,7 +18,7 @@ async def read_clipboard(serial: str) -> str | None:
     Returns:
         The actual text in the clip, or None if there is no text.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device.clipboard)
 
 
@@ -30,5 +30,5 @@ async def write_clipboard(serial: str, text: str):
         serial (str): Android device serialno
         text: The actual text in the clip.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.set_clipboard, text)

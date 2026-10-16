@@ -5,7 +5,7 @@ from anyio.abc import TaskStatus
 
 from ..background import get_background_task_group
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = ("screen_record", "screen_record_start", "screen_record_stop")
 
@@ -35,7 +35,7 @@ async def screen_record_start(serial: str, file: str, duration: float) -> str:
         task_status.started()
 
         try:
-            async with get_device(serial) as device:
+            async with use_device(serial) as device:
                 await to_thread.run_sync(lambda: device.screenrecord(file, duration))
         finally:
             _recording_active.pop(serial, None)
@@ -67,5 +67,5 @@ async def screen_record(serial: str, filename: str, fps: int = 20):
     Returns:
         str: Output file path.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.screenrecord(filename, fps))

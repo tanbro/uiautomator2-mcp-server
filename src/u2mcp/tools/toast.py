@@ -3,7 +3,7 @@ from __future__ import annotations
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = (
     "get_toast",
@@ -28,7 +28,7 @@ async def get_toast(serial: str, wait_timeout: float = 10) -> str | None:
     Returns:
         None or toast message
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(
             lambda: device.toast.get_message(wait_timeout=wait_timeout)  # type: ignore[arg-type]
         )
@@ -43,7 +43,7 @@ async def show_toast(serial: str, text: str, duration: float = 1.0):
         text (str): The message text to display in the Toast.
         duration (float): Display duration in seconds (default: 1.0).
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.toast.show(text, duration))
 
 
@@ -58,5 +58,5 @@ async def reset_toast(serial: str):
     Args:
         serial (str): Android device serial number.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(lambda: device.toast.reset())

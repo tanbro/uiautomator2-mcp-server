@@ -3,7 +3,7 @@ from __future__ import annotations
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = (
     "swipe_down",
@@ -16,7 +16,7 @@ __all__ = (
 
 async def _swipe_ext_impl(serial: str, direction: str, scale: float):
     """Internal implementation for swipe from screen edge."""
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.swipe_ext, direction, scale)
 
 

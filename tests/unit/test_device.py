@@ -420,7 +420,7 @@ async def test_save_dump_hierarchy_default_pretty_true(mock_u2_device, mocker: M
 @pytest.mark.unit
 async def test_connect_stale_entry_removed_and_error_raised() -> None:
     """When a cached device no longer responds, connect re-raises the
-    ConnectError, and get_device evicts the stale entry when its reference
+    ConnectError, and use_device evicts the stale entry when its reference
     count drops to zero."""
     import uiautomator2 as u2
     from anyio import Lock

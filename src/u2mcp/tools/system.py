@@ -5,7 +5,7 @@ from typing import Literal
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = (
     "get_orientation",
@@ -27,7 +27,7 @@ async def set_orientation(serial: str, orientation: OrientationType):
         serial (str): Android device serial number.
         orientation (OrientationType): Target orientation, one of natural, left, right, upsidedown.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.set_orientation, orientation)
 
 
@@ -41,7 +41,7 @@ async def get_orientation(serial: str) -> str:
     Returns:
         str: Current orientation, one of natural, left, right, upsidedown, or unknown.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         info = await to_thread.run_sync(lambda: device.info)
         return info.get("orientation", "unknown")
 
@@ -53,7 +53,7 @@ async def open_notification(serial: str):
     Args:
         serial (str): Android device serial number.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.open_notification)
 
 
@@ -64,7 +64,7 @@ async def open_quick_settings(serial: str):
     Args:
         serial (str): Android device serial number.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.open_quick_settings)
 
 
@@ -78,5 +78,5 @@ async def unlock(serial: str):
     Args:
         serial (str): Android device serial number.
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.unlock)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from anyio import to_thread
 
 from ..mcp import mcp
-from .device import get_device
+from .device import use_device
 
 __all__ = (
     "clear_text",
@@ -22,7 +22,7 @@ async def send_text(serial: str, text: str, clear: bool = False):
         text (str): input text
             clear: clear text before input
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.send_keys, text, clear)
 
 
@@ -44,7 +44,7 @@ async def set_focused_text(serial: str, text: str) -> bool:
     Raises:
         RuntimeError: If no element is currently focused
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         return await to_thread.run_sync(lambda: device(focused=True).set_text(text))
 
 
@@ -55,7 +55,7 @@ async def clear_text(serial: str):
     Args:
         serial (str): Android device serialno
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.clear_text)
 
 
@@ -66,5 +66,5 @@ async def hide_keyboard(serial: str):
     Args:
         serial (str): Android device serialno
     """
-    async with get_device(serial) as device:
+    async with use_device(serial) as device:
         await to_thread.run_sync(device.hide_keyboard)
