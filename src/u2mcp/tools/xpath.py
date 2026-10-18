@@ -14,6 +14,9 @@ SwipeDirectionType = Literal["left", "right", "up", "down"]
 # XPathElement.scroll remaps only these two onto Direction.FORWARD/BACKWARD.
 XpathScrollDirectionType = Literal["forward", "backward"]
 
+# Image formats for capture tools (also valid as PIL save format and data URL subtype).
+ImageFormatType = Literal["jpeg", "png"]
+
 __all__ = (
     "xpath_click",
     "xpath_click_nowait",
@@ -107,13 +110,13 @@ async def xpath_long_press(serial: str, xpath: str):
 
 
 @mcp.tool("xpath_screenshot", tags={"xpath", "xpath:capture"})
-async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, int, int]:
+async def xpath_screenshot(serial: str, xpath: str, format: ImageFormatType = "jpeg") -> tuple[str, int, int]:
     """Find element by XPath and take screenshot.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-        format (str): Image format, jpeg or png.
+        format (str): Image format, jpeg or png. Defaults to jpeg.
 
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.

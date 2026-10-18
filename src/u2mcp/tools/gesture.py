@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from anyio import to_thread
 
 from ..mcp import mcp
 from .device import use_device
+
+# Swipe direction accepted by uiautomator2's swipe_ext (Direction enum values).
+SwipeDirectionType = Literal["left", "right", "up", "down"]
 
 __all__ = (
     "swipe_down",
@@ -14,14 +19,14 @@ __all__ = (
 )
 
 
-async def _swipe_ext_impl(serial: str, direction: str, scale: float):
+async def _swipe_ext_impl(serial: str, direction: SwipeDirectionType, scale: float):
     """Internal implementation for swipe from screen edge."""
     async with use_device(serial) as device:
         await to_thread.run_sync(device.swipe_ext, direction, scale)
 
 
 @mcp.tool("swipe_ext", tags={"gesture", "gesture:edge"})
-async def swipe_ext(serial: str, direction: str, scale: float):
+async def swipe_ext(serial: str, direction: SwipeDirectionType, scale: float):
     """Swipe from screen edge.
 
     Args:

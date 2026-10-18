@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager, closing
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import uiautomator2 as u2
 from adbutils import AdbError, adb
@@ -246,13 +246,13 @@ async def window_size(serial: str) -> dict[str, int]:
 
 
 @mcp.tool("screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
-async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) -> dict[str, Any]:
+async def screenshot(serial: str, format: Literal["jpeg", "png"] = "jpeg", display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
 
     Args:
         serial (str): Android device serialno.
-        format (str): Image format. Defaults to "jpeg".
+        format (str): Image format, jpeg or png. Defaults to "jpeg".
         display_id (int): use specific display if device has multiple screen. Defaults to -1.
 
     Returns:
