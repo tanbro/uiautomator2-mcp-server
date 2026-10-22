@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from anyio import to_thread
 
 from ..mcp import mcp
 from .device import encode_image, ensure_image, save_image, use_device
+
+# XPathElement.swipe delegates to swipe_in_bounds (uiautomator2/utils.py),
+# which raises ValueError for anything outside these four.
+SwipeDirectionType = Literal["left", "right", "up", "down"]
+
+# XPathElement.scroll remaps only these two onto Direction.FORWARD/BACKWARD.
+XpathScrollDirectionType = Literal["forward", "backward"]
 
 __all__ = (
     "xpath_click",
@@ -226,7 +235,12 @@ async def xpath_get_attrib(serial: str, xpath: str, key: str) -> str:
 
 
 @mcp.tool("xpath_swipe", tags={"xpath", "xpath:gesture"})
-async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.6):
+async def xpath_swipe(
+    serial: str,
+    xpath: str,
+    direction: SwipeDirectionType,
+    scale: float = 0.6,
+):
     """Find element by XPath and swipe within it.
 
     Args:
@@ -240,7 +254,7 @@ async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.
 
 
 @mcp.tool("xpath_scroll", tags={"xpath", "xpath:gesture"})
-async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
+async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionType = "forward") -> bool:
     """Find element by XPath and scroll within it.
 
     Args:
@@ -256,13 +270,23 @@ async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
 
 
 @mcp.tool("xpath_scroll_to", tags={"xpath", "xpath:gesture"})
-async def xpath_scroll_to(serial: str, xpath: str, direction: str, max_swipes: int) -> bool:
+async def xpath_scroll_to(
+    serial: str,
+    xpath: str,
+    direction: SwipeDirectionType = "up",
+    max_swipes: int = 10,
+) -> bool:
     """Scroll the entire screen to find an element by XPath.
+
+    The direction is the swipe direction: the screen slides toward
+    "up"/"left"/"right"/"down" until the target element becomes visible.
+    Use "up" for forward scrolling (content below comes into view) and
+    "down" for backward scrolling.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Target element XPath expression to scroll to.
-        direction (str): Scroll direction, one of forward or backward.
+        direction (str): Swipe direction, one of left, right, up, down.
         max_swipes (int): Maximum swipe attempts.
 
     Returns:
