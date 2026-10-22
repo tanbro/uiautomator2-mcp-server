@@ -270,13 +270,23 @@ async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionT
 
 
 @mcp.tool("xpath_scroll_to", tags={"xpath", "xpath:gesture"})
-async def xpath_scroll_to(serial: str, xpath: str, direction: str, max_swipes: int) -> bool:
+async def xpath_scroll_to(
+    serial: str,
+    xpath: str,
+    direction: SwipeDirectionType,
+    max_swipes: int,
+) -> bool:
     """Scroll the entire screen to find an element by XPath.
+
+    The direction is the swipe direction: the screen slides toward
+    "up"/"left"/"right"/"down" until the target element becomes visible.
+    Use "up" for forward scrolling (content below comes into view) and
+    "down" for backward scrolling.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Target element XPath expression to scroll to.
-        direction (str): Scroll direction, one of forward or backward.
+        direction (str): Swipe direction, one of left, right, up, down.
         max_swipes (int): Maximum swipe attempts.
 
     Returns:

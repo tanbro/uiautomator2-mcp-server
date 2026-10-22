@@ -193,5 +193,5 @@ async def test_xpath_scroll(mock_u2_device) -> None:
 @pytest.mark.unit
 async def test_xpath_scroll_to(mock_u2_device) -> None:
     """Test xpath_scroll_to executes without error."""
-    result = await xpath_scroll_to("emulator-5554", "//node[@text='Target']", "forward", 10)
+    result = await xpath_scroll_to("emulator-5554", "//node[@text='Target']", "up", 10)
     assert result is True
