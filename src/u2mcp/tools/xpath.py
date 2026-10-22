@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from anyio import to_thread
 
 from ..mcp import mcp
 from .device import encode_image, ensure_image, save_image, use_device
+
+# XPathElement.swipe delegates to swipe_in_bounds (uiautomator2/utils.py),
+# which raises ValueError for anything outside these four.
+SwipeDirectionType = Literal["left", "right", "up", "down"]
+
+# XPathElement.scroll remaps only these two onto Direction.FORWARD/BACKWARD.
+XpathScrollDirectionType = Literal["forward", "backward"]
 
 __all__ = (
     "xpath_click",
@@ -226,7 +235,12 @@ async def xpath_get_attrib(serial: str, xpath: str, key: str) -> str:
 
 
 @mcp.tool("xpath_swipe", tags={"xpath", "xpath:gesture"})
-async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.6):
+async def xpath_swipe(
+    serial: str,
+    xpath: str,
+    direction: SwipeDirectionType,
+    scale: float = 0.6,
+):
     """Find element by XPath and swipe within it.
 
     Args:
@@ -240,7 +254,7 @@ async def xpath_swipe(serial: str, xpath: str, direction: str, scale: float = 0.
 
 
 @mcp.tool("xpath_scroll", tags={"xpath", "xpath:gesture"})
-async def xpath_scroll(serial: str, xpath: str, direction: str) -> bool:
+async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionType) -> bool:
     """Find element by XPath and scroll within it.
 
     Args:
