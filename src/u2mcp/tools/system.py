@@ -25,7 +25,7 @@ async def set_orientation(serial: str, orientation: OrientationType):
 
     Args:
         serial (str): Android device serial number.
-        orientation (OrientationType): Target orientation, one of natural, left, right, upsidedown.
+        orientation (OrientationType): Target orientation.
     """
     async with use_device(serial) as device:
         await to_thread.run_sync(device.set_orientation, orientation)

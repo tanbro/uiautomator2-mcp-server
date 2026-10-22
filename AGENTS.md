@@ -213,6 +213,24 @@ async def click(serial: str, x: int, y: int) -> bool:
 
 Do NOT include usage examples in tool function docstrings unless absolutely critical for LLM understanding. Examples bloat the documentation and confuse the LLM.
 
+### 6. Closed Value Domains Come From the Annotation
+
+When a parameter's type already carries its value domain (`Literal[...]`, an enum alias like `SwipeDirectionType`, or a `bool`), do NOT also enumerate those values in the prose description. FastMCP projects the annotation into the schema's `enum`, so listing them again duplicates the information in every tool payload and lets the two copies drift apart — a drifted pair hands the LLM contradictory guidance.
+
+```python
+# Good — domain lives in one place; prose explains what the values MEAN.
+        direction (SwipeDirectionType): Swipe direction.
+
+# Bad — prose restates a domain the schema already carries.
+        direction (str): Swipe direction, one of left, right, up, down.
+```
+
+Three carve-outs:
+
+- **The prose type slot is free, but don't count on it for the CLI.** FastMCP consumes the docstring's `Args:` section while building the schema, so `tool.description` never contains it — and `helpers.py` parses `tool.description`, which makes its Args/Returns rendering blocks dead code (`u2mcp info` shows no parameters today). Keep the alias name in the slot (`(SwipeDirectionType)`, not `(str)`) so the source states the real domain at zero schema cost, but treat the schema `enum` as the only channel that actually reaches the LLM.
+- **Return descriptions are not covered.** A `-> str` return has no `enum` counterpart in the schema, so its prose list is the only place the domain appears. Keep it.
+- **Explain semantics, don't list values.** Which value to pick is often non-obvious — `xpath_scroll_to` needs "use `up` for forward scrolling", and that survives trimming. Delete value inventories, keep disambiguation.
+
 ## Key Implementation Details
 
 ### Device Connection Pool
