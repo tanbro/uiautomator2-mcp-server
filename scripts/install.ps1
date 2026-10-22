@@ -1,100 +1,170 @@
 <#
 .SYNOPSIS
-u2mcp one‑dir installer for Windows
+u2mcp standalone (one-dir) installer. Works on Windows PowerShell 5.1+
+and PowerShell 7+ on Linux/macOS.
 #>
 $ErrorActionPreference = "Stop"
 
 $APP_NAME = "u2mcp"
-$GITHUB_REPO = "tanbro/uiautomator2‑mcp"
-# bundle本体固定路径
-$APP_LIB = Join-Path $HOME ".local\lib\$APP_NAME"
+$GITHUB_REPO = "tanbro/uiautomator2-mcp-server"
 
 # --------------------------
-# 探测 BIN_DIR
-# 优先级：U2MCP_INSTALL_BIN > XDG_BIN_DIR > $HOME\bin > $HOME\.u2mcp\bin
+# Platform detection from runtime facts (pwsh runs on Windows and Unix)
 # --------------------------
-if ($env:U2MCP_INSTALL_BIN) {
-    $BIN_DIR = $env:U2MCP_INSTALL_BIN
+try {
+    $rt = [System.Runtime.InteropServices.RuntimeInformation]
+    if ($rt::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::Windows)) { $OS = "windows" }
+    elseif ($rt::IsOSPlatform([System.Runtime.InteropServices.OSPlatform]::OSX))  { $OS = "darwin" }
+    else                                                                           { $OS = "linux" }
+} catch {
+    # PS 5.1 on .NET Framework < 4.7.1 lacks IsOSPlatform; there it is always Windows
+    $OS = if ($env:OS -eq "Windows_NT") { "windows" } else { "linux" }
 }
-elseif ($env:XDG_BIN_DIR) {
-    $BIN_DIR = $env:XDG_BIN_DIR
+
+# OSArchitecture reports the real native arch (e.g. ARM64 under x64 emulation),
+# unlike Is64BitOperatingSystem. Windows on ARM runs x64 binaries via
+# emulation, so arm64 maps to x64 on Windows only.
+$arch = try {
+    $a = $rt::OSArchitecture.ToString()
+    $a = $a.Substring(0, 1).ToLower() + $a.Substring(1)
+    switch ($a) {
+        "arm64" { if ($OS -eq "windows") { "x64" } else { "arm64" } }
+        default { $a }
+    }
+} catch {
+    if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
 }
-elseif (Test-Path (Join-Path $HOME "bin")) {
-    $BIN_DIR = Join-Path $HOME "bin"
+$IS_WINDOWS = ($OS -eq "windows")
+$TARGET = "$OS-$arch"
+$PREFIX = "u2mcp-$TARGET-"
+
+# --------------------------
+# Install layout (user-level only).
+# U2MCP_HOME overrides the bundle location. On Windows the command wrapper
+# lives next to the bundle; on Unix it goes to ~/.local/bin.
+# --------------------------
+if ($IS_WINDOWS) {
+    $LOCAL_APPDATA = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { Join-Path $HOME "AppData\Local" }
+    $DEFAULT_BUNDLE = Join-Path $LOCAL_APPDATA $APP_NAME
+    $BIN_DIR = Join-Path $DEFAULT_BUNDLE "bin"
+    $COMMAND_PATH = Join-Path $BIN_DIR "$APP_NAME.cmd"
+    if (${env:U2MCP_HOME}) {
+        $BUNDLE_DIR = ${env:U2MCP_HOME}
+        $BIN_DIR = Join-Path $BUNDLE_DIR "bin"
+        $COMMAND_PATH = Join-Path $BIN_DIR "$APP_NAME.cmd"
+    }
+    else {
+        $BUNDLE_DIR = $DEFAULT_BUNDLE
+    }
 }
 else {
-    $BIN_DIR = Join-Path $HOME ".u2mcp\bin"
+    $XDG_DATA = if ($env:XDG_DATA_HOME) { $env:XDG_DATA_HOME } else { Join-Path $HOME ".local/share" }
+    $BUNDLE_DIR = if (${env:U2MCP_HOME}) { ${env:U2MCP_HOME} } else { Join-Path $XDG_DATA $APP_NAME }
+    $BIN_DIR = Join-Path $HOME ".local/bin"
+    $COMMAND_PATH = Join-Path $BIN_DIR $APP_NAME
 }
-$WRAPPER_PATH = Join-Path $BIN_DIR "$APP_NAME.cmd"
 
 # --------------------------
-# 平台
-# --------------------------
-$OS = "windows"
-$arch = [Environment]::Is64BitOperatingSystem ? "x64" : "x86"
-
-# --------------------------
-# 版本
+# Resolve release asset via the channel manifest (latest.txt).
+# Asset naming is owned by CI; this script only prefix-matches "u2mcp-<target>-".
+# Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 $VERSION = if ($env:U2MCP_VERSION) { $env:U2MCP_VERSION } else { "latest" }
 if ($VERSION -eq "latest") {
-    $DOWNLOAD_URL = "https://github.com/$GITHUB_REPO/releases/latest/download/$APP_NAME-$OS-$arch.zip"
+    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/latest/download/latest.txt"
+    $MANIFEST_SOURCE = "the latest release"
 }
 else {
-    $DOWNLOAD_URL = "https://github.com/$GITHUB_REPO/releases/download/$VERSION/$APP_NAME-$OS-$arch.zip"
+    $RELEASE_VERSION = $VERSION.TrimStart('v','V')
+    $TAG = "v$RELEASE_VERSION"
+    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/latest.txt"
+    $MANIFEST_SOURCE = "release $TAG"
+}
+try {
+    $MANIFEST = ((Invoke-WebRequest -Uri $CHANNEL_URL -UseBasicParsing).Content) -split "`r?`n"
+} catch {
+    Write-Host "ERROR: failed to fetch the channel manifest."
+    Write-Host "  URL: $CHANNEL_URL"
+    exit 1
+}
+$ASSET = $MANIFEST | Where-Object { $_ -like "$PREFIX*" } | Select-Object -First 1
+if (-not $ASSET) {
+    Write-Host "ERROR: no pre-built binary for $TARGET in $MANIFEST_SOURCE."
+    Write-Host "  Hint: check supported platforms at $CHANNEL_URL"
+    exit 1
 }
 
+# Derive the tag from the matched asset name
+$TAG = "v" + ($ASSET -replace ("^" + [regex]::Escape($PREFIX) + "(.+)\.(zip|tar\.gz)$"), '$1')
+$DOWNLOAD_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/$ASSET"
+
 Write-Host "=== u2mcp installer ==="
-Write-Host "OS:         $OS"
-Write-Host "Arch:       $arch"
-Write-Host "Bundle dir: $APP_LIB"
-Write-Host "Entry dir:  $BIN_DIR"
-Write-Host "Download:   $DOWNLOAD_URL"
+Write-Host "Platform:  $TARGET"
+Write-Host "Version:   $TAG"
+Write-Host "Bundle:    $BUNDLE_DIR"
+Write-Host "Command:   $COMMAND_PATH"
+Write-Host "Archive:   $DOWNLOAD_URL"
 Write-Host ""
 
-# 临时目录
-$TMP_DIR = Join-Path $env:TEMP ("u2mcp-install-" + [Guid]::NewGuid().ToString("N"))
+# --------------------------
+# Download, extract, install
+# --------------------------
+$TMP_DIR = Join-Path ([IO.Path]::GetTempPath()) ("u2mcp-install-" + [Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $TMP_DIR | Out-Null
 try {
-    $ZIP_FILE = Join-Path $TMP_DIR "$APP_NAME.zip"
+    $ARCHIVE = Join-Path $TMP_DIR $ASSET
 
-    Write-Host "Downloading archive..."
-    Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $ZIP_FILE -UseBasicParsing
+    Write-Host "[1/3] Downloading $ASSET..."
+    Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $ARCHIVE -UseBasicParsing
 
-    Write-Host "Extracting archive..."
-    Expand-Archive -Path $ZIP_FILE -DestinationPath $TMP_DIR -Force
-
-    Write-Host "Installing runtime bundle to $APP_LIB"
-    if (Test-Path $APP_LIB) {
-        Remove-Item -Path $APP_LIB -Recurse -Force
-    }
-    New-Item -ItemType Directory -Path $APP_LIB -Force | Out-Null
-    $src = Join-Path $TMP_DIR "$APP_NAME\*"
-    Copy-Item -Path $src -Destination $APP_LIB -Recurse -Force
-
-    # 生成 thin cmd wrapper
-    New-Item -ItemType Directory -Path $BIN_DIR -Force | Out-Null
-    $exePath = Join-Path $APP_LIB "$APP_NAME.exe"
-    "@echo off`n`"$exePath`" %*" | Out-File -FilePath $WRAPPER_PATH -Encoding ASCII
-
-    Write-Host ""
-    # 简单校验
-    $cmdExists = $null -ne (Get-Command $APP_NAME -ErrorAction SilentlyContinue)
-    if ($cmdExists) {
-        Write-Host "✅ Install succeeded."
-        & $APP_NAME --version
+    Write-Host "[2/3] Extracting..."
+    if ($ASSET -like "*.zip") {
+        Expand-Archive -Path $ARCHIVE -DestinationPath $TMP_DIR -Force
     }
     else {
-        Write-Host "✅ Files installed, but command `"$APP_NAME`" not found in current PATH."
-        Write-Host "Hint: add `"$BIN_DIR`" to user PATH environment variable, restart terminal."
+        & tar -xzf $ARCHIVE -C $TMP_DIR
+        if ($LASTEXITCODE -ne 0) { throw "tar failed with exit code $LASTEXITCODE" }
     }
 
-    Write-Host ""
-    Write-Host "Uninstall PowerShell commands:"
-    Write-Host "Remove-Item -Path `"$APP_LIB`" -Recurse -Force"
-    Write-Host "Remove-Item -Path `"$WRAPPER_PATH`" -Force -ErrorAction SilentlyContinue"
-    Write-Host "# Remove-Item -Path `$env:APPDATA\$APP_NAME -Recurse -Force  # optional purge user config"
+    Write-Host "[3/3] Installing to $BUNDLE_DIR..."
+    if (Test-Path $BUNDLE_DIR) {
+        Remove-Item -Path $BUNDLE_DIR -Recurse -Force
+    }
+    New-Item -ItemType Directory -Path $BUNDLE_DIR -Force | Out-Null
+    # Archive root is u2mcp/: the binary plus its _internal runtime
+    Copy-Item -Path (Join-Path $TMP_DIR "$APP_NAME/*") -Destination $BUNDLE_DIR -Recurse -Force
+
+    $bundleExe = Join-Path $BUNDLE_DIR $APP_NAME
+    if ($IS_WINDOWS) {
+        $bundleExe += ".exe"
+        "@echo off`n`"$bundleExe`" %*" | Out-File -FilePath $COMMAND_PATH -Encoding ASCII
+    }
+    else {
+        chmod +x "$bundleExe"
+        if ($LASTEXITCODE -ne 0) { throw "chmod failed with exit code $LASTEXITCODE" }
+        "#!/bin/sh`nexec `"$bundleExe`" `"`$@" | Out-File -FilePath $COMMAND_PATH -Encoding ascii
+        chmod +x "$COMMAND_PATH"
+        if ($LASTEXITCODE -ne 0) { throw "chmod failed with exit code $LASTEXITCODE" }
+    }
 }
 finally {
     Remove-Item -Path $TMP_DIR -Recurse -Force -ErrorAction SilentlyContinue
 }
+
+# --------------------------
+# Verify
+# --------------------------
+try {
+    & $COMMAND_PATH --version
+} catch {
+    Write-Host "ERROR: installed command did not run. Try directly:"
+    Write-Host "  $COMMAND_PATH --version"
+    exit 1
+}
+if ($null -eq (Get-Command $APP_NAME -ErrorAction SilentlyContinue)) {
+    Write-Host "Note: add $BIN_DIR to your PATH to use the `"$APP_NAME`" command."
+}
+
+Write-Host ""
+Write-Host "To uninstall:"
+Write-Host "  Remove-Item -Path `"$BUNDLE_DIR`" -Recurse -Force; Remove-Item -Path `"$COMMAND_PATH`" -Force"

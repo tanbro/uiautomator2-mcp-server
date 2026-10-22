@@ -80,8 +80,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.15"]
 
     steps:
       - uses: actions/checkout@v7
@@ -99,7 +99,8 @@ jobs:
           uv run pytest --cov=src/u2mcp --cov-branch --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v7
         with:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -131,15 +132,17 @@ jobs:
           name: python-package-distributions
           path: dist/
 
-  build-executable:
-    name: Build executable(${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+  build-executable-linux:
+    name: Build Executable (linux-x86_64)
+    runs-on: ubuntu-latest
+    # glibc baseline is pinned by the image family (2.28), not the tag;
+    # latest keeps the build toolchain patched without manual bumps
+    container:
+      image: quay.io/pypa/manylinux_2_28_x86_64
     needs: [check-release-tag, pre-commit, test]
-    strategy:
-      fail-fast: true
-      matrix:
-        os: [ubuntu-20.04, windows-latest, macos-latest]
     if: needs.check-release-tag.outputs.version != ''
+    env:
+      VERSION: ${{ needs.check-release-tag.outputs.version }}
     steps:
       - uses: actions/checkout@v7
       - name: Install uv
@@ -156,15 +159,57 @@ jobs:
       - name: Package artifacts
         shell: bash
         run: |
-            mkdir -p executables
-            (cd dist && zip -r ../executables/u2mcp-${{runner.os}}-${needs.check-release-tag.outputs.version}.zip u2mcp)
+          test -n "$VERSION"
+          mkdir -p executables
+          # tar preserves the executable bit that zip would lose on Unix
+          tar -czf "executables/u2mcp-linux-x64-${VERSION}.tar.gz" -C dist u2mcp
+          echo "u2mcp-linux-x64-${VERSION}.tar.gz" > executables/channel-linux.txt
+      - name: Store the executable
+        uses: actions/upload-artifact@v7
+        with:
+          name: pyinstaller-executables-linux
+          path: executables/
+
+  build-executable:
+    name: Build Executable (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: [check-release-tag, pre-commit, test]
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [windows-latest, macos-latest]
+    if: needs.check-release-tag.outputs.version != ''
+    env:
+      VERSION: ${{ needs.check-release-tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: Build executable
+        env:
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.check-release-tag.outputs.version }}
+        run: |
+          uv sync --frozen --group pyinstaller
+          uv run pyinstaller u2mcp.spec
+      - name: Package artifacts
+        shell: bash
+        run: |
+          test -n "$VERSION"
+          mkdir -p executables
+          # tar preserves the executable bit that zip would lose on Unix
+          tar -czf "executables/u2mcp-macos-arm64-${VERSION}.tar.gz" -C dist u2mcp
+          echo "u2mcp-macos-arm64-${VERSION}.tar.gz" > executables/channel-macos.txt
         if: runner.os != 'Windows'
       - name: Package artifacts (Windows 7z)
         shell: pwsh
         run: |
-          mkdir -p executables
-          Set-Location dist
-          &7z a -r -spf2 "../executables/u2mcp-$($env:RUNNER_OS)-${{needs.check-release-tag.outputs.version}}.zip" u2mcp
+          New-Item -ItemType Directory -Force executables | Out-Null
+          # Invoke with a leading & and a space so 7z resolves from PATH
+          & 7z a -r "executables\u2mcp-windows-x64-$($env:VERSION).zip" "dist\u2mcp"
+          "u2mcp-windows-x64-$($env:VERSION).zip" | Set-Content -NoNewline executables/channel-windows.txt
         if: runner.os == 'Windows'
       - name: Store the executable
         uses: actions/upload-artifact@v7
@@ -197,7 +242,7 @@ jobs:
   github-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [check-release-tag, build, build-executable]
+    needs: [check-release-tag, build, build-executable, build-executable-linux]
     if: needs.check-release-tag.outputs.version != ''
     permissions:
       contents: write
@@ -214,14 +259,22 @@ jobs:
       - name: Download all executable artifacts
         uses: actions/download-artifact@v8
         with:
+          pattern: pyinstaller-executables-*
+          merge-multiple: true
           path: executables/
 
+      # Channel manifest: union of per-platform asset names, so installers
+      # match by uname instead of duplicating the naming convention
+      - name: Build latest.txt channel manifest
+        run: cat executables/channel-*.txt > executables/latest.txt
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ github.ref_name }}
           name: v${{ needs.check-release-tag.outputs.version }}
-          body: ${{ steps.release_notes.outputs.notes }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
             executables/*
             dist/*

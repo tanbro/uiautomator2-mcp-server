@@ -2,131 +2,139 @@
 set -euo pipefail
 
 APP_NAME="u2mcp"
-GITHUB_REPO="tanbro/uiautomator2‑mcp"
-# bundle 本体固定路径
-APP_LIB="${HOME}/.local/lib/${APP_NAME}"
-
+GITHUB_REPO="tanbro/uiautomator2-mcp-server"
 # --------------------------
-# 探测 BIN_DIR：放 symlink 的目录
-# 优先级：U2MCP_INSTALL_BIN > XDG_BIN_DIR > ~/bin > ~/.u2mcp/bin
+# Install layout (user-level only).
+# U2MCP_HOME overrides the bundle location; default is the XDG data dir.
+# The command entry is fixed at ~/.local/bin (freedesktop convention;
+# there is no XDG_BIN_HOME in any real spec).
 # --------------------------
-if [[ -n "${U2MCP_INSTALL_BIN:-}" ]]; then
-  BIN_DIR="${U2MCP_INSTALL_BIN}"
-elif [[ -n "${XDG_BIN_DIR:-}" ]]; then
-  BIN_DIR="${XDG_BIN_DIR}"
-elif [[ -d "${HOME}/bin" ]]; then
-  BIN_DIR="${HOME}/bin"
-else
-  BIN_DIR="${HOME}/.${APP_NAME}/bin"
-fi
+BUNDLE_DIR="${U2MCP_HOME:-${XDG_DATA_HOME:-${HOME}/.local/share}/${APP_NAME}}"
+BIN_DIR="${HOME}/.local/bin"
 BIN_LINK="${BIN_DIR}/${APP_NAME}"
 
 # --------------------------
-# 平台识别
+# Platform detection
 # --------------------------
-get_arch() {
-  local arch
-  arch=$(uname -m)
-  case "${arch}" in
-    x86_64) echo "x64" ;;
-    arm64|aarch64) echo "arm64" ;;
-    *) echo "unsupported" ;;
-  esac
-}
-
 get_os() {
-  local os
-  os=$(uname -s | tr '[:upper:]' '[:lower:]')
-  case "${os}" in
+  case "$(uname -s | tr '[:upper:]' '[:lower:]')" in
     linux) echo "linux" ;;
     darwin) echo "darwin" ;;
     *) echo "unsupported" ;;
   esac
 }
 
+get_arch() {
+  case "$(uname -m)" in
+    x86_64) echo "x64" ;;
+    arm64|aarch64) echo "arm64" ;;
+    *) echo "unsupported" ;;
+  esac
+}
+
 OS=$(get_os)
 ARCH=$(get_arch)
+TARGET="${OS}-${ARCH}"
 if [[ "${OS}" == "unsupported" || "${ARCH}" == "unsupported" ]]; then
-  echo "ERROR: unsupported OS/arch: $(uname -s) $(uname -m)" >&2
+  echo "ERROR: unsupported platform ($(uname -s) $(uname -m))." >&2
+  echo "Install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
   exit 1
 fi
 
+http_get() {
+  if command -v curl &>/dev/null; then
+    curl -fsSL "$1"
+  elif command -v wget &>/dev/null; then
+    wget -qO- "$1"
+  else
+    echo "ERROR: curl or wget is required." >&2
+    exit 1
+  fi
+}
+
 # --------------------------
-# 解析版本，默认 latest
+# Resolve release asset via the channel manifest (latest.txt).
+# Asset naming is owned by CI; this script only prefix-matches "u2mcp-<target>-".
+# Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 VERSION="${U2MCP_VERSION:-latest}"
 if [[ "${VERSION}" == "latest" ]]; then
-  DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/${APP_NAME}-${OS}-${ARCH}.zip"
+  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/latest.txt"
+  MANIFEST=$(http_get "${CHANNEL_URL}" || true)
+  MANIFEST_SOURCE="the latest release"
 else
-  DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${VERSION}/${APP_NAME}-${OS}-${ARCH}.zip"
+  RELEASE_VERSION="${VERSION#v}"
+  RELEASE_VERSION="${RELEASE_VERSION#V}"
+  TAG="v${RELEASE_VERSION}"
+  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/latest.txt"
+  MANIFEST=$(http_get "${CHANNEL_URL}" || true)
+  MANIFEST_SOURCE="release ${TAG}"
 fi
 
-echo "=== u2mcp installer ==="
-echo "OS:         ${OS}"
-echo "Arch:       ${ARCH}"
-echo "Bundle dir: ${APP_LIB}"
-echo "Entry dir:  ${BIN_DIR}"
-echo "Download:   ${DOWNLOAD_URL}"
-echo
-
-# --------------------------
-# 准备临时目录
-# --------------------------
-TMP_DIR=$(mktemp -d -t u2mcp-install-XXXXXX)
-trap 'rm -rf "${TMP_DIR}"' EXIT
-ZIP_FILE="${TMP_DIR}/${APP_NAME}.zip"
-
-# --------------------------
-# 下载
-# --------------------------
-echo "Downloading archive..."
-if command -v curl &>/dev/null; then
-  curl -fsSL --output "${ZIP_FILE}" "${DOWNLOAD_URL}"
-elif command -v wget &>/dev/null; then
-  wget -q -O "${ZIP_FILE}" "${DOWNLOAD_URL}"
-else
-  echo "ERROR: curl or wget required" >&2
+ASSET=$(printf '%s\n' "${MANIFEST}" | grep -m1 "^u2mcp-${TARGET}-" || true)
+if [[ -z "${ASSET}" ]]; then
+  echo "ERROR: no pre-built binary for ${TARGET} in ${MANIFEST_SOURCE}." >&2
+  if [[ "${TARGET}" == "darwin-x64" ]]; then
+    echo "Hint: Intel Macs have no pre-built binary. Install from PyPI: uv tool install uiautomator2-mcp-server" >&2
+  fi
+  echo "Hint: check supported platforms at ${CHANNEL_URL}" >&2
   exit 1
 fi
 
-# --------------------------
-# 解压
-# --------------------------
-echo "Extracting archive..."
-unzip -q -d "${TMP_DIR}" "${ZIP_FILE}"
+# Derive the tag from the matched asset name; avoids relying on
+# releases/latest/download redirects for the binary itself
+TAG="v$(printf '%s' "${ASSET}" | sed -E "s/^u2mcp-${TARGET}-(.+)\.(tar\.gz|zip)$/\1/")"
+DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/${ASSET}"
 
-# --------------------------
-# 替换 bundle 本体
-# --------------------------
-echo "Installing runtime bundle to ${APP_LIB}"
-rm -rf "${APP_LIB}"
-mkdir -p "${APP_LIB}"
-# zip根目录是 u2mcp/，内部包含二进制 + _internal
-cp -r "${TMP_DIR}/${APP_NAME}/"* "${APP_LIB}/"
-chmod +x "${APP_LIB}/${APP_NAME}"
-
-# --------------------------
-# 创建 symlink
-# --------------------------
-mkdir -p "${BIN_DIR}"
-rm -f "${BIN_LINK}"
-ln -s "${APP_LIB}/${APP_NAME}" "${BIN_LINK}"
-
-# --------------------------
-# 校验
-# --------------------------
+echo "=== u2mcp installer ==="
+echo "Platform:  ${TARGET}"
+echo "Version:   ${TAG}"
+echo "Bundle:    ${BUNDLE_DIR}"
+echo "Command:   ${BIN_LINK}"
+echo "Archive:   ${DOWNLOAD_URL}"
 echo
-if command -v "${APP_NAME}" &>/dev/null; then
-  echo "✅ Install succeeded. Version output:"
-  "${APP_NAME}" --version
-else
-  echo "✅ Files installed, but command \"${APP_NAME}\" is not found in current PATH."
-  echo "Hint: add \"${BIN_DIR}\" to your shell PATH."
-  echo "For bash/zsh: export PATH=\"${BIN_DIR}:\$PATH\""
+
+# --------------------------
+# Download and extract
+# --------------------------
+TMP_DIR=$(mktemp -d -t u2mcp-install-XXXXXX)
+trap 'rm -rf "${TMP_DIR}"' EXIT
+
+echo "[1/3] Downloading ${ASSET}..."
+http_get "${DOWNLOAD_URL}" > "${TMP_DIR}/${ASSET}"
+
+echo "[2/3] Extracting..."
+tar -xzf "${TMP_DIR}/${ASSET}" -C "${TMP_DIR}"
+
+# --------------------------
+# Replace bundle and link
+# --------------------------
+echo "[3/3] Installing to ${BUNDLE_DIR}..."
+rm -rf "${BUNDLE_DIR}"
+mkdir -p "${BUNDLE_DIR}" "${BIN_DIR}"
+# Archive root is u2mcp/: the binary plus its _internal runtime
+cp -r "${TMP_DIR}/${APP_NAME}/"* "${BUNDLE_DIR}/"
+chmod +x "${BUNDLE_DIR}/${APP_NAME}"
+rm -f "${BIN_LINK}"
+ln -s "${BUNDLE_DIR}/${APP_NAME}" "${BIN_LINK}"
+
+# --------------------------
+# Verify
+# --------------------------
+if ! "${BIN_LINK}" --version; then
+  echo "ERROR: installed binary did not start. Try running it directly:" >&2
+  echo "  ${BIN_LINK} --version" >&2
+  exit 1
+fi
+if ! command -v "${APP_NAME}" &>/dev/null; then
+  echo "Note: add ${BIN_DIR} to your PATH to use the \"${APP_NAME}\" command:"
+  echo "  export PATH=\"${BIN_DIR}:\$PATH\""
+fi
+if [[ "${OS}" == "darwin" ]]; then
+  echo "Note: if Gatekeeper blocks the first run (unsigned build), clear quarantine:"
+  echo "  xattr -d com.apple.quarantine \"${BUNDLE_DIR}/${APP_NAME}\""
 fi
 
 echo
-echo "Uninstall commands:"
-echo "  rm -rf ${APP_LIB}"
-echo "  rm -f ${BIN_LINK}"
-echo "  # rm -rf ~/.config/${APP_NAME}  # optional purge user config"
+echo "To uninstall:"
+echo "  rm -rf ${BUNDLE_DIR} && rm -f ${BIN_LINK}"
