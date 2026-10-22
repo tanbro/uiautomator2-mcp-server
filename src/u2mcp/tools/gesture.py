@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from anyio import to_thread
 
 from ..mcp import mcp
+from ..typing import SwipeDirectionType
 from .device import use_device
-
-# Swipe direction accepted by uiautomator2's swipe_ext (Direction enum values).
-SwipeDirectionType = Literal["left", "right", "up", "down"]
 
 __all__ = (
     "swipe_down",

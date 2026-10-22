@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager, closing
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import uiautomator2 as u2
 from adbutils import AdbError, adb
@@ -17,6 +17,7 @@ from lxml import etree
 from PIL.Image import Image
 
 from ..mcp import get_xpath_timeout, mcp
+from ..typing import ImageFormatType
 
 __all__ = (
     "activity_wait_appear",
@@ -246,7 +247,7 @@ async def window_size(serial: str) -> dict[str, int]:
 
 
 @mcp.tool("screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
-async def screenshot(serial: str, format: Literal["jpeg", "png"] = "jpeg", display_id: int = -1) -> dict[str, Any]:
+async def screenshot(serial: str, format: ImageFormatType = "jpeg", display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
 
