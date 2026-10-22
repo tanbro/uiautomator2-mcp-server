@@ -4,29 +4,20 @@ set -euo pipefail
 APP_NAME="u2mcp"
 GITHUB_REPO="tanbro/uiautomator2-mcp-server"
 # --------------------------
-# Install layout (user-level only).
-# U2MCP_HOME overrides the bundle location; default is the XDG data dir.
-# The command entry is fixed at ~/.local/bin (freedesktop convention;
-# there is no XDG_BIN_HOME in any real spec).
-# --------------------------
-BUNDLE_DIR="${U2MCP_HOME:-${XDG_DATA_HOME:-${HOME}/.local/share}/${APP_NAME}}"
-BIN_DIR="${HOME}/.local/bin"
-BIN_LINK="${BIN_DIR}/${APP_NAME}"
-
-# --------------------------
 # Platform detection
 # --------------------------
 get_os() {
   case "$(uname -s | tr '[:upper:]' '[:lower:]')" in
-    linux) echo "linux" ;;
-    darwin) echo "darwin" ;;
-    *) echo "unsupported" ;;
+    linux*)            echo "linux" ;;
+    darwin*)           echo "darwin" ;;
+    *mingw*|*msys*|*cygwin*) echo "windows" ;;
+    *)                 echo "unsupported" ;;
   esac
 }
 
 get_arch() {
   case "$(uname -m)" in
-    x86_64) echo "x64" ;;
+    x86_64|AMD64) echo "x64" ;;
     arm64|aarch64) echo "arm64" ;;
     *) echo "unsupported" ;;
   esac
@@ -40,6 +31,27 @@ if [[ "${OS}" == "unsupported" || "${ARCH}" == "unsupported" ]]; then
   echo "Install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
   exit 1
 fi
+
+# --------------------------
+# Install layout (user-level only).
+# U2MCP_HOME overrides the bundle location.
+# Unix:  bundle in the XDG data dir, command entry fixed at ~/.local/bin
+#        (freedesktop convention; there is no XDG_BIN_HOME in any real spec).
+# Windows (Git Bash/MSYS): bundle and command under %LOCALAPPDATA%\u2mcp.
+# --------------------------
+if [[ "${OS}" == "windows" ]]; then
+  DEFAULT_BASE="${HOME}/AppData/Local"
+  if [[ -n "${LOCALAPPDATA:-}" ]]; then
+    # Without cygpath (plain MSYS), convert C:\x paths to slash form
+    DEFAULT_BASE="$(cygpath -u "${LOCALAPPDATA}" 2>/dev/null || printf '%s' "${LOCALAPPDATA}" | tr $'\\' '/')"
+  fi
+  BUNDLE_DIR="${U2MCP_HOME:-${DEFAULT_BASE}/${APP_NAME}}"
+  BIN_DIR="${BUNDLE_DIR}/bin"
+else
+  BUNDLE_DIR="${U2MCP_HOME:-${XDG_DATA_HOME:-${HOME}/.local/share}/${APP_NAME}}"
+  BIN_DIR="${HOME}/.local/bin"
+fi
+BIN_LINK="${BIN_DIR}/${APP_NAME}"
 
 http_get() {
   if command -v curl &>/dev/null; then
@@ -104,7 +116,10 @@ echo "[1/3] Downloading ${ASSET}..."
 http_get "${DOWNLOAD_URL}" > "${TMP_DIR}/${ASSET}"
 
 echo "[2/3] Extracting..."
-tar -xzf "${TMP_DIR}/${ASSET}" -C "${TMP_DIR}"
+# Asset type decides the unpacker; CI ships zip on Windows, tar.gz elsewhere
+if ! tar -xf "${TMP_DIR}/${ASSET}" -C "${TMP_DIR}" 2>/dev/null; then
+  unzip -q -d "${TMP_DIR}" "${TMP_DIR}/${ASSET}"
+fi
 
 # --------------------------
 # Replace bundle and link
@@ -114,9 +129,16 @@ rm -rf "${BUNDLE_DIR}"
 mkdir -p "${BUNDLE_DIR}" "${BIN_DIR}"
 # Archive root is u2mcp/: the binary plus its _internal runtime
 cp -r "${TMP_DIR}/${APP_NAME}/"* "${BUNDLE_DIR}/"
-chmod +x "${BUNDLE_DIR}/${APP_NAME}"
 rm -f "${BIN_LINK}"
-ln -s "${BUNDLE_DIR}/${APP_NAME}" "${BIN_LINK}"
+if [[ "${OS}" == "windows" ]]; then
+  # MSYS: a shell wrapper (not a symlink) around the .exe stays callable from bash
+  chmod +x "${BUNDLE_DIR}/${APP_NAME}.exe"
+  printf '#!/bin/sh\nexec "%s/%s.exe" "$@"\n' "${BUNDLE_DIR}" "${APP_NAME}" > "${BIN_LINK}"
+  chmod +x "${BIN_LINK}"
+else
+  chmod +x "${BUNDLE_DIR}/${APP_NAME}"
+  ln -s "${BUNDLE_DIR}/${APP_NAME}" "${BIN_LINK}"
+fi
 
 # --------------------------
 # Verify
