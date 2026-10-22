@@ -146,9 +146,12 @@ def print_single_tool_help(console: Console, name: str, tool: Any):
     # Title and tags (as plain text, not markdown)
     tags_str = f"**Tags:** {', '.join(sorted(tool.tags))}" if tool.tags else ""
 
-    # Parse the docstring
-    description = tool.description or ""
-    parsed = parse(description)
+    # FastMCP consumes the Args/Returns sections when it builds the tool
+    # schema, so tool.description carries only the prose summary. The parameter
+    # list has to come from the undecorated docstring.
+    docstring = getattr(tool.fn, "__doc__", None) or tool.description or ""
+    parsed = parse(docstring)
+    schema_props = (tool.parameters or {}).get("properties", {})
 
     # Short description
     if parsed.short_description:
@@ -163,8 +166,14 @@ def print_single_tool_help(console: Console, name: str, tool: Any):
         md_lines.append("\n**Args:**")
         for p in parsed.params:
             type_suffix = f" ({p.type_name})" if p.type_name else ""
-            default_suffix = f"(default: `{p.default}`)" if p.default else ""
-            md_lines.append(f"- **{p.arg_name}**{type_suffix}: {p.description}{default_suffix}")
+            prop = schema_props.get(p.arg_name, {})
+            details = []
+            if prop.get("enum"):
+                details.append("one of: " + ", ".join(str(v) for v in prop["enum"]))
+            if "default" in prop:
+                details.append(f"default: `{prop['default']}`")
+            detail_suffix = f" ({'; '.join(details)})" if details else ""
+            md_lines.append(f"- **{p.arg_name}**{type_suffix}: {p.description}{detail_suffix}")
 
     # Returns section
     if parsed.returns:

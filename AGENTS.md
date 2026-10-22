@@ -227,7 +227,7 @@ When a parameter's type already carries its value domain (`Literal[...]`, an enu
 
 Three carve-outs:
 
-- **The prose type slot is free, but don't count on it for the CLI.** FastMCP consumes the docstring's `Args:` section while building the schema, so `tool.description` never contains it — and `helpers.py` parses `tool.description`, which makes its Args/Returns rendering blocks dead code (`u2mcp info` shows no parameters today). Keep the alias name in the slot (`(SwipeDirectionType)`, not `(str)`) so the source states the real domain at zero schema cost, but treat the schema `enum` as the only channel that actually reaches the LLM.
+- **The prose type slot is free.** FastMCP strips the `(type)` prefix when it lifts a docstring parameter into the schema, so naming the alias there (`(SwipeDirectionType)`, not `(str)`) costs zero schema bytes and keeps the source honest about the domain. It is not what the LLM sees either way: `helpers.py` reads the raw docstring for `u2mcp info` (FastMCP drops the `Args:` section from `tool.description`) and renders value domains from the schema's `enum`, so the annotation remains the single source of truth for both audiences.
 - **Return descriptions are not covered.** A `-> str` return has no `enum` counterpart in the schema, so its prose list is the only place the domain appears. Keep it.
 - **Explain semantics, don't list values.** Which value to pick is often non-obvious — `xpath_scroll_to` needs "use `up` for forward scrolling", and that survives trimming. Delete value inventories, keep disambiguation.
 
