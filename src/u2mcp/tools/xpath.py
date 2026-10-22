@@ -254,7 +254,7 @@ async def xpath_swipe(
 
 
 @mcp.tool("xpath_scroll", tags={"xpath", "xpath:gesture"})
-async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionType) -> bool:
+async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionType = "forward") -> bool:
     """Find element by XPath and scroll within it.
 
     Args:
@@ -273,8 +273,8 @@ async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionT
 async def xpath_scroll_to(
     serial: str,
     xpath: str,
-    direction: SwipeDirectionType,
-    max_swipes: int,
+    direction: SwipeDirectionType = "up",
+    max_swipes: int = 10,
 ) -> bool:
     """Scroll the entire screen to find an element by XPath.
 
