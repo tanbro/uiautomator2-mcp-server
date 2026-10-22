@@ -27,7 +27,7 @@ async def swipe_ext(serial: str, direction: SwipeDirectionType, scale: float):
 
     Args:
         serial (str): Android device serial number.
-        direction (str): Swipe direction, one of left, right, up, down.
+        direction (SwipeDirectionType): Swipe direction.
         scale (float): Percentage of swipe distance from edge, range (0, 1.0).
     """
     await _swipe_ext_impl(serial, direction, scale)

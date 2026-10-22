@@ -253,7 +253,7 @@ async def screenshot(serial: str, format: ImageFormatType = "jpeg", display_id: 
 
     Args:
         serial (str): Android device serialno.
-        format (str): Image format, jpeg or png. Defaults to "jpeg".
+        format (ImageFormatType): Image format. Defaults to "jpeg".
         display_id (int): use specific display if device has multiple screen. Defaults to -1.
 
     Returns:

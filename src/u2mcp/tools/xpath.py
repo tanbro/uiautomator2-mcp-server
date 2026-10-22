@@ -105,7 +105,7 @@ async def xpath_screenshot(serial: str, xpath: str, format: ImageFormatType = "j
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-        format (str): Image format, jpeg or png. Defaults to jpeg.
+        format (ImageFormatType): Image format. Defaults to jpeg.
 
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.
