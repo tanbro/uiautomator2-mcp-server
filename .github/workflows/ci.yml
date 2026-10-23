@@ -67,11 +67,15 @@ jobs:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
-      - name: Sync project environment (for mypy)
-        run: uv sync --all-extras --dev
-
       - name: Run pre-commit on all files
-        run: uvx pre-commit run --all-files
+        run: |
+          # mypy runs from .mypy.ini with `packages = u2mcp`, so the project and
+          # its dependencies must be importable here; that is why this step also
+          # syncs rather than only running pre-commit (the step used to be named
+          # "Sync project environment (for mypy)"). Verify by running the job
+          # before removing it.
+          uv sync --frozen --all-extras
+          uvx pre-commit run --all-files
 
   test:
     name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
