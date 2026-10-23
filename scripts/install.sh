@@ -43,7 +43,7 @@ if [[ "${OS}" == "windows" ]]; then
   DEFAULT_BASE="${HOME}/AppData/Local"
   if [[ -n "${LOCALAPPDATA:-}" ]]; then
     # Without cygpath (plain MSYS), convert C:\x paths to slash form
-    DEFAULT_BASE="$(cygpath -u "${LOCALAPPDATA}" 2>/dev/null || printf '%s' "${LOCALAPPDATA}" | tr $'\\' '/')"
+    DEFAULT_BASE="$(cygpath -u "${LOCALAPPDATA}" 2>/dev/null || printf '%s' "${LOCALAPPDATA}" | tr '\\' '/')"
   fi
   BUNDLE_DIR="${U2MCP_HOME:-${DEFAULT_BASE}/${APP_NAME}}"
   BIN_DIR="${BUNDLE_DIR}/bin"
@@ -105,7 +105,9 @@ if [[ -z "${CHANNEL_LINE}" ]]; then
   echo "Hint: check supported platforms at ${CHANNEL_URL}" >&2
   exit 1
 fi
-read -r EXPECTED_SHA256 ASSET <<< "${CHANNEL_LINE}"
+# The separator is exactly two spaces (CI writes sha256sum --text).
+EXPECTED_SHA256=${CHANNEL_LINE%%  *}
+ASSET=${CHANNEL_LINE#*  }
 
 # Derive the tag from the matched asset name; avoids relying on
 # releases/latest/download redirects for the binary itself
