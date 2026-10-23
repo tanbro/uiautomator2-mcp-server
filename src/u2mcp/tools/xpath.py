@@ -1,18 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from anyio import to_thread
 
 from ..mcp import mcp
+from ..typing import ImageFormatType, SwipeDirectionType, XpathScrollDirectionType
 from .device import encode_image, ensure_image, save_image, use_device
-
-# XPathElement.swipe delegates to swipe_in_bounds (uiautomator2/utils.py),
-# which raises ValueError for anything outside these four.
-SwipeDirectionType = Literal["left", "right", "up", "down"]
-
-# XPathElement.scroll remaps only these two onto Direction.FORWARD/BACKWARD.
-XpathScrollDirectionType = Literal["forward", "backward"]
 
 __all__ = (
     "xpath_click",
@@ -107,13 +99,13 @@ async def xpath_long_press(serial: str, xpath: str):
 
 
 @mcp.tool("xpath_screenshot", tags={"xpath", "xpath:capture"})
-async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, int, int]:
+async def xpath_screenshot(serial: str, xpath: str, format: ImageFormatType = "jpeg") -> tuple[str, int, int]:
     """Find element by XPath and take screenshot.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-        format (str): Image format, jpeg or png.
+        format (ImageFormatType): Image format. Defaults to jpeg.
 
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.
