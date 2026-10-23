@@ -58,9 +58,10 @@ def main():
     if cand:
         try:
             Version(cand)
-            version = cand
         except InvalidVersion:
             version = ""
+        else:
+            version = cand
     print(f"GITHUB_REF={ref!r} -> version={version!r}")
     write_github_output("version", version)
     return 0
