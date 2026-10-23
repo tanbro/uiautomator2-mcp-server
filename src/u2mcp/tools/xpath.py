@@ -1,18 +1,10 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from anyio import to_thread
 
 from ..mcp import mcp
+from ..typing import ImageFormatType, SwipeDirectionType, XpathScrollDirectionType
 from .device import encode_image, ensure_image, save_image, use_device
-
-# XPathElement.swipe delegates to swipe_in_bounds (uiautomator2/utils.py),
-# which raises ValueError for anything outside these four.
-SwipeDirectionType = Literal["left", "right", "up", "down"]
-
-# XPathElement.scroll remaps only these two onto Direction.FORWARD/BACKWARD.
-XpathScrollDirectionType = Literal["forward", "backward"]
 
 __all__ = (
     "xpath_click",
@@ -107,13 +99,13 @@ async def xpath_long_press(serial: str, xpath: str):
 
 
 @mcp.tool("xpath_screenshot", tags={"xpath", "xpath:capture"})
-async def xpath_screenshot(serial: str, xpath: str, format: str) -> tuple[str, int, int]:
+async def xpath_screenshot(serial: str, xpath: str, format: ImageFormatType = "jpeg") -> tuple[str, int, int]:
     """Find element by XPath and take screenshot.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-        format (str): Image format, jpeg or png.
+        format (ImageFormatType): Image format. Defaults to jpeg.
 
     Returns:
         tuple[str, int, int]: Base64 encoded image data URL, image height, image width.
@@ -246,7 +238,7 @@ async def xpath_swipe(
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-        direction (str): Swipe direction, one of left, right, up, down.
+        direction (SwipeDirectionType): Swipe direction.
         scale (float): Percentage of swipe distance, range (0, 1.0).
     """
     async with use_device(serial) as device:
@@ -260,7 +252,7 @@ async def xpath_scroll(serial: str, xpath: str, direction: XpathScrollDirectionT
     Args:
         serial (str): Android device serial number.
         xpath (str): Element XPath expression.
-        direction (str): Scroll direction, one of forward or backward.
+        direction (XpathScrollDirectionType): Scroll direction.
 
     Returns:
         bool: True if can scroll further, False otherwise.
@@ -278,15 +270,14 @@ async def xpath_scroll_to(
 ) -> bool:
     """Scroll the entire screen to find an element by XPath.
 
-    The direction is the swipe direction: the screen slides toward
-    "up"/"left"/"right"/"down" until the target element becomes visible.
-    Use "up" for forward scrolling (content below comes into view) and
-    "down" for backward scrolling.
+    The direction is the swipe direction: the screen slides that way until
+    the target element becomes visible. Use "up" for forward scrolling
+    (content below comes into view) and "down" for backward scrolling.
 
     Args:
         serial (str): Android device serial number.
         xpath (str): Target element XPath expression to scroll to.
-        direction (str): Swipe direction, one of left, right, up, down.
+        direction (SwipeDirectionType): Swipe direction.
         max_swipes (int): Maximum swipe attempts.
 
     Returns:

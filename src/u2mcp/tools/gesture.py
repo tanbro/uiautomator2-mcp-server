@@ -3,6 +3,7 @@ from __future__ import annotations
 from anyio import to_thread
 
 from ..mcp import mcp
+from ..typing import SwipeDirectionType
 from .device import use_device
 
 __all__ = (
@@ -14,19 +15,19 @@ __all__ = (
 )
 
 
-async def _swipe_ext_impl(serial: str, direction: str, scale: float):
+async def _swipe_ext_impl(serial: str, direction: SwipeDirectionType, scale: float):
     """Internal implementation for swipe from screen edge."""
     async with use_device(serial) as device:
         await to_thread.run_sync(device.swipe_ext, direction, scale)
 
 
 @mcp.tool("swipe_ext", tags={"gesture", "gesture:edge"})
-async def swipe_ext(serial: str, direction: str, scale: float):
+async def swipe_ext(serial: str, direction: SwipeDirectionType, scale: float):
     """Swipe from screen edge.
 
     Args:
         serial (str): Android device serial number.
-        direction (str): Swipe direction, one of left, right, up, down.
+        direction (SwipeDirectionType): Swipe direction.
         scale (float): Percentage of swipe distance from edge, range (0, 1.0).
     """
     await _swipe_ext_impl(serial, direction, scale)

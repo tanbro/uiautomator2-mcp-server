@@ -17,6 +17,7 @@ from lxml import etree
 from PIL.Image import Image
 
 from ..mcp import get_xpath_timeout, mcp
+from ..typing import ImageFormatType
 
 __all__ = (
     "activity_wait_appear",
@@ -246,13 +247,13 @@ async def window_size(serial: str) -> dict[str, int]:
 
 
 @mcp.tool("screenshot", tags={"device", "device:capture", "screen", "screen:capture"})
-async def screenshot(serial: str, format: str = "jpeg", display_id: int = -1) -> dict[str, Any]:
+async def screenshot(serial: str, format: ImageFormatType = "jpeg", display_id: int = -1) -> dict[str, Any]:
     """
     Take screenshot of device
 
     Args:
         serial (str): Android device serialno.
-        format (str): Image format. Defaults to "jpeg".
+        format (ImageFormatType): Image format. Defaults to "jpeg".
         display_id (int): use specific display if device has multiple screen. Defaults to -1.
 
     Returns:
