@@ -163,7 +163,6 @@ jobs:
           mkdir -p executables
           # tar preserves the executable bit that zip would lose on Unix
           tar -czf "executables/u2mcp-linux-x64-${VERSION}.tar.gz" -C dist u2mcp
-          echo "u2mcp-linux-x64-${VERSION}.tar.gz" > executables/channel-linux.txt
       - name: Store the executable
         uses: actions/upload-artifact@v7
         with:
@@ -201,7 +200,6 @@ jobs:
           mkdir -p executables
           # tar preserves the executable bit that zip would lose on Unix
           tar -czf "executables/u2mcp-macos-arm64-${VERSION}.tar.gz" -C dist u2mcp
-          echo "u2mcp-macos-arm64-${VERSION}.tar.gz" > executables/channel-macos.txt
         if: runner.os != 'Windows'
       - name: Package artifacts (Windows 7z)
         shell: pwsh
@@ -209,7 +207,6 @@ jobs:
           New-Item -ItemType Directory -Force executables | Out-Null
           # Invoke with a leading & and a space so 7z resolves from PATH
           & 7z a -r "executables\u2mcp-windows-x64-$($env:VERSION).zip" "dist\u2mcp"
-          "u2mcp-windows-x64-$($env:VERSION).zip" | Set-Content -NoNewline executables/channel-windows.txt
         if: runner.os == 'Windows'
       - name: Store the executable
         uses: actions/upload-artifact@v7
@@ -263,10 +260,15 @@ jobs:
           merge-multiple: true
           path: executables/
 
-      # Channel manifest: union of per-platform asset names, so installers
-      # match by uname instead of duplicating the naming convention
-      - name: Build latest.txt channel manifest
-        run: cat executables/channel-*.txt > executables/latest.txt
+      # Channel manifest: one "<sha256>  <asset>" line per archive, so installers
+      # match by uname and verify integrity from the same file. Digests are
+      # computed here because this is the only job holding every platform's
+      # archive; basenames only, so the file is also valid `sha256sum -c` input.
+      # --text pins the two-space separator instead of the build's default mode.
+      - name: Build sha256sums.txt channel manifest
+        run: |
+          cd executables
+          sha256sum --text u2mcp-* > sha256sums.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3

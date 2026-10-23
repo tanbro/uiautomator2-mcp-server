@@ -65,19 +65,20 @@ else {
 }
 
 # --------------------------
-# Resolve release asset via the channel manifest (latest.txt).
-# Asset naming is owned by CI; this script only prefix-matches "u2mcp-<target>-".
+# Resolve release asset via the channel manifest (sha256sums.txt), whose lines
+# pair each asset name with its SHA256 digest. Asset naming is owned by CI;
+# this script only prefix-matches "u2mcp-<target>-".
 # Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 $VERSION = if ($env:U2MCP_VERSION) { $env:U2MCP_VERSION } else { "latest" }
 if ($VERSION -eq "latest") {
-    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/latest/download/latest.txt"
+    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/latest/download/sha256sums.txt"
     $MANIFEST_SOURCE = "the latest release"
 }
 else {
     $RELEASE_VERSION = $VERSION.TrimStart('v','V')
     $TAG = "v$RELEASE_VERSION"
-    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/latest.txt"
+    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/sha256sums.txt"
     $MANIFEST_SOURCE = "release $TAG"
 }
 try {
@@ -87,12 +88,15 @@ try {
     Write-Host "  URL: $CHANNEL_URL"
     exit 1
 }
-$ASSET = $MANIFEST | Where-Object { $_ -like "$PREFIX*" } | Select-Object -First 1
-if (-not $ASSET) {
+$CHANNEL_LINE = $MANIFEST | Where-Object { $_ -match ("^[0-9a-f]{64}  " + [regex]::Escape($PREFIX)) } | Select-Object -First 1
+if (-not $CHANNEL_LINE) {
     Write-Host "ERROR: no pre-built binary for $TARGET in $MANIFEST_SOURCE."
     Write-Host "  Hint: check supported platforms at $CHANNEL_URL"
     exit 1
 }
+$MANIFEST_FIELDS = $CHANNEL_LINE -split '\s+', 2
+$EXPECTED_SHA256 = $MANIFEST_FIELDS[0]
+$ASSET = $MANIFEST_FIELDS[1]
 
 # Derive the tag from the matched asset name
 $TAG = "v" + ($ASSET -replace ("^" + [regex]::Escape($PREFIX) + "(.+)\.(zip|tar\.gz)$"), '$1')
@@ -104,20 +108,33 @@ Write-Host "Version:   $TAG"
 Write-Host "Bundle:    $BUNDLE_DIR"
 Write-Host "Command:   $COMMAND_PATH"
 Write-Host "Archive:   $DOWNLOAD_URL"
+Write-Host "SHA256:    $EXPECTED_SHA256"
 Write-Host ""
 
 # --------------------------
-# Download, extract, install
+# Download, verify, extract, install
 # --------------------------
 $TMP_DIR = Join-Path ([IO.Path]::GetTempPath()) ("u2mcp-install-" + [Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $TMP_DIR | Out-Null
 try {
     $ARCHIVE = Join-Path $TMP_DIR $ASSET
 
-    Write-Host "[1/3] Downloading $ASSET..."
+    Write-Host "[1/4] Downloading $ASSET..."
     Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $ARCHIVE -UseBasicParsing
 
-    Write-Host "[2/3] Extracting..."
+    # Checked before extraction so a corrupt or swapped archive fails while the
+    # previously installed bundle is still untouched.
+    Write-Host "[2/4] Verifying SHA256..."
+    $ACTUAL_SHA256 = (Get-FileHash -Algorithm SHA256 $ARCHIVE).Hash.ToLower()
+    if ($ACTUAL_SHA256 -ne $EXPECTED_SHA256) {
+        Write-Host "ERROR: SHA256 mismatch for $ASSET. Nothing was installed."
+        Write-Host "  expected: $EXPECTED_SHA256"
+        Write-Host "  actual:   $ACTUAL_SHA256"
+        Write-Host "The download is corrupt or the release changed after publishing."
+        exit 1
+    }
+
+    Write-Host "[3/4] Extracting..."
     if ($ASSET -like "*.zip") {
         Expand-Archive -Path $ARCHIVE -DestinationPath $TMP_DIR -Force
     }
@@ -126,7 +143,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "tar failed with exit code $LASTEXITCODE" }
     }
 
-    Write-Host "[3/3] Installing to $BUNDLE_DIR..."
+    Write-Host "[4/4] Installing to $BUNDLE_DIR..."
     if (Test-Path $BUNDLE_DIR) {
         Remove-Item -Path $BUNDLE_DIR -Recurse -Force
     }

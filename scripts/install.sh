@@ -64,27 +64,40 @@ http_get() {
   fi
 }
 
+# macOS ships shasum but not sha256sum, so probe both.
+sha256_of() {
+  if command -v sha256sum &>/dev/null; then
+    sha256sum "$1" | cut -d' ' -f1
+  elif command -v shasum &>/dev/null; then
+    shasum -a 256 "$1" | cut -d' ' -f1
+  else
+    echo "ERROR: sha256sum or shasum is required to verify the download." >&2
+    exit 1
+  fi
+}
+
 # --------------------------
-# Resolve release asset via the channel manifest (latest.txt).
-# Asset naming is owned by CI; this script only prefix-matches "u2mcp-<target>-".
+# Resolve release asset via the channel manifest (sha256sums.txt), whose lines
+# pair each asset name with its SHA256 digest. Asset naming is owned by CI;
+# this script only prefix-matches "u2mcp-<target>-".
 # Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 VERSION="${U2MCP_VERSION:-latest}"
 if [[ "${VERSION}" == "latest" ]]; then
-  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/latest.txt"
+  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/sha256sums.txt"
   MANIFEST=$(http_get "${CHANNEL_URL}" || true)
   MANIFEST_SOURCE="the latest release"
 else
   RELEASE_VERSION="${VERSION#v}"
   RELEASE_VERSION="${RELEASE_VERSION#V}"
   TAG="v${RELEASE_VERSION}"
-  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/latest.txt"
+  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/sha256sums.txt"
   MANIFEST=$(http_get "${CHANNEL_URL}" || true)
   MANIFEST_SOURCE="release ${TAG}"
 fi
 
-ASSET=$(printf '%s\n' "${MANIFEST}" | grep -m1 "^u2mcp-${TARGET}-" || true)
-if [[ -z "${ASSET}" ]]; then
+CHANNEL_LINE=$(printf '%s\n' "${MANIFEST}" | grep -m1 -E "^[0-9a-f]{64}  u2mcp-${TARGET}-" || true)
+if [[ -z "${CHANNEL_LINE}" ]]; then
   echo "ERROR: no pre-built binary for ${TARGET} in ${MANIFEST_SOURCE}." >&2
   if [[ "${TARGET}" == "darwin-x64" ]]; then
     echo "Hint: Intel Macs have no pre-built binary. Install from PyPI: uv tool install uiautomator2-mcp-server" >&2
@@ -92,6 +105,7 @@ if [[ -z "${ASSET}" ]]; then
   echo "Hint: check supported platforms at ${CHANNEL_URL}" >&2
   exit 1
 fi
+read -r EXPECTED_SHA256 ASSET <<< "${CHANNEL_LINE}"
 
 # Derive the tag from the matched asset name; avoids relying on
 # releases/latest/download redirects for the binary itself
@@ -104,18 +118,31 @@ echo "Version:   ${TAG}"
 echo "Bundle:    ${BUNDLE_DIR}"
 echo "Command:   ${BIN_LINK}"
 echo "Archive:   ${DOWNLOAD_URL}"
+echo "SHA256:    ${EXPECTED_SHA256}"
 echo
 
 # --------------------------
-# Download and extract
+# Download, verify, extract
 # --------------------------
 TMP_DIR=$(mktemp -d -t u2mcp-install-XXXXXX)
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
-echo "[1/3] Downloading ${ASSET}..."
+echo "[1/4] Downloading ${ASSET}..."
 http_get "${DOWNLOAD_URL}" > "${TMP_DIR}/${ASSET}"
 
-echo "[2/3] Extracting..."
+# Checked before extraction so a corrupt or swapped archive fails while the
+# previously installed bundle is still untouched.
+echo "[2/4] Verifying SHA256..."
+ACTUAL_SHA256=$(sha256_of "${TMP_DIR}/${ASSET}")
+if [[ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]]; then
+  echo "ERROR: SHA256 mismatch for ${ASSET}. Nothing was installed." >&2
+  echo "  expected: ${EXPECTED_SHA256}" >&2
+  echo "  actual:   ${ACTUAL_SHA256}" >&2
+  echo "The download is corrupt or the release changed after publishing." >&2
+  exit 1
+fi
+
+echo "[3/4] Extracting..."
 # Asset type decides the unpacker; CI ships zip on Windows, tar.gz elsewhere
 if ! tar -xf "${TMP_DIR}/${ASSET}" -C "${TMP_DIR}" 2>/dev/null; then
   unzip -q -d "${TMP_DIR}" "${TMP_DIR}/${ASSET}"
@@ -124,7 +151,7 @@ fi
 # --------------------------
 # Replace bundle and link
 # --------------------------
-echo "[3/3] Installing to ${BUNDLE_DIR}..."
+echo "[4/4] Installing to ${BUNDLE_DIR}..."
 rm -rf "${BUNDLE_DIR}"
 mkdir -p "${BUNDLE_DIR}" "${BIN_DIR}"
 # Archive root is u2mcp/: the binary plus its _internal runtime
