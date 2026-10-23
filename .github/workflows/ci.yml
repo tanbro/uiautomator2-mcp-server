@@ -3,7 +3,7 @@ name: CI
 on:
   workflow_dispatch:
   push:
-    branches: [main, develop]
+    branches: [main]
     tags:
       - "*"
     paths:
@@ -13,7 +13,7 @@ on:
       - pyproject.toml
       - uv.lock
   pull_request:
-    branches: [main, develop]
+    branches: [main]
     paths:
       - .github/**
       - src/**
