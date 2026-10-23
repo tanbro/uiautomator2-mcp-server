@@ -196,6 +196,19 @@ The following are two optional enhanced package managers. You can choose to inst
   u2mcp --version
   ```
 
+  Supported platforms for the pre-compiled binaries:
+
+  | Platform | Release asset | Requirement |
+  |----------|---------------|-------------|
+  | Linux x86_64 | `u2mcp-linux-x64-glibc_2_28-<version>.tar.gz` | glibc >= 2.28 |
+  | macOS (Apple Silicon) | `u2mcp-darwin-arm64-<version>.tar.gz` | arm64 Mac |
+  | Windows x64 | `u2mcp-windows-x64-<version>.zip` | x64 Windows (ARM64 runs it under emulation) |
+
+  Distributions the `glibc_2_28` token in the Linux asset name rules out — musl
+  systems such as Alpine, and older glibc releases such as CentOS 7 / Debian 9 —
+  have no pre-compiled binary and must install from PyPI below. The same goes for
+  Intel Macs.
+
 - Run directly without installation
 
   Using `uvx` (recommended) or `pipx run` from PyPI:

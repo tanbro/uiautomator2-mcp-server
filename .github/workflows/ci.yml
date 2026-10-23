@@ -94,9 +94,7 @@ jobs:
           cache-dependency-glob: "uv.lock"
 
       - name: Run tests
-        run: |
-          uv sync --frozen --group test
-          uv run pytest --cov=src/u2mcp --cov-branch --cov-report=term-missing --cov-report=xml
+        run: uv run --frozen --group test pytest --cov=src/u2mcp --cov-branch --cov-report=term-missing --cov-report=xml
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
@@ -143,6 +141,10 @@ jobs:
     if: needs.check-release-tag.outputs.version != ''
     env:
       VERSION: ${{ needs.check-release-tag.outputs.version }}
+      # The floor the image family above guarantees, and the token the asset
+      # name advertises. Kept next to the image so changing one draws the eye
+      # to the other; the assert step below proves the claim holds.
+      GLIBC_BASELINE: glibc_2_28
     steps:
       - uses: actions/checkout@v7
       - name: Install uv
@@ -153,16 +155,29 @@ jobs:
       - name: Build executable
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.check-release-tag.outputs.version }}
+        run: uv run --frozen --group pyinstaller pyinstaller u2mcp.spec
+      # The asset name promises a glibc floor, so measure the promise against
+      # every ELF in the bundle before shipping it. Failing here costs a build,
+      # not a user hunting for why the binary will not start.
+      - name: Assert the bundle needs no newer glibc than the baseline
+        shell: bash
         run: |
-          uv sync --frozen --group pyinstaller
-          uv run pyinstaller u2mcp.spec
+          floor=${GLIBC_BASELINE#glibc_}
+          floor=${floor/_/.}
+          required=$(find dist/u2mcp -type f -print0 | xargs -0 objdump -T 2>/dev/null |
+            grep -oE 'GLIBC_[0-9][0-9.]*' | sed 's/GLIBC_//' | sort -V | tail -1 || true)
+          # Empty means objdump reported nothing at all -- a missing tool or an
+          # unexpected bundle. Fail instead of waving the promise through.
+          test -n "${required}"
+          echo "bundle requires GLIBC_${required}, asset name declares ${GLIBC_BASELINE}"
+          test "$(printf '%s\n' "${required}" "${floor}" | sort -V | tail -1)" = "${floor}"
       - name: Package artifacts
         shell: bash
         run: |
           test -n "$VERSION"
           mkdir -p executables
           # tar preserves the executable bit that zip would lose on Unix
-          tar -czf "executables/u2mcp-linux-x64-${VERSION}.tar.gz" -C dist u2mcp
+          tar -czf "executables/u2mcp-linux-x64-${GLIBC_BASELINE}-${VERSION}.tar.gz" -C dist u2mcp
       - name: Store the executable
         uses: actions/upload-artifact@v7
         with:
@@ -190,24 +205,24 @@ jobs:
       - name: Build executable
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.check-release-tag.outputs.version }}
-        run: |
-          uv sync --frozen --group pyinstaller
-          uv run pyinstaller u2mcp.spec
+        run: uv run --frozen --group pyinstaller pyinstaller u2mcp.spec
       - name: Package artifacts
+        if: runner.os != 'Windows'
         shell: bash
         run: |
           test -n "$VERSION"
           mkdir -p executables
           # tar preserves the executable bit that zip would lose on Unix
-          tar -czf "executables/u2mcp-macos-arm64-${VERSION}.tar.gz" -C dist u2mcp
-        if: runner.os != 'Windows'
+          # The OS token must stay "darwin": installers derive it from
+          # `uname -s`, so a "macos" asset name is unreachable from a Mac.
+          tar -czf "executables/u2mcp-darwin-arm64-${VERSION}.tar.gz" -C dist u2mcp
       - name: Package artifacts (Windows 7z)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force executables | Out-Null
           # Invoke with a leading & and a space so 7z resolves from PATH
           & 7z a -r "executables\u2mcp-windows-x64-$($env:VERSION).zip" "dist\u2mcp"
-        if: runner.os == 'Windows'
       - name: Store the executable
         uses: actions/upload-artifact@v7
         with:
@@ -265,10 +280,10 @@ jobs:
       # computed here because this is the only job holding every platform's
       # archive; basenames only, so the file is also valid `sha256sum -c` input.
       # --text pins the two-space separator instead of the build's default mode.
-      - name: Build sha256sums.txt channel manifest
+      - name: Build SHA256SUMS channel manifest
         run: |
           cd executables
-          sha256sum --text u2mcp-* > sha256sums.txt
+          sha256sum --text u2mcp-* > SHA256SUMS
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3

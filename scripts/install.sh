@@ -25,12 +25,35 @@ get_arch() {
 
 OS=$(get_os)
 ARCH=$(get_arch)
-TARGET="${OS}-${ARCH}"
 if [[ "${OS}" == "unsupported" || "${ARCH}" == "unsupported" ]]; then
   echo "ERROR: unsupported platform ($(uname -s) $(uname -m))." >&2
   echo "Install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
   exit 1
 fi
+
+# A Terminal forced to run under Rosetta 2 answers x86_64 to uname -m even on
+# Apple Silicon, which would select the Intel target we never publish. The
+# kernel knob is a contract (a named 0/1 value), so trust it over uname here.
+if [[ "${OS}" == "darwin" && "${ARCH}" == "x64" ]]; then
+  if [[ "$(sysctl -n sysctl.proc_translated 2>/dev/null || true)" == "1" ]]; then
+    ARCH="arm64"
+  fi
+fi
+
+# glibc-built bundles can never run on a musl system -- PyInstaller has no musl
+# port, so there is no asset to select. Refuse before spending the download.
+# The loader path is musl's own install contract, not a parsed command banner.
+if [[ "${OS}" == "linux" ]]; then
+  for musl_loader in /lib/ld-musl-*.so.1 /usr/lib/ld-musl-*.so.1; do
+    if [[ -e "${musl_loader}" ]]; then
+      echo "ERROR: this system uses musl libc (${musl_loader##*/}); pre-built u2mcp binaries are glibc-only." >&2
+      echo "Install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
+      exit 1
+    fi
+  done
+fi
+
+TARGET="${OS}-${ARCH}"
 
 # --------------------------
 # Install layout (user-level only).
@@ -77,23 +100,32 @@ sha256_of() {
 }
 
 # --------------------------
-# Resolve release asset via the channel manifest (sha256sums.txt), whose lines
-# pair each asset name with its SHA256 digest. Asset naming is owned by CI;
-# this script only prefix-matches "u2mcp-<target>-".
+# Resolve release asset via the channel manifest (SHA256SUMS), whose lines pair
+# each asset name with its SHA256 digest. Asset naming is owned by CI; this
+# script only prefix-matches "u2mcp-<target>-".
 # Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 VERSION="${U2MCP_VERSION:-latest}"
 if [[ "${VERSION}" == "latest" ]]; then
-  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/sha256sums.txt"
-  MANIFEST=$(http_get "${CHANNEL_URL}" || true)
+  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/latest/download/SHA256SUMS"
   MANIFEST_SOURCE="the latest release"
 else
   RELEASE_VERSION="${VERSION#v}"
   RELEASE_VERSION="${RELEASE_VERSION#V}"
   TAG="v${RELEASE_VERSION}"
-  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/sha256sums.txt"
-  MANIFEST=$(http_get "${CHANNEL_URL}" || true)
+  CHANNEL_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/SHA256SUMS"
   MANIFEST_SOURCE="release ${TAG}"
+fi
+
+# A failed fetch and a manifest without this platform are different problems:
+# the first says the release or the network is unreachable, the second says no
+# build exists for this target. Reporting them identically sends users hunting
+# for a binary that was never published.
+if ! MANIFEST=$(http_get "${CHANNEL_URL}" 2>/dev/null); then
+  echo "ERROR: could not fetch the channel manifest${MANIFEST_SOURCE:+ from ${MANIFEST_SOURCE}}." >&2
+  echo "  URL: ${CHANNEL_URL}" >&2
+  echo "Either the network is unreachable or that release publishes no manifest." >&2
+  exit 1
 fi
 
 CHANNEL_LINE=$(printf '%s\n' "${MANIFEST}" | grep -m1 -E "^[0-9a-f]{64}  u2mcp-${TARGET}-" || true)
@@ -109,9 +141,21 @@ fi
 EXPECTED_SHA256=${CHANNEL_LINE%%  *}
 ASSET=${CHANNEL_LINE#*  }
 
-# Derive the tag from the matched asset name; avoids relying on
-# releases/latest/download redirects for the binary itself
-TAG="v$(printf '%s' "${ASSET}" | sed -E "s/^u2mcp-${TARGET}-(.+)\.(tar\.gz|zip)$/\1/")"
+# The version is the last hyphen-delimited field of the asset name, so the
+# naming stays CI-owned even if CI adds more fields (e.g. a libc token). An
+# unexpected shape aborts rather than assembling a garbage download URL.
+VERSION_FIELD=${ASSET##*-}
+case "${VERSION_FIELD}" in
+  *.tar.gz) VERSION_FIELD=${VERSION_FIELD%.tar.gz} ;;
+  *.zip)    VERSION_FIELD=${VERSION_FIELD%.zip} ;;
+esac
+if [[ ! "${VERSION_FIELD}" =~ ^[0-9] ]]; then
+  echo "ERROR: unexpected asset name in the manifest: ${ASSET}" >&2
+  exit 1
+fi
+# Derived from the asset rather than the URL redirect, so the manifest and the
+# binary it names cannot come from different releases.
+TAG="v${VERSION_FIELD}"
 DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/${ASSET}"
 
 echo "=== u2mcp installer ==="
@@ -129,12 +173,12 @@ echo
 TMP_DIR=$(mktemp -d -t u2mcp-install-XXXXXX)
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
-echo "[1/4] Downloading ${ASSET}..."
+echo "[1/5] Downloading ${ASSET}..."
 http_get "${DOWNLOAD_URL}" > "${TMP_DIR}/${ASSET}"
 
 # Checked before extraction so a corrupt or swapped archive fails while the
 # previously installed bundle is still untouched.
-echo "[2/4] Verifying SHA256..."
+echo "[2/5] Verifying SHA256..."
 ACTUAL_SHA256=$(sha256_of "${TMP_DIR}/${ASSET}")
 if [[ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]]; then
   echo "ERROR: SHA256 mismatch for ${ASSET}. Nothing was installed." >&2
@@ -144,16 +188,33 @@ if [[ "${ACTUAL_SHA256}" != "${EXPECTED_SHA256}" ]]; then
   exit 1
 fi
 
-echo "[3/4] Extracting..."
+echo "[3/5] Extracting..."
 # Asset type decides the unpacker; CI ships zip on Windows, tar.gz elsewhere
 if ! tar -xf "${TMP_DIR}/${ASSET}" -C "${TMP_DIR}" 2>/dev/null; then
   unzip -q -d "${TMP_DIR}" "${TMP_DIR}/${ASSET}"
 fi
 
+# The bundle's own exit code is the only contract-grade answer to "will this
+# run here": a missing glibc loader and a glibc older than the build baseline
+# both surface as a failed exec, without parsing any command's output. Run it
+# on the extracted copy so a failure leaves the existing install intact.
+echo "[4/5] Checking the bundle runs here..."
+BUNDLE_EXE="${TMP_DIR}/${APP_NAME}/${APP_NAME}"
+if [[ "${OS}" == "windows" ]]; then
+  BUNDLE_EXE="${BUNDLE_EXE}.exe"
+fi
+chmod +x "${BUNDLE_EXE}"
+if ! "${BUNDLE_EXE}" --version; then
+  echo "ERROR: ${TAG} did not start on this system (${TARGET}); the existing install was left untouched." >&2
+  echo "Hint: pre-built binaries need glibc at or above the baseline named in the asset name." >&2
+  echo "Hint: install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
+  exit 1
+fi
+
 # --------------------------
 # Replace bundle and link
 # --------------------------
-echo "[4/4] Installing to ${BUNDLE_DIR}..."
+echo "[5/5] Installing to ${BUNDLE_DIR}..."
 rm -rf "${BUNDLE_DIR}"
 mkdir -p "${BUNDLE_DIR}" "${BIN_DIR}"
 # Archive root is u2mcp/: the binary plus its _internal runtime
@@ -172,8 +233,10 @@ fi
 # --------------------------
 # Verify
 # --------------------------
+# The bundle itself already ran from the temp dir, so this only proves the
+# command entry just created here reaches it.
 if ! "${BIN_LINK}" --version; then
-  echo "ERROR: installed binary did not start. Try running it directly:" >&2
+  echo "ERROR: the ${APP_NAME} command did not start. Try running it directly:" >&2
   echo "  ${BIN_LINK} --version" >&2
   exit 1
 fi

@@ -263,6 +263,18 @@ PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
   u2mcp --version
   ```
 
+  预编译产物的支持平台:
+
+  | 平台 | 发布资产 | 要求 |
+  |------|----------|------|
+  | Linux x86_64 | `u2mcp-linux-x64-glibc_2_28-<version>.tar.gz` | glibc >= 2.28 |
+  | macOS (Apple Silicon) | `u2mcp-darwin-arm64-<version>.tar.gz` | arm64 Mac |
+  | Windows x64 | `u2mcp-windows-x64-<version>.zip` | x64 Windows (ARM64 经仿真运行) |
+
+  Linux 资产名里的 `glibc_2_28` 标明了构建基线, 因此被排除的系统没有预编译产物,
+  只能按下面从 PyPI 安装: musl 系统 (如 Alpine)、glibc 低于 2.28 的旧发行版
+  (如 CentOS 7 / Debian 9), 以及 Intel Mac。
+
 - 免安装直接执行
 
   使用 `uvx` (推荐) 或 `pipx run` 直接一键从 PyPI 下载运行:

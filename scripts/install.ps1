@@ -35,6 +35,24 @@ $arch = try {
     if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
 }
 $IS_WINDOWS = ($OS -eq "windows")
+
+# A Terminal forced under Rosetta 2 makes an x64 pwsh believe it is on an Intel
+# Mac, which would select a target we never publish. The kernel knob is a
+# contract (a named 0/1 value), so prefer it over the reported architecture.
+if ($OS -eq "darwin" -and $arch -eq "x64") {
+    $translated = try { (& sysctl -n sysctl.proc_translated 2>$null | Out-String).Trim() } catch { "" }
+    if ($translated -eq "1") { $arch = "arm64" }
+}
+
+# glibc-built bundles can never run on a musl system -- PyInstaller has no musl
+# port, so there is no asset to select. Refuse before spending the download.
+# The loader path is musl's own install contract, not a parsed command banner.
+if ($OS -eq "linux" -and (Get-ChildItem -Path "/lib", "/usr/lib" -Filter "ld-musl-*.so.1" -ErrorAction SilentlyContinue)) {
+    Write-Host "ERROR: this system uses musl libc; pre-built u2mcp binaries are glibc-only."
+    Write-Host "Install from PyPI instead: uv tool install uiautomator2-mcp-server"
+    exit 1
+}
+
 $TARGET = "$OS-$arch"
 $PREFIX = "u2mcp-$TARGET-"
 
@@ -65,27 +83,31 @@ else {
 }
 
 # --------------------------
-# Resolve release asset via the channel manifest (sha256sums.txt), whose lines
-# pair each asset name with its SHA256 digest. Asset naming is owned by CI;
+# Resolve release asset via the channel manifest (SHA256SUMS), whose lines pair
+# each asset name with its SHA256 digest. Asset naming is owned by CI;
 # this script only prefix-matches "u2mcp-<target>-".
 # Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 $VERSION = if ($env:U2MCP_VERSION) { $env:U2MCP_VERSION } else { "latest" }
 if ($VERSION -eq "latest") {
-    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/latest/download/sha256sums.txt"
+    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/latest/download/SHA256SUMS"
     $MANIFEST_SOURCE = "the latest release"
 }
 else {
     $RELEASE_VERSION = $VERSION.TrimStart('v','V')
     $TAG = "v$RELEASE_VERSION"
-    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/sha256sums.txt"
+    $CHANNEL_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/SHA256SUMS"
     $MANIFEST_SOURCE = "release $TAG"
 }
+# A failed fetch and a manifest without this platform are different problems:
+# reporting them identically sends users hunting for a binary that was never
+# published.
 try {
     $MANIFEST = ((Invoke-WebRequest -Uri $CHANNEL_URL -UseBasicParsing).Content) -split "`r?`n"
 } catch {
-    Write-Host "ERROR: failed to fetch the channel manifest."
+    Write-Host "ERROR: could not fetch the channel manifest from $MANIFEST_SOURCE."
     Write-Host "  URL: $CHANNEL_URL"
+    Write-Host "Either the network is unreachable or that release publishes no manifest."
     exit 1
 }
 $CHANNEL_LINE = $MANIFEST | Where-Object { $_ -match ("^[0-9a-f]{64}  " + [regex]::Escape($PREFIX)) } | Select-Object -First 1
@@ -98,8 +120,17 @@ $MANIFEST_FIELDS = $CHANNEL_LINE -split '\s+', 2
 $EXPECTED_SHA256 = $MANIFEST_FIELDS[0]
 $ASSET = $MANIFEST_FIELDS[1]
 
-# Derive the tag from the matched asset name
-$TAG = "v" + ($ASSET -replace ("^" + [regex]::Escape($PREFIX) + "(.+)\.(zip|tar\.gz)$"), '$1')
+# The version is the last hyphen-delimited field of the asset name, so the
+# naming stays CI-owned even if CI adds more fields (e.g. a libc token). An
+# unexpected shape aborts rather than assembling a garbage download URL.
+$VERSION_FIELD = (($ASSET -split '-')[-1] -replace '\.(tar\.gz|zip)$', '')
+if ($VERSION_FIELD -notmatch '^[0-9]') {
+    Write-Host "ERROR: unexpected asset name in the manifest: $ASSET"
+    exit 1
+}
+# Derived from the asset rather than the URL redirect, so the manifest and the
+# binary it names cannot come from different releases.
+$TAG = "v$VERSION_FIELD"
 $DOWNLOAD_URL = "https://github.com/$GITHUB_REPO/releases/download/$TAG/$ASSET"
 
 Write-Host "=== u2mcp installer ==="
@@ -112,19 +143,19 @@ Write-Host "SHA256:    $EXPECTED_SHA256"
 Write-Host ""
 
 # --------------------------
-# Download, verify, extract, install
+# Download, verify, extract, smoke-test, install
 # --------------------------
 $TMP_DIR = Join-Path ([IO.Path]::GetTempPath()) ("u2mcp-install-" + [Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $TMP_DIR | Out-Null
 try {
     $ARCHIVE = Join-Path $TMP_DIR $ASSET
 
-    Write-Host "[1/4] Downloading $ASSET..."
+    Write-Host "[1/5] Downloading $ASSET..."
     Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $ARCHIVE -UseBasicParsing
 
     # Checked before extraction so a corrupt or swapped archive fails while the
     # previously installed bundle is still untouched.
-    Write-Host "[2/4] Verifying SHA256..."
+    Write-Host "[2/5] Verifying SHA256..."
     $ACTUAL_SHA256 = (Get-FileHash -Algorithm SHA256 $ARCHIVE).Hash.ToLower()
     if ($ACTUAL_SHA256 -ne $EXPECTED_SHA256) {
         Write-Host "ERROR: SHA256 mismatch for $ASSET. Nothing was installed."
@@ -134,7 +165,7 @@ try {
         exit 1
     }
 
-    Write-Host "[3/4] Extracting..."
+    Write-Host "[3/5] Extracting..."
     if ($ASSET -like "*.zip") {
         Expand-Archive -Path $ARCHIVE -DestinationPath $TMP_DIR -Force
     }
@@ -143,11 +174,52 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "tar failed with exit code $LASTEXITCODE" }
     }
 
-    Write-Host "[4/4] Installing to $BUNDLE_DIR..."
+    Write-Host "[4/5] Checking the bundle runs here..."
+    # The archive root is u2mcp/, so the extracted exe sits one level deeper
+    # than the flat BUNDLE_DIR layout used after the copy.
+    $tempExe = Join-Path (Join-Path $TMP_DIR $APP_NAME) $APP_NAME
+    if ($IS_WINDOWS) {
+        $tempExe += ".exe"
+    }
+    if (-not (Test-Path $tempExe)) {
+        Write-Host "ERROR: $ASSET did not unpack to $APP_NAME. Nothing was installed."
+        exit 1
+    }
+    if (-not $IS_WINDOWS) {
+        & chmod +x $tempExe
+        if ($LASTEXITCODE -ne 0) { throw "chmod failed with exit code $LASTEXITCODE" }
+    }
+    # The bundle's own exit code is the only contract-grade answer to "will this
+    # run here": a missing glibc loader and a glibc older than the build baseline
+    # both surface as a failed exec, without parsing any command's output. Run it
+    # on the extracted copy so a failure leaves the existing install intact.
+    # Read the code deliberately: PS 7.3+ can promote a native failure to an
+    # error under Stop, and an image the OS refuses to start throws outright --
+    # both must still land on the message that explains what happened.
+    $ErrorActionPreference = "Continue"
+    try {
+        & $tempExe --version
+        $started = ($LASTEXITCODE -eq 0)
+    }
+    catch {
+        $started = $false
+    }
+    $ErrorActionPreference = "Stop"
+    if (-not $started) {
+        Write-Host "ERROR: $TAG did not start on this system ($TARGET); the existing install was left untouched."
+        Write-Host "Hint: pre-built binaries need glibc at or above the baseline named in the asset name."
+        Write-Host "Hint: install from PyPI instead: uv tool install uiautomator2-mcp-server"
+        exit 1
+    }
+
+    Write-Host "[5/5] Installing to $BUNDLE_DIR..."
     if (Test-Path $BUNDLE_DIR) {
         Remove-Item -Path $BUNDLE_DIR -Recurse -Force
     }
     New-Item -ItemType Directory -Path $BUNDLE_DIR -Force | Out-Null
+    # The command entry lives in BIN_DIR, which is a child of the bundle on
+    # Windows and ~/.local/bin elsewhere; neither is guaranteed to exist yet.
+    New-Item -ItemType Directory -Path $BIN_DIR -Force | Out-Null
     # Archive root is u2mcp/: the binary plus its _internal runtime
     Copy-Item -Path (Join-Path $TMP_DIR "$APP_NAME/*") -Destination $BUNDLE_DIR -Recurse -Force
 
@@ -171,10 +243,19 @@ finally {
 # --------------------------
 # Verify
 # --------------------------
+# The bundle itself already ran from the temp dir, so this only proves the
+# command entry just created here reaches it.
+$ErrorActionPreference = "Continue"
 try {
     & $COMMAND_PATH --version
-} catch {
-    Write-Host "ERROR: installed command did not run. Try directly:"
+    $commandStarted = ($LASTEXITCODE -eq 0)
+}
+catch {
+    $commandStarted = $false
+}
+$ErrorActionPreference = "Stop"
+if (-not $commandStarted) {
+    Write-Host "ERROR: the $APP_NAME command did not run. Try directly:"
     Write-Host "  $COMMAND_PATH --version"
     exit 1
 }
