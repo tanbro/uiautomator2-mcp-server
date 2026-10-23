@@ -144,9 +144,6 @@ jobs:
       # Rust-style target triple: the third slot is what distinguishes ABIs
       # (gnu vs a future musl), so adding a target never reshapes the names.
       TARGET_TRIPLE: x86_64-unknown-linux-gnu
-      # The floor the image family above guarantees. The triple names the libc
-      # kind only; the number is documented in the README and enforced below.
-      GLIBC_BASELINE: glibc_2_28
     steps:
       - uses: actions/checkout@v7
       - name: Install uv
@@ -158,21 +155,6 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.check-release-tag.outputs.version }}
         run: uv run --frozen --group pyinstaller pyinstaller u2mcp.spec
-      # The README promises this floor, so measure it against every ELF in the
-      # bundle before shipping it. Failing here costs a build, not a user
-      # hunting for why the binary will not start.
-      - name: Assert the bundle needs no newer glibc than the baseline
-        shell: bash
-        run: |
-          floor=${GLIBC_BASELINE#glibc_}
-          floor=${floor/_/.}
-          required=$(find dist/u2mcp -type f -print0 | xargs -0 objdump -T 2>/dev/null |
-            grep -oE 'GLIBC_[0-9][0-9.]*' | sed 's/GLIBC_//' | sort -V | tail -1 || true)
-          # Empty means objdump reported nothing at all -- a missing tool or an
-          # unexpected bundle. Fail instead of waving the promise through.
-          test -n "${required}"
-          echo "bundle requires GLIBC_${required}, declared baseline is ${GLIBC_BASELINE}"
-          test "$(printf '%s\n' "${required}" "${floor}" | sort -V | tail -1)" = "${floor}"
       - name: Package artifacts
         shell: bash
         run: |

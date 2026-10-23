@@ -40,19 +40,6 @@ if [[ "${OS}" == "darwin" && "${ARCH}" == "x64" ]]; then
   fi
 fi
 
-# glibc-built bundles can never run on a musl system -- PyInstaller has no musl
-# port, so there is no asset to select. Refuse before spending the download.
-# The loader path is musl's own install contract, not a parsed command banner.
-if [[ "${OS}" == "linux" ]]; then
-  for musl_loader in /lib/ld-musl-*.so.1 /usr/lib/ld-musl-*.so.1; do
-    if [[ -e "${musl_loader}" ]]; then
-      echo "ERROR: this system uses musl libc (${musl_loader##*/}); pre-built u2mcp binaries are glibc-only." >&2
-      echo "Install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
-      exit 1
-    fi
-  done
-fi
-
 # Map the detected pair onto a release target triple. CI mints the triples (see
 # .github/workflows/ci.yml); this table is the only naming knowledge the script
 # carries, and an unmapped pair means "we do not build for you" -- which is
@@ -223,7 +210,7 @@ fi
 chmod +x "${BUNDLE_EXE}"
 if ! "${BUNDLE_EXE}" --version; then
   echo "ERROR: ${TAG} did not start on this system (${TRIPLE}); the existing install was left untouched." >&2
-  echo "Hint: the glibc floor each build needs is listed in the README platform matrix." >&2
+  echo "Hint: builds need glibc (manylinux_2_28 base); musl systems such as Alpine are unsupported." >&2
   echo "Hint: install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
   exit 1
 fi

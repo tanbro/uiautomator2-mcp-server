@@ -267,13 +267,14 @@ PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
 
   | 平台 | 发布资产 | 要求 |
   |------|----------|------|
-  | Linux x86_64 | `u2mcp-x86_64-unknown-linux-gnu-<version>.tar.gz` | glibc >= 2.28 |
+  | Linux x86_64 | `u2mcp-x86_64-unknown-linux-gnu-<version>.tar.gz` | glibc; 构建镜像 `quay.io/pypa/manylinux_2_28_x86_64` |
   | Linux aarch64 | 未发布 | — |
   | macOS (Apple Silicon) | `u2mcp-aarch64-apple-darwin-<version>.tar.gz` | arm64 Mac |
   | Windows x64 | `u2mcp-x86_64-pc-windows-msvc-<version>.zip` | x64 Windows (ARM64 经仿真运行) |
 
   资产名用 Rust 风格的 target triple, 以后换 ABI 是新增一个 triple, 不是改命名规则。
-  Linux 名里的 `-gnu` 就是全部承诺: musl 系统 (如 Alpine)、glibc 低于 2.28 的旧发行版
+  Linux 的下限由构建镜像决定, 不在这里维护一个数字 —— 上面那个镜像是个 manylinux profile,
+  名字里就写了它对准的 glibc。musl 系统 (如 Alpine)、比该 profile 更老的发行版
   (如 CentOS 7 / Debian 9), 以及 Intel Mac 都没有预编译产物, 只能按下面从 PyPI 安装。
 
 - 免安装直接执行
