@@ -141,9 +141,11 @@ jobs:
     if: needs.check-release-tag.outputs.version != ''
     env:
       VERSION: ${{ needs.check-release-tag.outputs.version }}
-      # The floor the image family above guarantees, and the token the asset
-      # name advertises. Kept next to the image so changing one draws the eye
-      # to the other; the assert step below proves the claim holds.
+      # Rust-style target triple: the third slot is what distinguishes ABIs
+      # (gnu vs a future musl), so adding a target never reshapes the names.
+      TARGET_TRIPLE: x86_64-unknown-linux-gnu
+      # The floor the image family above guarantees. The triple names the libc
+      # kind only; the number is documented in the README and enforced below.
       GLIBC_BASELINE: glibc_2_28
     steps:
       - uses: actions/checkout@v7
@@ -156,9 +158,9 @@ jobs:
         env:
           SETUPTOOLS_SCM_PRETEND_VERSION: ${{ needs.check-release-tag.outputs.version }}
         run: uv run --frozen --group pyinstaller pyinstaller u2mcp.spec
-      # The asset name promises a glibc floor, so measure the promise against
-      # every ELF in the bundle before shipping it. Failing here costs a build,
-      # not a user hunting for why the binary will not start.
+      # The README promises this floor, so measure it against every ELF in the
+      # bundle before shipping it. Failing here costs a build, not a user
+      # hunting for why the binary will not start.
       - name: Assert the bundle needs no newer glibc than the baseline
         shell: bash
         run: |
@@ -169,7 +171,7 @@ jobs:
           # Empty means objdump reported nothing at all -- a missing tool or an
           # unexpected bundle. Fail instead of waving the promise through.
           test -n "${required}"
-          echo "bundle requires GLIBC_${required}, asset name declares ${GLIBC_BASELINE}"
+          echo "bundle requires GLIBC_${required}, declared baseline is ${GLIBC_BASELINE}"
           test "$(printf '%s\n' "${required}" "${floor}" | sort -V | tail -1)" = "${floor}"
       - name: Package artifacts
         shell: bash
@@ -177,7 +179,7 @@ jobs:
           test -n "$VERSION"
           mkdir -p executables
           # tar preserves the executable bit that zip would lose on Unix
-          tar -czf "executables/u2mcp-linux-x64-${GLIBC_BASELINE}-${VERSION}.tar.gz" -C dist u2mcp
+          tar -czf "executables/u2mcp-${TARGET_TRIPLE}-${VERSION}.tar.gz" -C dist u2mcp
       - name: Store the executable
         uses: actions/upload-artifact@v7
         with:
@@ -213,16 +215,16 @@ jobs:
           test -n "$VERSION"
           mkdir -p executables
           # tar preserves the executable bit that zip would lose on Unix
-          # The OS token must stay "darwin": installers derive it from
-          # `uname -s`, so a "macos" asset name is unreachable from a Mac.
-          tar -czf "executables/u2mcp-darwin-arm64-${VERSION}.tar.gz" -C dist u2mcp
+          # Triples are CI's to mint; installers only map uname output to them.
+          # Keep the OS slot as "darwin" (what `uname -s` says), not "macos".
+          tar -czf "executables/u2mcp-aarch64-apple-darwin-${VERSION}.tar.gz" -C dist u2mcp
       - name: Package artifacts (Windows 7z)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force executables | Out-Null
           # Invoke with a leading & and a space so 7z resolves from PATH
-          & 7z a -r "executables\u2mcp-windows-x64-$($env:VERSION).zip" "dist\u2mcp"
+          & 7z a -r "executables\u2mcp-x86_64-pc-windows-msvc-$($env:VERSION).zip" "dist\u2mcp"
       - name: Store the executable
         uses: actions/upload-artifact@v7
         with:

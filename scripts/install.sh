@@ -53,7 +53,27 @@ if [[ "${OS}" == "linux" ]]; then
   done
 fi
 
-TARGET="${OS}-${ARCH}"
+# Map the detected pair onto a release target triple. CI mints the triples (see
+# .github/workflows/ci.yml); this table is the only naming knowledge the script
+# carries, and an unmapped pair means "we do not build for you" -- which is
+# known here, before spending a manifest fetch on a guess.
+case "${OS}/${ARCH}" in
+  linux/x64)     TRIPLE="x86_64-unknown-linux-gnu" ;;
+  linux/arm64)   TRIPLE="aarch64-unknown-linux-gnu" ;;
+  darwin/arm64)  TRIPLE="aarch64-apple-darwin" ;;
+  # Windows on ARM runs x64 images under emulation.
+  windows/x64|windows/arm64) TRIPLE="x86_64-pc-windows-msvc" ;;
+  *) TRIPLE="" ;;
+esac
+if [[ -z "${TRIPLE}" ]]; then
+  echo "ERROR: no pre-built binary for ${OS}-${ARCH}." >&2
+  if [[ "${OS}" == "darwin" && "${ARCH}" == "x64" ]]; then
+    echo "Hint: Intel Macs have no pre-built binary. Install from PyPI: uv tool install uiautomator2-mcp-server" >&2
+  else
+    echo "Install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
+  fi
+  exit 1
+fi
 
 # --------------------------
 # Install layout (user-level only).
@@ -102,7 +122,7 @@ sha256_of() {
 # --------------------------
 # Resolve release asset via the channel manifest (SHA256SUMS), whose lines pair
 # each asset name with its SHA256 digest. Asset naming is owned by CI; this
-# script only prefix-matches "u2mcp-<target>-".
+# script only maps uname onto a target triple and prefix-matches "u2mcp-<triple>-".
 # Plain HTTP download links are used so the GitHub API rate limit is irrelevant.
 # --------------------------
 VERSION="${U2MCP_VERSION:-latest}"
@@ -128,12 +148,9 @@ if ! MANIFEST=$(http_get "${CHANNEL_URL}" 2>/dev/null); then
   exit 1
 fi
 
-CHANNEL_LINE=$(printf '%s\n' "${MANIFEST}" | grep -m1 -E "^[0-9a-f]{64}  u2mcp-${TARGET}-" || true)
+CHANNEL_LINE=$(printf '%s\n' "${MANIFEST}" | grep -m1 -E "^[0-9a-f]{64}  u2mcp-${TRIPLE}-" || true)
 if [[ -z "${CHANNEL_LINE}" ]]; then
-  echo "ERROR: no pre-built binary for ${TARGET} in ${MANIFEST_SOURCE}." >&2
-  if [[ "${TARGET}" == "darwin-x64" ]]; then
-    echo "Hint: Intel Macs have no pre-built binary. Install from PyPI: uv tool install uiautomator2-mcp-server" >&2
-  fi
+  echo "ERROR: no pre-built binary for ${TRIPLE} in ${MANIFEST_SOURCE}." >&2
   echo "Hint: check supported platforms at ${CHANNEL_URL}" >&2
   exit 1
 fi
@@ -159,7 +176,7 @@ TAG="v${VERSION_FIELD}"
 DOWNLOAD_URL="https://github.com/${GITHUB_REPO}/releases/download/${TAG}/${ASSET}"
 
 echo "=== u2mcp installer ==="
-echo "Platform:  ${TARGET}"
+echo "Target:    ${TRIPLE}"
 echo "Version:   ${TAG}"
 echo "Bundle:    ${BUNDLE_DIR}"
 echo "Command:   ${BIN_LINK}"
@@ -205,8 +222,8 @@ if [[ "${OS}" == "windows" ]]; then
 fi
 chmod +x "${BUNDLE_EXE}"
 if ! "${BUNDLE_EXE}" --version; then
-  echo "ERROR: ${TAG} did not start on this system (${TARGET}); the existing install was left untouched." >&2
-  echo "Hint: pre-built binaries need glibc at or above the baseline named in the asset name." >&2
+  echo "ERROR: ${TAG} did not start on this system (${TRIPLE}); the existing install was left untouched." >&2
+  echo "Hint: the glibc floor each build needs is listed in the README platform matrix." >&2
   echo "Hint: install from PyPI instead: uv tool install uiautomator2-mcp-server" >&2
   exit 1
 fi

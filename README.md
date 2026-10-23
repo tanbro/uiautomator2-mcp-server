@@ -200,14 +200,16 @@ The following are two optional enhanced package managers. You can choose to inst
 
   | Platform | Release asset | Requirement |
   |----------|---------------|-------------|
-  | Linux x86_64 | `u2mcp-linux-x64-glibc_2_28-<version>.tar.gz` | glibc >= 2.28 |
-  | macOS (Apple Silicon) | `u2mcp-darwin-arm64-<version>.tar.gz` | arm64 Mac |
-  | Windows x64 | `u2mcp-windows-x64-<version>.zip` | x64 Windows (ARM64 runs it under emulation) |
+  | Linux x86_64 | `u2mcp-x86_64-unknown-linux-gnu-<version>.tar.gz` | glibc >= 2.28 |
+  | Linux aarch64 | not published | — |
+  | macOS (Apple Silicon) | `u2mcp-aarch64-apple-darwin-<version>.tar.gz` | arm64 Mac |
+  | Windows x64 | `u2mcp-x86_64-pc-windows-msvc-<version>.zip` | x64 Windows (ARM64 runs it under emulation) |
 
-  Distributions the `glibc_2_28` token in the Linux asset name rules out — musl
-  systems such as Alpine, and older glibc releases such as CentOS 7 / Debian 9 —
-  have no pre-compiled binary and must install from PyPI below. The same goes for
-  Intel Macs.
+  Release assets are named with a Rust-style target triple, so a new ABI is a
+  new triple rather than a new naming scheme. The `-gnu` in the Linux asset name
+  is the whole promise: musl systems such as Alpine, glibc releases older than
+  2.28 such as CentOS 7 or Debian 9, and Intel Macs have no pre-compiled binary
+  and must install from PyPI below.
 
 - Run directly without installation
 
