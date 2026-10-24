@@ -14,10 +14,13 @@ classifiers = [
   "Programming Language :: Python :: 3.15",
 ]
 dependencies = [
-  "fastmcp>=4.0,<5.0",
+  "fastmcp>=4.1.2,<5.0",
   "cyclopts[yaml]", # included in fastmcp
   "platformdirs>=4.0",
   "uiautomator2>=3.5,<4.0",
+  # Declared directly: only reachable via uiautomator2, which places no bound on it.
+  "Pillow>=13.0,<14",
+  "certifi>=2026.10.19",
   "typing_extensions>=4.12; python_version < '3.12'",
 ]
 description = "uiautomator2 mcp server"
@@ -45,7 +48,7 @@ requires-python = ">=3.11"
 
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = ["setuptools>=80", "setuptools-scm>=8"]
+requires = ["setuptools>=84.1.0", "setuptools-scm>=8"]
 
 [tool.setuptools_scm]
 version_file = "src/u2mcp/version.py"
