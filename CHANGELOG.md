@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## 0.4.1
+
+> 📅 2026-10-25
+
+- 🆕 New:
+  - **One-line installers for pre-built executables**: `scripts/install.sh` (curl, plus Git Bash on Windows) and `scripts/install.ps1` resolve a platform bundle through the release's `SHA256SUMS` channel manifest and verify its digest before unpacking
+  - **Pre-built executables published with the release**: `x86_64-unknown-linux-gnu` (built on manylinux_2_28), `x86_64-pc-windows-msvc`, `aarch64-apple-darwin`, alongside the existing wheel/sdist
+
+- ⚙️ Changed:
+  - **Closed value domains moved into the schema**: direction, format and similar parameters now use `Literal` aliases declared in `u2mcp.typing`, so tools expose real `enum` choices instead of prose lists an LLM had to trust
+  - Release asset names use Rust-style target triples, and every release carries a `SHA256SUMS` manifest computed once in the job that holds all platform archives
+  - `xpath_scroll_to` direction and `max_swipes` defaults now match `XPathModule.scroll_to`
+  - Executable builds anchor on `.python-version`, with the interpreter pinned per build role
+  - Dependency floors raised to the patched versions of open security advisories (Pillow, fastmcp, certifi, setuptools)
+
+- 🐛 Fixed:
+  - `u2mcp info` showed only a one-line summary for every tool: the `Args`/`Returns` blocks never rendered because FastMCP strips those sections from the tool description. It now parses the undecorated docstring and prints parameters, types, defaults and value domains
+  - The PyInstaller spec no longer trips lint errors, and keeps icons genuinely stripped from the bundle
+
 ## 0.4.0
 
 > 📅 2026-10-15
